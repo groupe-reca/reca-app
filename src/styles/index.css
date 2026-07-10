@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@import "@fontsource/manrope/400.css";
+@import "@fontsource/manrope/500.css";
+@import "@fontsource/manrope/600.css";
+@import "@fontsource/manrope/700.css";
+
+@theme {
+  --font-sans: "Manrope", system-ui, sans-serif;
+
+  /* Placeholder brand palette — swap once exact "Rouge RECA" hex is confirmed. */
+  --color-reca-red: #ed1c24;
+  --color-reca-red-dark: #c8151c;
+  --color-reca-black: #111111;
+  --color-reca-snow: #fafbfc;
+  --color-reca-gray-light: #e5e7eb;
+  --color-reca-gray-medium: #6b7280;
+  --color-reca-night-blue: #0f172a;
+  --color-reca-success: #16a34a;
+  --color-reca-warning: #f59e0b;
+  --color-reca-info: #2563eb;
+
+  --radius-control: 10px;
+  --radius-card: 16px;
+  --radius-modal: 20px;
+
+  --text-h1: 36px;
+  --text-section: 24px;
+  --text-subtitle: 18px;
+  --text-body: 15px;
+  --text-label: 13px;
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-reca-black);
+}
