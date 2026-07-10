@@ -32,7 +32,7 @@ const NAV_ITEMS: NavItemConfig[] = [
   { label: 'Factures', to: '/invoices', icon: Receipt, enabled: true },
   { label: 'Paiements', to: '/payments', icon: CreditCard, enabled: true },
   { label: 'Routes', to: '/routes', icon: RouteIcon, enabled: false },
-  { label: 'Équipements', to: '/equipment', icon: Truck, enabled: false },
+  { label: 'Équipements', to: '/equipment', icon: Truck, enabled: true },
   { label: 'Employés', to: '/employees', icon: UserCog, enabled: false },
 ]
 
