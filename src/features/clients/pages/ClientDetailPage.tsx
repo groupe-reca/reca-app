@@ -1,8 +1,11 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router'
-import { Mail, Pencil, Phone, Trash2 } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router'
+import { Mail, Pencil, Phone, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { ContractFormModal } from '@/features/contracts/components/ContractFormModal'
+import { ContractStatusBadge } from '@/features/contracts/components/ContractStatusBadge'
+import { useClientContracts } from '@/features/contracts/hooks/useClientContracts'
 import { useClient } from '../hooks/useClient'
 import { useDeleteClient } from '../hooks/useDeleteClient'
 import { ClientFormModal } from '../components/ClientFormModal'
@@ -12,7 +15,9 @@ export function ClientDetailPage() {
   const navigate = useNavigate()
   const { data: client, isLoading } = useClient(id)
   const deleteClient = useDeleteClient()
+  const { data: contracts } = useClientContracts(id)
   const [editOpen, setEditOpen] = useState(false)
+  const [contractModalOpen, setContractModalOpen] = useState(false)
 
   if (isLoading || !client) {
     return <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
@@ -89,7 +94,43 @@ export function ClientDetailPage() {
         </Card>
       </div>
 
+      <Card>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-subtitle font-semibold text-reca-black">Contrats</h2>
+          <Button variant="secondary" onClick={() => setContractModalOpen(true)}>
+            <Plus className="size-4" aria-hidden="true" />
+            Créer un contrat
+          </Button>
+        </div>
+        {contracts && contracts.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {contracts.map((contract) => (
+              <Link
+                key={contract.id}
+                to={`/contracts/${contract.id}`}
+                className="flex items-center justify-between rounded-control border border-reca-gray-light px-4 py-3 hover:bg-reca-snow"
+              >
+                <div className="text-body text-reca-black">
+                  <span className="font-medium">{contract.numero}</span>
+                  {contract.type && <span className="text-reca-gray-medium"> — {contract.type}</span>}
+                  {contract.saison && <span className="text-reca-gray-medium"> ({contract.saison})</span>}
+                </div>
+                <ContractStatusBadge status={contract.statut} />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-body text-reca-gray-medium">Aucun contrat pour ce client.</p>
+        )}
+      </Card>
+
       <ClientFormModal open={editOpen} onClose={() => setEditOpen(false)} client={client} />
+
+      <ContractFormModal
+        open={contractModalOpen}
+        onClose={() => setContractModalOpen(false)}
+        clientId={client.id}
+      />
     </div>
   )
 }

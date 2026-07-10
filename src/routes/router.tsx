@@ -12,6 +12,8 @@ import { QuoteDetailPage } from '@/features/quotes/pages/QuoteDetailPage'
 import { QuotesListPage } from '@/features/quotes/pages/QuotesListPage'
 import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage'
 import { ClientsListPage } from '@/features/clients/pages/ClientsListPage'
+import { ContractDetailPage } from '@/features/contracts/pages/ContractDetailPage'
+import { ContractsListPage } from '@/features/contracts/pages/ContractsListPage'
 
 export const router = createBrowserRouter([
   {
@@ -34,6 +36,8 @@ export const router = createBrowserRouter([
           { path: 'quotes/:id', element: <QuoteDetailPage />, handle: { breadcrumb: 'Détail' } },
           { path: 'clients', element: <ClientsListPage />, handle: { breadcrumb: 'Clients' } },
           { path: 'clients/:id', element: <ClientDetailPage />, handle: { breadcrumb: 'Détail' } },
+          { path: 'contracts', element: <ContractsListPage />, handle: { breadcrumb: 'Contrats' } },
+          { path: 'contracts/:id', element: <ContractDetailPage />, handle: { breadcrumb: 'Détail' } },
         ],
       },
     ],
