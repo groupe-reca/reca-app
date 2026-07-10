@@ -29,7 +29,7 @@ const NAV_ITEMS: NavItemConfig[] = [
   { label: 'Soumissions', to: '/quotes', icon: FileText, enabled: true },
   { label: 'Clients', to: '/clients', icon: Users, enabled: true },
   { label: 'Contrats', to: '/contracts', icon: FileSignature, enabled: true },
-  { label: 'Factures', to: '/invoices', icon: Receipt, enabled: false },
+  { label: 'Factures', to: '/invoices', icon: Receipt, enabled: true },
   { label: 'Paiements', to: '/payments', icon: CreditCard, enabled: false },
   { label: 'Routes', to: '/routes', icon: RouteIcon, enabled: false },
   { label: 'Équipements', to: '/equipment', icon: Truck, enabled: false },

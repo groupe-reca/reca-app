@@ -6,6 +6,10 @@ import { Card } from '@/components/ui/Card'
 import { ContractFormModal } from '@/features/contracts/components/ContractFormModal'
 import { ContractStatusBadge } from '@/features/contracts/components/ContractStatusBadge'
 import { useClientContracts } from '@/features/contracts/hooks/useClientContracts'
+import { InvoiceFormModal } from '@/features/invoices/components/InvoiceFormModal'
+import { InvoiceStatusBadge } from '@/features/invoices/components/InvoiceStatusBadge'
+import { useClientInvoices } from '@/features/invoices/hooks/useClientInvoices'
+import { formatCurrency } from '@/lib/format'
 import { useClient } from '../hooks/useClient'
 import { useDeleteClient } from '../hooks/useDeleteClient'
 import { ClientFormModal } from '../components/ClientFormModal'
@@ -16,8 +20,10 @@ export function ClientDetailPage() {
   const { data: client, isLoading } = useClient(id)
   const deleteClient = useDeleteClient()
   const { data: contracts } = useClientContracts(id)
+  const { data: invoices } = useClientInvoices(id)
   const [editOpen, setEditOpen] = useState(false)
   const [contractModalOpen, setContractModalOpen] = useState(false)
+  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
 
   if (isLoading || !client) {
     return <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
@@ -124,11 +130,46 @@ export function ClientDetailPage() {
         )}
       </Card>
 
+      <Card>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-subtitle font-semibold text-reca-black">Factures</h2>
+          <Button variant="secondary" onClick={() => setInvoiceModalOpen(true)}>
+            <Plus className="size-4" aria-hidden="true" />
+            Créer une facture
+          </Button>
+        </div>
+        {invoices && invoices.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {invoices.map((invoice) => (
+              <Link
+                key={invoice.id}
+                to={`/invoices/${invoice.id}`}
+                className="flex items-center justify-between rounded-control border border-reca-gray-light px-4 py-3 hover:bg-reca-snow"
+              >
+                <div className="text-body text-reca-black">
+                  <span className="font-medium">{invoice.numero}</span>
+                  <span className="text-reca-gray-medium"> — {formatCurrency(invoice.total)}</span>
+                </div>
+                <InvoiceStatusBadge status={invoice.statut} />
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <p className="text-body text-reca-gray-medium">Aucune facture pour ce client.</p>
+        )}
+      </Card>
+
       <ClientFormModal open={editOpen} onClose={() => setEditOpen(false)} client={client} />
 
       <ContractFormModal
         open={contractModalOpen}
         onClose={() => setContractModalOpen(false)}
+        clientId={client.id}
+      />
+
+      <InvoiceFormModal
+        open={invoiceModalOpen}
+        onClose={() => setInvoiceModalOpen(false)}
         clientId={client.id}
       />
     </div>
