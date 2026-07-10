@@ -19,6 +19,8 @@ import { InvoicesListPage } from '@/features/invoices/pages/InvoicesListPage'
 import { PaymentsListPage } from '@/features/payments/pages/PaymentsListPage'
 import { EquipmentDetailPage } from '@/features/equipments/pages/EquipmentDetailPage'
 import { EquipmentsListPage } from '@/features/equipments/pages/EquipmentsListPage'
+import { EmployeeDetailPage } from '@/features/employees/pages/EmployeeDetailPage'
+import { EmployeesListPage } from '@/features/employees/pages/EmployeesListPage'
 
 export const router = createBrowserRouter([
   {
@@ -48,6 +50,8 @@ export const router = createBrowserRouter([
           { path: 'payments', element: <PaymentsListPage />, handle: { breadcrumb: 'Paiements' } },
           { path: 'equipment', element: <EquipmentsListPage />, handle: { breadcrumb: 'Équipements' } },
           { path: 'equipment/:id', element: <EquipmentDetailPage />, handle: { breadcrumb: 'Détail' } },
+          { path: 'employees', element: <EmployeesListPage />, handle: { breadcrumb: 'Employés' } },
+          { path: 'employees/:id', element: <EmployeeDetailPage />, handle: { breadcrumb: 'Détail' } },
         ],
       },
     ],

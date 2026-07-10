@@ -33,7 +33,7 @@ const NAV_ITEMS: NavItemConfig[] = [
   { label: 'Paiements', to: '/payments', icon: CreditCard, enabled: true },
   { label: 'Routes', to: '/routes', icon: RouteIcon, enabled: false },
   { label: 'Équipements', to: '/equipment', icon: Truck, enabled: true },
-  { label: 'Employés', to: '/employees', icon: UserCog, enabled: false },
+  { label: 'Employés', to: '/employees', icon: UserCog, enabled: true },
 ]
 
 const SETTINGS_ITEM: NavItemConfig = { label: 'Paramètres', to: '/settings', icon: Settings, enabled: false }
