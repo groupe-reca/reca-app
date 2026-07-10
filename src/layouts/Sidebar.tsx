@@ -27,7 +27,7 @@ const NAV_ITEMS: NavItemConfig[] = [
   { label: 'Centre des opérations', to: '/dashboard', icon: LayoutDashboard, enabled: true },
   { label: 'Leads', to: '/leads', icon: UserPlus, enabled: true },
   { label: 'Soumissions', to: '/quotes', icon: FileText, enabled: true },
-  { label: 'Clients', to: '/clients', icon: Users, enabled: false },
+  { label: 'Clients', to: '/clients', icon: Users, enabled: true },
   { label: 'Contrats', to: '/contracts', icon: FileSignature, enabled: false },
   { label: 'Factures', to: '/invoices', icon: Receipt, enabled: false },
   { label: 'Paiements', to: '/payments', icon: CreditCard, enabled: false },

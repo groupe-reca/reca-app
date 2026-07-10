@@ -1,10 +1,11 @@
 import { supabase } from '@/lib/supabaseClient'
 import type { QuoteFormValues } from '../schemas/quote.schema'
-import type { Quote, QuoteLeadRef, QuoteRow, QuoteStatus } from '../types/quote.types'
+import type { Quote, QuoteClientRef, QuoteLeadRef, QuoteRow, QuoteStatus } from '../types/quote.types'
 
-const SELECT_WITH_LEAD = '*, lead:leads(id, numero, prenom, nom)'
+const SELECT_WITH_LEAD =
+  '*, lead:leads(id, numero, prenom, nom), client:clients(id, numero, prenom, nom)'
 
-type QuoteRowWithLead = QuoteRow & { lead: QuoteLeadRef | null }
+type QuoteRowWithLead = QuoteRow & { lead: QuoteLeadRef | null; client: QuoteClientRef | null }
 
 function mapQuote(row: QuoteRowWithLead): Quote {
   return {
@@ -20,6 +21,7 @@ function mapQuote(row: QuoteRowWithLead): Quote {
     notes: row.notes,
     createdAt: row.created_at,
     lead: row.lead,
+    client: row.client,
   }
 }
 
@@ -76,6 +78,18 @@ export async function updateQuoteStatus(id: string, statut: QuoteStatus): Promis
   const { data, error } = await supabase
     .from('quotes')
     .update({ statut } as never)
+    .eq('id', id)
+    .select(SELECT_WITH_LEAD)
+    .single()
+
+  if (error) throw error
+  return mapQuote(data as unknown as QuoteRowWithLead)
+}
+
+export async function convertQuoteToClient(id: string, clientId: string): Promise<Quote> {
+  const { data, error } = await supabase
+    .from('quotes')
+    .update({ client_id: clientId, statut: 'acceptee' } as never)
     .eq('id', id)
     .select(SELECT_WITH_LEAD)
     .single()

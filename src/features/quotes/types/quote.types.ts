@@ -17,6 +17,13 @@ export type QuoteLeadRef = {
   nom: string
 }
 
+export type QuoteClientRef = {
+  id: string
+  numero: string
+  prenom: string
+  nom: string
+}
+
 export type QuoteRow = {
   id: string
   numero: string
@@ -46,4 +53,5 @@ export type Quote = {
   notes: string | null
   createdAt: string
   lead: QuoteLeadRef | null
+  client: QuoteClientRef | null
 }

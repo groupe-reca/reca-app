@@ -4,7 +4,9 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Dropdown, DropdownItem } from '@/components/ui/Dropdown'
+import { ClientFormModal } from '@/features/clients/components/ClientFormModal'
 import { formatCurrency } from '@/lib/format'
+import { useConvertQuoteToClient } from '../hooks/useConvertQuoteToClient'
 import { useDeleteQuote } from '../hooks/useDeleteQuote'
 import { useQuote } from '../hooks/useQuote'
 import { useUpdateQuoteStatus } from '../hooks/useUpdateQuoteStatus'
@@ -18,7 +20,9 @@ export function QuoteDetailPage() {
   const { data: quote, isLoading } = useQuote(id)
   const updateStatus = useUpdateQuoteStatus(id)
   const deleteQuote = useDeleteQuote()
+  const convertToClient = useConvertQuoteToClient(id)
   const [editOpen, setEditOpen] = useState(false)
+  const [clientModalOpen, setClientModalOpen] = useState(false)
 
   if (isLoading || !quote) {
     return <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
@@ -83,9 +87,34 @@ export function QuoteDetailPage() {
             <p className="text-body text-reca-gray-medium">Aucun lead associé.</p>
           )}
         </Card>
+
+        <Card>
+          <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Client</h2>
+          {quote.client ? (
+            <p className="text-body text-reca-gray-medium">
+              <Link to={`/clients/${quote.client.id}`} className="text-reca-red hover:underline">
+                {quote.client.prenom} {quote.client.nom} ({quote.client.numero})
+              </Link>
+            </p>
+          ) : (
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-body text-reca-gray-medium">Aucun client associé.</p>
+              <Button variant="secondary" onClick={() => setClientModalOpen(true)}>
+                Transformer en client
+              </Button>
+            </div>
+          )}
+        </Card>
       </div>
 
       <QuoteFormModal open={editOpen} onClose={() => setEditOpen(false)} quote={quote} />
+
+      <ClientFormModal
+        open={clientModalOpen}
+        onClose={() => setClientModalOpen(false)}
+        initialValues={quote.lead ? { prenom: quote.lead.prenom, nom: quote.lead.nom } : undefined}
+        onCreated={(client) => convertToClient.mutate(client.id)}
+      />
     </div>
   )
 }
