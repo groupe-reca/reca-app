@@ -16,6 +16,7 @@ import { ContractDetailPage } from '@/features/contracts/pages/ContractDetailPag
 import { ContractsListPage } from '@/features/contracts/pages/ContractsListPage'
 import { InvoiceDetailPage } from '@/features/invoices/pages/InvoiceDetailPage'
 import { InvoicesListPage } from '@/features/invoices/pages/InvoicesListPage'
+import { PaymentsListPage } from '@/features/payments/pages/PaymentsListPage'
 
 export const router = createBrowserRouter([
   {
@@ -42,6 +43,7 @@ export const router = createBrowserRouter([
           { path: 'contracts/:id', element: <ContractDetailPage />, handle: { breadcrumb: 'Détail' } },
           { path: 'invoices', element: <InvoicesListPage />, handle: { breadcrumb: 'Factures' } },
           { path: 'invoices/:id', element: <InvoiceDetailPage />, handle: { breadcrumb: 'Détail' } },
+          { path: 'payments', element: <PaymentsListPage />, handle: { breadcrumb: 'Paiements' } },
         ],
       },
     ],

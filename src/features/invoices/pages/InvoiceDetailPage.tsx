@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Dropdown, DropdownItem } from '@/components/ui/Dropdown'
+import { PaymentFormModal } from '@/features/payments/components/PaymentFormModal'
+import { useDeletePayment } from '@/features/payments/hooks/useDeletePayment'
+import { useInvoicePayments } from '@/features/payments/hooks/useInvoicePayments'
 import { formatCurrency } from '@/lib/format'
 import { useDeleteInvoice } from '../hooks/useDeleteInvoice'
 import { useInvoice } from '../hooks/useInvoice'
@@ -18,7 +21,10 @@ export function InvoiceDetailPage() {
   const { data: invoice, isLoading } = useInvoice(id)
   const updateStatus = useUpdateInvoiceStatus(id)
   const deleteInvoice = useDeleteInvoice()
+  const { data: payments } = useInvoicePayments(id)
+  const deletePayment = useDeletePayment(id)
   const [editOpen, setEditOpen] = useState(false)
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false)
 
   if (isLoading || !invoice) {
     return <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
@@ -98,7 +104,52 @@ export function InvoiceDetailPage() {
         </Card>
       </div>
 
+      <Card>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-subtitle font-semibold text-reca-black">Paiements</h2>
+          <Button variant="secondary" onClick={() => setPaymentModalOpen(true)}>
+            <Plus className="size-4" aria-hidden="true" />
+            Enregistrer un paiement
+          </Button>
+        </div>
+        {payments && payments.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {payments.map((payment) => (
+              <div
+                key={payment.id}
+                className="flex items-center justify-between rounded-control border border-reca-gray-light px-4 py-3"
+              >
+                <div className="text-body text-reca-black">
+                  <span className="font-medium">{formatCurrency(payment.montant)}</span>
+                  <span className="text-reca-gray-medium">
+                    {' '}
+                    — {payment.date} {payment.methode ? `· ${payment.methode}` : ''}
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    if (!window.confirm('Supprimer ce paiement ?')) return
+                    deletePayment.mutate(payment.id)
+                  }}
+                >
+                  <Trash2 className="size-4" aria-hidden="true" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-body text-reca-gray-medium">Aucun paiement enregistré.</p>
+        )}
+      </Card>
+
       <InvoiceFormModal open={editOpen} onClose={() => setEditOpen(false)} invoice={invoice} />
+
+      <PaymentFormModal
+        open={paymentModalOpen}
+        onClose={() => setPaymentModalOpen(false)}
+        factureId={invoice.id}
+      />
     </div>
   )
 }
