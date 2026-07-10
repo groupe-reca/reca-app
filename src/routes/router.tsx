@@ -21,6 +21,8 @@ import { EquipmentDetailPage } from '@/features/equipments/pages/EquipmentDetail
 import { EquipmentsListPage } from '@/features/equipments/pages/EquipmentsListPage'
 import { EmployeeDetailPage } from '@/features/employees/pages/EmployeeDetailPage'
 import { EmployeesListPage } from '@/features/employees/pages/EmployeesListPage'
+import { RouteDetailPage } from '@/features/routes/pages/RouteDetailPage'
+import { RoutesListPage } from '@/features/routes/pages/RoutesListPage'
 
 export const router = createBrowserRouter([
   {
@@ -52,6 +54,8 @@ export const router = createBrowserRouter([
           { path: 'equipment/:id', element: <EquipmentDetailPage />, handle: { breadcrumb: 'Détail' } },
           { path: 'employees', element: <EmployeesListPage />, handle: { breadcrumb: 'Employés' } },
           { path: 'employees/:id', element: <EmployeeDetailPage />, handle: { breadcrumb: 'Détail' } },
+          { path: 'routes', element: <RoutesListPage />, handle: { breadcrumb: 'Routes' } },
+          { path: 'routes/:id', element: <RouteDetailPage />, handle: { breadcrumb: 'Détail' } },
         ],
       },
     ],
