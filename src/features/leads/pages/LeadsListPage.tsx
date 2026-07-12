@@ -11,7 +11,7 @@ export function LeadsListPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-section font-semibold text-reca-black">Leads</h1>
           <p className="text-body text-reca-gray-medium">Demandes provenant du site web.</p>

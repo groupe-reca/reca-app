@@ -35,3 +35,9 @@ body {
   font-family: var(--font-sans);
   color: var(--color-reca-black);
 }
+
+/*
+ * Animation convention (doc 05 — 150-250ms, soft transitions, no spectacular animation):
+ * use Tailwind's `duration-150` for micro-interactions (hover, tooltip),
+ * `duration-200` for layout transitions (drawer, modal open/close).
+ */

@@ -34,7 +34,7 @@ export function LeadDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-label text-reca-gray-medium">{lead.numero}</p>
           <h1 className="text-section font-semibold text-reca-black">
@@ -44,7 +44,7 @@ export function LeadDetailPage() {
             <LeadStatusBadge status={lead.statut} />
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" onClick={() => setEditOpen(true)}>
             <Pencil className="size-4" aria-hidden="true" />
             Modifier

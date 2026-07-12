@@ -26,6 +26,24 @@
 
 **Prochaine étape après ce module** : les 10 modules du scope sont complets — repasser en revue globale (doc 07) pour tout écart avant de considérer le projet "livré".
 
+## [x] Modernisation UI — Socle responsive + pilote Leads (2026-07-12, terminé et vérifié)
+
+**Objectif** : rendre le Centre des opérations (app admin existante) responsive desktop/tablette/mobile, en commençant par le socle partagé (tokens, shell `layouts/`, primitives `components/ui/`) validé sur le module Leads comme pilote. Les 8 autres modules sont reportés à des tâches ultérieures séparées. La future "Application employé" terrain (module I, non spécifiée) est explicitement hors scope.
+
+Décisions validées avec l'utilisateur :
+1. Seuil tiroir sidebar : `<1024px` (`lg`) = tiroir avec backdrop, `≥1024px` = sidebar fixe comme aujourd'hui.
+2. Fond sidebar corrigé vers Bleu Nuit `#0F172A` (doc 05) — écart préexistant avec la doc, corrigé au passage puisque le fichier est touché de toute façon.
+3. Rouge RECA reste le placeholder `#ed1c24` (pas de changement de couleur de marque).
+4. Table → vue carte sous `md` (768px), avec nouvelles props optionnelles `TableColumn.primary`/`hiddenOnCard` rétrocompatibles.
+5. Modal → bottom-sheet sous `sm` (640px) avec `motion` pour l'animation (déjà une dépendance, utilisée seulement dans LoginPage avant ça).
+6. Nouveaux hooks partagés `src/hooks/{useBreakpoint,useBodyScrollLock,useFocusTrap}.ts`, réutilisés par Modal (qui n'avait ni scroll-lock ni focus-trap avant) et le tiroir Sidebar.
+
+Plan détaillé complet (tous les fichiers touchés, comportement exact par composant, plan de vérification par largeur de viewport) : voir `/root/.claude/plans/oui-c-est-lui-on-imperative-hartmanis.md`.
+
+**Fichiers touchés** : `src/styles/index.css` (commentaire convention durées), `src/hooks/useBreakpoint.ts` (nouveau), `src/hooks/useBodyScrollLock.ts` (nouveau), `src/hooks/useFocusTrap.ts` (nouveau), `src/layouts/Sidebar.tsx`, `src/layouts/AppLayout.tsx`, `src/layouts/Breadcrumb.tsx`, `src/components/ui/Modal.tsx`, `src/components/ui/Dropdown.tsx`, `src/components/ui/Tooltip.tsx`, `src/components/ui/Toaster.tsx`, `src/components/ui/Table.tsx`, `src/features/leads/pages/LeadsListPage.tsx`, `src/features/leads/components/LeadTable.tsx`, `src/features/leads/pages/LeadDetailPage.tsx`.
+
+**Vérification finale (2026-07-12)** : `tsc -b` et `npm run lint` propres. Test de bout en bout réel (Playwright, compte admin, dev server sur le port 3011 — 3010 occupé par le process pm2 de build statique) aux largeurs 375/768/1024/1280px sur Leads (liste+détail) et le Dashboard : tiroir sidebar + backdrop + fermeture (hamburger/Esc) fonctionnels sous 1024px, sidebar fixe sans hamburger dès 1024px, fond Bleu Nuit correct, bascule table↔cartes à 768px avec tri mobile fonctionnel, Modal en bottom-sheet sous 640px avec animation `motion`, Dropdown Statut sans débordement, breadcrumb condensé en lien retour sous 640px, Dashboard hérite du nouveau shell sans aucune modification de code. Non-régression confirmée : création/modification/suppression d'un lead de test fonctionne de bout en bout (lead créé puis supprimé proprement, aucune donnée de test résiduelle). Aucune erreur console à aucune étape. Pas encore commité.
+
 ## [x] Rework module Contrats — fiche de création complète (2026-07-12, terminé et vérifié)
 
 Demande (`.input/tache2.md` + `.input/contrat.md`) : la fiche "Nouveau contrat" doit contenir toutes les clauses d'un contrat de déneigement type (zone desservie, exclusions, seuil de déclenchement, obligations, responsabilités, prix + échéancier de paiement), permettre de chercher un client existant (nom/adresse/téléphone) ou d'en créer un nouveau à la volée, et générer une facture par modalité de paiement lors de la création. Le module existe déjà (commit `4c29ef9`) mais seulement avec les champs génériques — c'est une extension, pas une reconstruction.
