@@ -36,7 +36,7 @@ const NAV_ITEMS: NavItemConfig[] = [
   { label: 'Employés', to: '/employees', icon: UserCog, enabled: true },
 ]
 
-const SETTINGS_ITEM: NavItemConfig = { label: 'Paramètres', to: '/settings', icon: Settings, enabled: false }
+const SETTINGS_ITEM: NavItemConfig = { label: 'Paramètres', to: '/settings', icon: Settings, enabled: true }
 
 export function Sidebar() {
   const { data: session } = useSession()
@@ -55,7 +55,7 @@ export function Sidebar() {
       </nav>
 
       <div className="flex flex-col gap-1 border-t border-reca-gray-light px-3 py-4">
-        <SidebarNavItem item={SETTINGS_ITEM} />
+        {session?.user.role === 'administrateur' && <SidebarNavItem item={SETTINGS_ITEM} />}
         {session && (
           <div className="mt-2 flex items-center gap-2 rounded-control px-3 py-2">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-reca-gray-light text-label font-semibold text-reca-black">

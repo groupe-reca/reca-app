@@ -1,6 +1,6 @@
 # Plans — RECA Centre des opérations
 
-## [~] J. Paramètres (module en cours)
+## [x] J. Paramètres — archivé, terminé le 2026-07-11 (voir `tasks.md` pour le détail exact de ce qui a été livré et de ce qui reste non vérifié en navigateur)
 
 **Objectif** : finir le dernier des 10 modules du scope — config entreprise/taxes + gestion des rôles de comptes, réservé aux administrateurs.
 

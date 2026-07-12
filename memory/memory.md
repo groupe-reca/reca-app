@@ -21,6 +21,8 @@
 - Paiements : pas d'action "Modifier" (doc 06 n'en liste aucune) — seulement enregistrer/annuler, avec recalcul automatique du solde/statut de la facture parente à chaque opération.
 - Ordre de construction des modules imposé par doc 07 §8 "Prochaines étapes" et par les dépendances naturelles du pipeline (voir `tasks.md`).
 - CLAUDE.md racine (créé 2026-07-11) documente le protocole memory/ obligatoire — lire ce fichier + `tasks.md` en début de tâche, mettre à jour les trois fichiers en fin de tâche.
+- Restriction admin-only (module Paramètres, 2026-07-11) : utilise `RequireRole` (`src/features/auth/components/RequireAuth.tsx`, existait déjà mais n'était utilisé nulle part) comme route wrapper, plutôt qu'une garde locale dans la page — pattern à réutiliser pour toute future route admin-only.
+- Les 10 modules du scope (doc 07) sont tous construits depuis le 2026-07-11 (Paramètres = dernier). Prochaine étape naturelle : revue globale vs doc 07 avant "livraison", pas un nouveau module.
 
 ## Essayé et rejeté
 - (rien à ce jour — section à remplir au fil des décisions techniques écartées)

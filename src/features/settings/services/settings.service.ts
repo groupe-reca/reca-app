@@ -1,0 +1,50 @@
+import { supabase } from '@/lib/supabaseClient'
+import type { SettingsFormValues } from '../schemas/settings.schema'
+import type { Settings, SettingsRow } from '../types/settings.types'
+
+const DEFAULT_TAXES = { tps: 5, tvq: 9.975 }
+const DEFAULT_COLORS = { primaire: '#DA291C', secondaire: '#0F172A' }
+
+function mapSettings(row: SettingsRow): Settings {
+  return {
+    nom: row.nom,
+    logo: row.logo,
+    telephone: row.telephone,
+    courriel: row.courriel,
+    taxes: { ...DEFAULT_TAXES, ...row.taxes },
+    adresse: row.adresse,
+    couleurs: { ...DEFAULT_COLORS, ...row.couleurs },
+    updatedAt: row.updated_at,
+  }
+}
+
+export async function getSettings(): Promise<Settings> {
+  const { data, error } = await supabase.from('settings').select('*').eq('id', true).single()
+  if (error) throw error
+  return mapSettings(data as SettingsRow)
+}
+
+export async function updateSettings(values: SettingsFormValues): Promise<Settings> {
+  const input = {
+    nom: values.nom || null,
+    adresse: values.adresse || null,
+    telephone: values.telephone || null,
+    courriel: values.courriel || null,
+    logo: values.logo || null,
+    taxes: { tps: Number(values.tps), tvq: Number(values.tvq) },
+    couleurs: {
+      primaire: values.couleurPrimaire || DEFAULT_COLORS.primaire,
+      secondaire: values.couleurSecondaire || DEFAULT_COLORS.secondaire,
+    },
+  }
+
+  const { data, error } = await supabase
+    .from('settings')
+    .update(input as never)
+    .eq('id', true)
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return mapSettings(data as SettingsRow)
+}

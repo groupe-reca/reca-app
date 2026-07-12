@@ -5,7 +5,7 @@ import { LandingPage } from '@/pages/LandingPage'
 import { OperationsCenterPage } from '@/pages/OperationsCenterPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { LoginPage } from '@/features/auth/pages/LoginPage'
-import { RequireAuth } from '@/features/auth/components/RequireAuth'
+import { RequireAuth, RequireRole } from '@/features/auth/components/RequireAuth'
 import { LeadDetailPage } from '@/features/leads/pages/LeadDetailPage'
 import { LeadsListPage } from '@/features/leads/pages/LeadsListPage'
 import { QuoteDetailPage } from '@/features/quotes/pages/QuoteDetailPage'
@@ -23,6 +23,7 @@ import { EmployeeDetailPage } from '@/features/employees/pages/EmployeeDetailPag
 import { EmployeesListPage } from '@/features/employees/pages/EmployeesListPage'
 import { RouteDetailPage } from '@/features/routes/pages/RouteDetailPage'
 import { RoutesListPage } from '@/features/routes/pages/RoutesListPage'
+import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 
 export const router = createBrowserRouter([
   {
@@ -56,6 +57,10 @@ export const router = createBrowserRouter([
           { path: 'employees/:id', element: <EmployeeDetailPage />, handle: { breadcrumb: 'Détail' } },
           { path: 'routes', element: <RoutesListPage />, handle: { breadcrumb: 'Routes' } },
           { path: 'routes/:id', element: <RouteDetailPage />, handle: { breadcrumb: 'Détail' } },
+          {
+            element: <RequireRole roles={['administrateur']} />,
+            children: [{ path: 'settings', element: <SettingsPage />, handle: { breadcrumb: 'Paramètres' } }],
+          },
         ],
       },
     ],
