@@ -1,12 +1,11 @@
-import { useState } from 'react'
+import { useNavigate } from 'react-router'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { LeadFormModal } from '../components/LeadFormModal'
 import { LeadTable } from '../components/LeadTable'
 import { useLeads } from '../hooks/useLeads'
 
 export function LeadsListPage() {
-  const [modalOpen, setModalOpen] = useState(false)
+  const navigate = useNavigate()
   const { data: leads, isLoading, isError } = useLeads()
 
   return (
@@ -16,15 +15,13 @@ export function LeadsListPage() {
           <h1 className="text-section font-semibold text-reca-black">Leads</h1>
           <p className="text-body text-reca-gray-medium">Demandes provenant du site web.</p>
         </div>
-        <Button onClick={() => setModalOpen(true)}>
+        <Button onClick={() => navigate('/leads/new')}>
           <Plus className="size-4" aria-hidden="true" />
           Nouveau lead
         </Button>
       </div>
 
       <LeadTable leads={leads} isLoading={isLoading} isError={isError} />
-
-      <LeadFormModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </div>
   )
 }

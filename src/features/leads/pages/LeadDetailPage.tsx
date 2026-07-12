@@ -4,7 +4,6 @@ import { Mail, Pencil, Phone, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Dropdown, DropdownItem } from '@/components/ui/Dropdown'
-import { QuoteFormModal } from '@/features/quotes/components/QuoteFormModal'
 import { useDeleteLead } from '../hooks/useDeleteLead'
 import { useLead } from '../hooks/useLead'
 import { useUpdateLeadStatus } from '../hooks/useUpdateLeadStatus'
@@ -20,7 +19,6 @@ export function LeadDetailPage() {
   const updateStatus = useUpdateLeadStatus(id)
   const deleteLead = useDeleteLead()
   const [editOpen, setEditOpen] = useState(false)
-  const [quoteModalOpen, setQuoteModalOpen] = useState(false)
 
   if (isLoading || !lead) {
     return <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
@@ -111,25 +109,13 @@ export function LeadDetailPage() {
             <h2 className="text-subtitle font-semibold text-reca-black">Prochaine étape</h2>
             <p className="text-body text-reca-gray-medium">Créer une soumission pour ce lead.</p>
           </div>
-          <Button variant="secondary" onClick={() => setQuoteModalOpen(true)}>
+          <Button variant="secondary" onClick={() => navigate(`/quotes/new?leadId=${lead.id}`)}>
             Créer une soumission
           </Button>
         </div>
       </Card>
 
       <LeadFormModal open={editOpen} onClose={() => setEditOpen(false)} lead={lead} />
-
-      <QuoteFormModal
-        open={quoteModalOpen}
-        onClose={() => setQuoteModalOpen(false)}
-        leadId={lead.id}
-        onCreated={(quote) => {
-          if (lead.statut === 'nouveau' || lead.statut === 'contacte') {
-            updateStatus.mutate('soumission_envoyee')
-          }
-          navigate(`/quotes/${quote.id}`)
-        }}
-      />
     </div>
   )
 }

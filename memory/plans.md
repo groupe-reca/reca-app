@@ -60,3 +60,19 @@ Plan détaillé complet (migration SQL, types, schéma, service, hooks, `ClientS
 **Étapes** : toutes les étapes du plan détaillé sont implémentées (migration écrite, types/schéma/service/hooks, `ClientSearchPicker`, `ContractCreatePage` + sous-composants, câblage router/pages existantes). `tsc -b` et `npm run lint` propres. Vérifié en navigateur (Playwright, compte admin) : recherche/création client inline fonctionne, clauses pré-remplies correctement, validation Zod bloque les échéances sans date, échec géré proprement par toast quand la base ne connaît pas encore les nouvelles colonnes.
 
 **Vérification finale (2026-07-12)** : migration appliquée par l'utilisateur, test de bout en bout réel effectué — contrat créé avec 2 modalités 50/50 → 2 factures générées automatiquement au bon montant, statut Actif, client bien lié. Données de ce test nettoyées après vérification. Reste dans la base (laissés par l'utilisateur, hors scope de cette tâche) : 2 clients de test d'une vérification antérieure (CLI-000001 "Jean Test", CLI-000002 "Jean Test2"). Commit en attente de confirmation de l'utilisateur.
+
+## [x] Généraliser le pattern de création "page dédiée" à tout le site (2026-07-12, terminé et vérifié)
+
+Demande (`.input/tache1.md`) : toute la navigation du site doit suivre le pattern du module Contrats — "Nouveau X" navigue vers une page dédiée (`/x/new`), jamais une modale sur la liste, comme c'était encore le cas pour Clients et 6 autres modules.
+
+Décisions validées avec l'utilisateur :
+1. Les boutons de création croisée depuis une fiche détail (Lead→"Créer une soumission", Client→"Créer une facture") sont alignés aussi, pas seulement les listes.
+2. "Transformer en client" (fiche Soumission) est converti en page dédiée aussi, malgré sa mutation de liaison supplémentaire.
+
+Exception délibérée conservée : `ClientSearchPicker` (création rapide de client à l'intérieur du formulaire Contrats en cours) reste une modale — précédent posé par Contrats lui-même.
+
+Plan détaillé complet (gabarit page par module, cas particuliers Quotes/Invoices/Clients, fichiers touchés) : voir `/root/.claude/plans/floating-snacking-popcorn.md`.
+
+**Étapes réalisées** : 7 nouvelles `pages/*CreatePage.tsx` (Leads, Quotes, Clients, Invoices, Equipment, Employees, Routes), 7 routes `x/new` ajoutées dans `router.tsx`, 7 `*ListPage.tsx` migrées vers `navigate()`, 6 `*FormModal.tsx` simplifiées en édition seule (`ClientFormModal` gardé dual, exception documentée), 3 boutons de fiche détail migrés (`LeadDetailPage`, `ClientDetailPage`, `QuoteDetailPage`). `tsc -b` et `npm run lint` propres à chaque étape.
+
+**Vérification finale (2026-07-12)** : test de bout en bout réel (Playwright, compte admin, port 3011) — les 7 boutons "Nouveau X" des listes ouvrent bien une page (pas de modale) ; flow croisé Lead→Soumission avec mise à jour automatique du statut du lead (`soumission_envoyee`) ; flow Soumission→Client ("Transformer en client") avec préremplissage prénom/nom et liaison automatique au retour sur la soumission ; flow Client→Facture avec client préselectionné (pas de picker affiché) ; régression confirmée : modale d'édition (Lead) toujours fonctionnelle, modale inline `ClientSearchPicker` (exception) toujours une modale. Aucune erreur console à aucune étape. Un bug de course a été trouvé et corrigé pendant la vérification : `QuoteCreatePage` pouvait laisser soumettre le formulaire avant la fin du chargement du lead lié, sautant silencieusement la mise à jour de son statut — corrigé par un garde de chargement (`if (leadId && isLoading) return <skeleton/>`), voir `memory/memory.md` pour le pattern à réutiliser. Toutes les données de test créées pendant la vérification ont été supprimées (4 leads, 4 soumissions, 2 clients, 2 factures) — base revérifiée vide de ces entités. Pas encore commité.

@@ -1,35 +1,23 @@
 import { Modal } from '@/components/ui/Modal'
-import { useCreateEquipment } from '../hooks/useCreateEquipment'
 import { useUpdateEquipment } from '../hooks/useUpdateEquipment'
 import { EquipmentForm } from './EquipmentForm'
-import type { EquipmentFormValues } from '../schemas/equipment.schema'
 import type { Equipment } from '../types/equipment.types'
 
 type EquipmentFormModalProps = {
   open: boolean
   onClose: () => void
-  equipment?: Equipment
+  equipment: Equipment
 }
 
 export function EquipmentFormModal({ open, onClose, equipment }: EquipmentFormModalProps) {
-  const createEquipment = useCreateEquipment()
-  const updateEquipment = useUpdateEquipment(equipment?.id ?? '')
-  const isEditing = Boolean(equipment)
-
-  function handleSubmit(values: EquipmentFormValues) {
-    if (isEditing && equipment) {
-      updateEquipment.mutate(values, { onSuccess: onClose })
-    } else {
-      createEquipment.mutate(values, { onSuccess: onClose })
-    }
-  }
+  const updateEquipment = useUpdateEquipment(equipment.id)
 
   return (
-    <Modal open={open} onClose={onClose} title={isEditing ? 'Modifier l’équipement' : 'Nouvel équipement'}>
+    <Modal open={open} onClose={onClose} title="Modifier l’équipement">
       <EquipmentForm
         equipment={equipment}
-        isSubmitting={isEditing ? updateEquipment.isPending : createEquipment.isPending}
-        onSubmit={handleSubmit}
+        isSubmitting={updateEquipment.isPending}
+        onSubmit={(values) => updateEquipment.mutate(values, { onSuccess: onClose })}
         onCancel={onClose}
       />
     </Modal>

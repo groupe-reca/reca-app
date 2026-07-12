@@ -1,35 +1,23 @@
 import { Modal } from '@/components/ui/Modal'
-import { useCreateEmployee } from '../hooks/useCreateEmployee'
 import { useUpdateEmployee } from '../hooks/useUpdateEmployee'
 import { EmployeeForm } from './EmployeeForm'
-import type { EmployeeFormValues } from '../schemas/employee.schema'
 import type { Employee } from '../types/employee.types'
 
 type EmployeeFormModalProps = {
   open: boolean
   onClose: () => void
-  employee?: Employee
+  employee: Employee
 }
 
 export function EmployeeFormModal({ open, onClose, employee }: EmployeeFormModalProps) {
-  const createEmployee = useCreateEmployee()
-  const updateEmployee = useUpdateEmployee(employee?.id ?? '')
-  const isEditing = Boolean(employee)
-
-  function handleSubmit(values: EmployeeFormValues) {
-    if (isEditing && employee) {
-      updateEmployee.mutate(values, { onSuccess: onClose })
-    } else {
-      createEmployee.mutate(values, { onSuccess: onClose })
-    }
-  }
+  const updateEmployee = useUpdateEmployee(employee.id)
 
   return (
-    <Modal open={open} onClose={onClose} title={isEditing ? 'Modifier l’employé' : 'Nouvel employé'}>
+    <Modal open={open} onClose={onClose} title="Modifier l’employé">
       <EmployeeForm
         employee={employee}
-        isSubmitting={isEditing ? updateEmployee.isPending : createEmployee.isPending}
-        onSubmit={handleSubmit}
+        isSubmitting={updateEmployee.isPending}
+        onSubmit={(values) => updateEmployee.mutate(values, { onSuccess: onClose })}
         onCancel={onClose}
       />
     </Modal>
