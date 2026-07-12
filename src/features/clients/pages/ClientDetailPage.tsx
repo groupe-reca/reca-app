@@ -3,7 +3,6 @@ import { Link, useNavigate, useParams } from 'react-router'
 import { Mail, Pencil, Phone, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { ContractFormModal } from '@/features/contracts/components/ContractFormModal'
 import { ContractStatusBadge } from '@/features/contracts/components/ContractStatusBadge'
 import { useClientContracts } from '@/features/contracts/hooks/useClientContracts'
 import { InvoiceFormModal } from '@/features/invoices/components/InvoiceFormModal'
@@ -22,7 +21,6 @@ export function ClientDetailPage() {
   const { data: contracts } = useClientContracts(id)
   const { data: invoices } = useClientInvoices(id)
   const [editOpen, setEditOpen] = useState(false)
-  const [contractModalOpen, setContractModalOpen] = useState(false)
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
 
   if (isLoading || !client) {
@@ -103,7 +101,7 @@ export function ClientDetailPage() {
       <Card>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-subtitle font-semibold text-reca-black">Contrats</h2>
-          <Button variant="secondary" onClick={() => setContractModalOpen(true)}>
+          <Button variant="secondary" onClick={() => navigate(`/contracts/new?clientId=${client.id}`)}>
             <Plus className="size-4" aria-hidden="true" />
             Créer un contrat
           </Button>
@@ -160,12 +158,6 @@ export function ClientDetailPage() {
       </Card>
 
       <ClientFormModal open={editOpen} onClose={() => setEditOpen(false)} client={client} />
-
-      <ContractFormModal
-        open={contractModalOpen}
-        onClose={() => setContractModalOpen(false)}
-        clientId={client.id}
-      />
 
       <InvoiceFormModal
         open={invoiceModalOpen}

@@ -75,6 +75,18 @@ export async function listInvoicesByClient(clientId: string): Promise<Invoice[]>
   return ((data ?? []) as unknown as InvoiceRowWithRelations[]).map(mapInvoice)
 }
 
+export async function listInvoicesByContract(contratId: string): Promise<Invoice[]> {
+  const { data, error } = await supabase
+    .from('invoices')
+    .select(SELECT_WITH_RELATIONS)
+    .eq('contrat_id', contratId)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+
+  if (error) throw error
+  return ((data ?? []) as unknown as InvoiceRowWithRelations[]).map(mapInvoice)
+}
+
 export async function getInvoice(id: string): Promise<Invoice> {
   const { data, error } = await supabase.from('invoices').select(SELECT_WITH_RELATIONS).eq('id', id).single()
   if (error) throw error

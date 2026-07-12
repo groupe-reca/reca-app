@@ -25,3 +25,20 @@
 - `useUpdateAccountRole`/`useUpdateAccountActive` touchent `public.users` avec RLS — mêmes précautions que le module Employés (déjà résolu là-bas, réutiliser le même pattern).
 
 **Prochaine étape après ce module** : les 10 modules du scope sont complets — repasser en revue globale (doc 07) pour tout écart avant de considérer le projet "livré".
+
+## [x] Rework module Contrats — fiche de création complète (2026-07-12, terminé et vérifié)
+
+Demande (`.input/tache2.md` + `.input/contrat.md`) : la fiche "Nouveau contrat" doit contenir toutes les clauses d'un contrat de déneigement type (zone desservie, exclusions, seuil de déclenchement, obligations, responsabilités, prix + échéancier de paiement), permettre de chercher un client existant (nom/adresse/téléphone) ou d'en créer un nouveau à la volée, et générer une facture par modalité de paiement lors de la création. Le module existe déjà (commit `4c29ef9`) mais seulement avec les champs génériques — c'est une extension, pas une reconstruction.
+
+Décisions validées avec l'utilisateur :
+1. Les clauses légales sont des **champs éditables en base** (pas un texte fixe) — migration nécessaire.
+2. Le bouton **"Brouillon" crée un Contrat** (statut `en_attente`), pas une Soumission — sans générer de factures.
+3. Le bouton "Créer un contrat" de la fiche client redirige aussi vers `/contracts/new?clientId=...` — un seul chemin de création dans toute l'app.
+
+Plan détaillé complet (migration SQL, types, schéma, service, hooks, `ClientSearchPicker`, `ContractCreatePage` + sous-composants, câblage router/pages existantes, vérification) : voir `/root/.claude/plans/robust-fluttering-dahl.md`.
+
+**Contrainte bloquante connue** : la migration ne peut pas être appliquée à la base live depuis ce sandbox (pas de connexion Postgres directe, seulement URL+clés PostgREST dans `.input/supabase`) — l'utilisateur doit l'appliquer lui-même avant que "Créer"/"Brouillon" fonctionnent contre la vraie base.
+
+**Étapes** : toutes les étapes du plan détaillé sont implémentées (migration écrite, types/schéma/service/hooks, `ClientSearchPicker`, `ContractCreatePage` + sous-composants, câblage router/pages existantes). `tsc -b` et `npm run lint` propres. Vérifié en navigateur (Playwright, compte admin) : recherche/création client inline fonctionne, clauses pré-remplies correctement, validation Zod bloque les échéances sans date, échec géré proprement par toast quand la base ne connaît pas encore les nouvelles colonnes.
+
+**Vérification finale (2026-07-12)** : migration appliquée par l'utilisateur, test de bout en bout réel effectué — contrat créé avec 2 modalités 50/50 → 2 factures générées automatiquement au bon montant, statut Actif, client bien lié. Données de ce test nettoyées après vérification. Reste dans la base (laissés par l'utilisateur, hors scope de cette tâche) : 2 clients de test d'une vérification antérieure (CLI-000001 "Jean Test", CLI-000002 "Jean Test2"). Commit en attente de confirmation de l'utilisateur.

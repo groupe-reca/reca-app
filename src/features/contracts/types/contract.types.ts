@@ -16,6 +16,15 @@ export type ContractClientRef = {
   nom: string
 }
 
+export type PaymentScheduleEntryType = 'pourcentage' | 'montant'
+
+export type PaymentScheduleEntry = {
+  description: string
+  type: PaymentScheduleEntryType
+  valeur: number
+  dateEcheance: string
+}
+
 export type ContractRow = {
   id: string
   numero: string
@@ -29,6 +38,17 @@ export type ContractRow = {
   date_fin: string | null
   renouvellement: boolean
   notes: string | null
+  zone_desservie: string
+  superficie: number | null
+  exclusions: string
+  seuil_declenchement_cm: number
+  heure_premier_passage: string
+  nettoyage_final: string
+  distance_securite_cm: number
+  balises_requises: boolean
+  obligations_client: string
+  responsabilites: string
+  modalites_paiement: PaymentScheduleEntry[]
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -47,6 +67,17 @@ export type Contract = {
   dateFin: string | null
   renouvellement: boolean
   notes: string | null
+  zoneDesservie: string
+  superficie: number | null
+  exclusions: string
+  seuilDeclenchementCm: number
+  heurePremierPassage: string
+  nettoyageFinal: string
+  distanceSecuriteCm: number
+  balisesRequises: boolean
+  obligationsClient: string
+  responsabilites: string
+  modalitesPaiement: PaymentScheduleEntry[]
   createdAt: string
   client: ContractClientRef | null
 }
