@@ -1,11 +1,15 @@
-import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Menu } from 'lucide-react'
 import { Link, useMatches } from 'react-router'
 
 type RouteHandle = {
   breadcrumb?: string
 }
 
-export function Breadcrumb() {
+type BreadcrumbProps = {
+  onOpenMenu: () => void
+}
+
+export function Breadcrumb({ onOpenMenu }: BreadcrumbProps) {
   const matches = useMatches()
   const crumbs = matches
     .filter((match) => Boolean((match.handle as RouteHandle | undefined)?.breadcrumb))
@@ -14,34 +18,46 @@ export function Breadcrumb() {
       pathname: match.pathname,
     }))
 
-  if (crumbs.length === 0) {
-    return (
-      <div className="flex h-11 shrink-0 items-center gap-1.5 border-b border-reca-gray-light bg-white px-4 text-label text-reca-gray-medium lg:px-6">
-        <span className="font-medium text-reca-black">Centre des opérations</span>
-      </div>
-    )
-  }
-
-  const parent = crumbs.length > 1 ? crumbs[crumbs.length - 2] : null
+  const allCrumbs = [{ label: 'Centre des opérations', pathname: '/dashboard' }, ...crumbs]
+  const current = allCrumbs[allCrumbs.length - 1]
+  const parent = allCrumbs.length > 1 ? allCrumbs[allCrumbs.length - 2] : null
 
   return (
-    <div className="flex h-11 shrink-0 items-center overflow-x-auto whitespace-nowrap border-b border-reca-gray-light bg-white px-4 text-label text-reca-gray-medium lg:px-6">
-      {/* Mobile: condensed back-link only — pages already show their own <h1>. */}
-      <Link to={parent?.pathname ?? '/dashboard'} className="flex items-center gap-1 hover:text-reca-black sm:hidden">
-        <ChevronLeft className="size-3.5" aria-hidden="true" />
-        {parent?.label ?? 'Centre des opérations'}
-      </Link>
+    <div className="flex h-14 shrink-0 items-center gap-2 border-b border-reca-gray-light bg-white px-4 text-label text-reca-gray-medium lg:h-[72px] lg:px-6">
+      <button
+        type="button"
+        onClick={onOpenMenu}
+        aria-label="Ouvrir le menu"
+        className="flex size-11 shrink-0 items-center justify-center rounded-control text-reca-black hover:bg-reca-gray-light lg:hidden"
+      >
+        <Menu className="size-5" aria-hidden="true" />
+      </button>
 
-      <div className="hidden items-center gap-1.5 sm:flex">
-        <span className="font-medium text-reca-black">Centre des opérations</span>
-        {crumbs.map((crumb) => (
-          <span key={crumb.pathname} className="flex items-center gap-1.5">
-            <ChevronRight className="size-3.5" aria-hidden="true" />
-            <Link to={crumb.pathname} className="hover:text-reca-black">
-              {crumb.label}
-            </Link>
-          </span>
-        ))}
+      {/* Mobile: condensed back-link only — pages already show their own <h1>. */}
+      {parent && (
+        <Link to={parent.pathname} className="flex items-center gap-1 hover:text-reca-black sm:hidden">
+          <ChevronLeft className="size-3.5" aria-hidden="true" />
+          {parent.label}
+        </Link>
+      )}
+      {!parent && <span className="font-medium text-reca-black sm:hidden">{current.label}</span>}
+
+      <div className="hidden min-w-0 items-center gap-1.5 overflow-x-auto whitespace-nowrap sm:flex">
+        {allCrumbs.map((crumb, index) => {
+          const isLast = index === allCrumbs.length - 1
+          return (
+            <span key={crumb.pathname} className="flex items-center gap-1.5">
+              {index > 0 && <ChevronRight className="size-3.5" aria-hidden="true" />}
+              {isLast ? (
+                <span className="font-medium text-reca-black">{crumb.label}</span>
+              ) : (
+                <Link to={crumb.pathname} className="hover:text-reca-black">
+                  {crumb.label}
+                </Link>
+              )}
+            </span>
+          )
+        })}
       </div>
     </div>
   )

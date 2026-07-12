@@ -24,6 +24,7 @@ export function AccountsTable() {
     >
       {(data) => {
         const columns: TableColumn<Account>[] = [
+          { key: 'nom', header: 'Nom', render: (account) => account.nom ?? '—' },
           { key: 'email', header: 'Courriel', render: (account) => account.email },
           {
             key: 'role',

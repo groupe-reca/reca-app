@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 import { LoginForm } from '../components/LoginForm'
-import logo from '@/assets/logo.jpg'
+import logo from '@/assets/logo-clair.svg'
 
 export function LoginPage() {
   return (

@@ -6,12 +6,13 @@ type PublicUserRow = {
   role: Role
   actif: boolean
   derniere_connexion: string | null
+  nom: string | null
 }
 
 async function mapUser(user: SupabaseUser): Promise<User> {
   const { data, error } = await supabase
     .from('users')
-    .select('role, actif, derniere_connexion')
+    .select('role, actif, derniere_connexion, nom')
     .eq('id', user.id)
     .single<PublicUserRow>()
 
@@ -33,6 +34,7 @@ async function mapUser(user: SupabaseUser): Promise<User> {
   return {
     id: user.id,
     email: user.email ?? '',
+    nom: data.nom,
     role: data.role,
     actif: data.actif,
     derniereConnexion: data.derniere_connexion,
