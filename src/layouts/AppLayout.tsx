@@ -7,7 +7,7 @@ export function AppLayout() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   return (
-    <div className="flex min-h-screen bg-reca-snow">
+    <div className="flex h-screen overflow-hidden bg-reca-snow">
       <Sidebar open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
       <div className="flex min-w-0 flex-1 flex-col">
         <Breadcrumb onOpenMenu={() => setMobileNavOpen(true)} />

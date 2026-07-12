@@ -116,7 +116,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
         }`}
       >
         <div className="flex items-center justify-between gap-2 px-6 py-6">
-          <img src={logo} alt="Groupe RECA" className="h-8 w-auto object-contain" />
+          <img src={logo} alt="Groupe RECA" className="h-12 w-auto object-contain" />
           <button
             type="button"
             onClick={onClose}

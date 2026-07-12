@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router'
+import { createBrowserRouter, Outlet } from 'react-router'
 import { PublicLayout } from '@/layouts/PublicLayout'
 import { AppLayout } from '@/layouts/AppLayout'
 import { LandingPage } from '@/pages/LandingPage'
@@ -76,9 +76,16 @@ export const router = createBrowserRouter([
           {
             element: <RequireModule moduleKey="contracts" />,
             children: [
-              { path: 'contracts', element: <ContractsListPage />, handle: { breadcrumb: 'Contrats' } },
-              { path: 'contracts/new', element: <ContractCreatePage />, handle: { breadcrumb: 'Nouveau contrat' } },
-              { path: 'contracts/:id', element: <ContractDetailPage />, handle: { breadcrumb: 'Détail' } },
+              {
+                path: 'contracts',
+                element: <Outlet />,
+                handle: { breadcrumb: 'Contrats' },
+                children: [
+                  { index: true, element: <ContractsListPage /> },
+                  { path: 'new', element: <ContractCreatePage />, handle: { breadcrumb: 'Nouveau contrat' } },
+                  { path: ':id', element: <ContractDetailPage />, handle: { breadcrumb: 'Détail' } },
+                ],
+              },
             ],
           },
           {

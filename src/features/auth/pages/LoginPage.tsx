@@ -12,7 +12,7 @@ export function LoginPage() {
         className="w-full max-w-[420px] rounded-card border border-reca-gray-light bg-white p-8 shadow-sm"
       >
         <div className="mb-6 flex flex-col items-center text-center">
-          <img src={logo} alt="Groupe RECA" className="mb-4 h-16 w-auto object-contain" />
+          <img src={logo} alt="Groupe RECA" className="mb-4 h-24 w-auto object-contain" />
           <p className="text-label font-medium uppercase tracking-wide text-reca-gray-medium">
             Centre des opérations
           </p>
