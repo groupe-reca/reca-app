@@ -51,7 +51,15 @@ export function useMapboxMap(containerRef: React.RefObject<HTMLDivElement | null
     mapRef.current = instance
     setMap(instance)
 
+    // Le conteneur a maintenant une hauteur flexible (flex-1) plutôt qu'une hauteur fixe
+    // en pixels — Mapbox GL ne détecte pas seul un redimensionnement de son conteneur
+    // (resize de fenêtre, sidebar qui s'ouvre/ferme, etc.), il faut appeler resize()
+    // explicitement pour que le canvas WebGL suive sans espace vide ni débordement.
+    const resizeObserver = new ResizeObserver(() => instance.resize())
+    resizeObserver.observe(containerRef.current)
+
     return () => {
+      resizeObserver.disconnect()
       instance.remove()
       mapRef.current = null
       setMap(null)

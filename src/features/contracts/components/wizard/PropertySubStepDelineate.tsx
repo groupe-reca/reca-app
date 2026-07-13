@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
 import type { Polygon } from 'geojson'
 import { MapPin, Ruler } from 'lucide-react'
@@ -10,6 +10,7 @@ import { PropertyMap } from './PropertyMap'
 import { PolygonEditor } from './PolygonEditor'
 import { SurfaceSummary } from './SurfaceSummary'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
+import type { PropertyNav } from './WizardStepProperty'
 
 const EMPTY_POLYGON: Polygon = {
   type: 'Polygon',
@@ -33,9 +34,15 @@ type PropertySubStepDelineateProps = {
   onAddZone: (zone: ContractZoneFormValues) => void
   onRemoveZone: (id: string) => void
   onContinue: () => void
+  onNavChange: (nav: PropertyNav) => void
 }
 
-/** Sous-étape 2/3 : tracé des polygones (ou saisie manuelle si la carte n'est pas disponible). */
+/**
+ * Sous-étape 2/3 : tracé des polygones (ou saisie manuelle si la carte n'est pas
+ * disponible). Depuis sprint008.5, le "Continuer vers la validation" n'est plus rendu ici
+ * — rapporté au Footer du Wizard via `onNavChange`. Le mini-formulaire "Ajouter la zone"
+ * reste sur la carte : il est lié au polygone qui vient d'être tracé, pas une navigation.
+ */
 export function PropertySubStepDelineate({
   center,
   capturePath,
@@ -45,12 +52,20 @@ export function PropertySubStepDelineate({
   onAddZone,
   onRemoveZone,
   onContinue,
+  onNavChange,
 }: PropertySubStepDelineateProps) {
   const [map, setMap] = useState<MapboxMap | null>(null)
   const [pendingZone, setPendingZone] = useState<{ geojson: Polygon; surfaceM2: number } | null>(null)
   const [label, setLabel] = useState('')
   const [manualLabel, setManualLabel] = useState('')
   const [manualSurface, setManualSurface] = useState('')
+
+  useEffect(() => {
+    onNavChange({ onNext: onContinue, nextDisabled: zones.length === 0, action: null })
+    // onContinue/onNavChange sont recréés à chaque rendu du parent — seul le nombre de
+    // zones doit réellement redéclencher un nouveau rapport de nav.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zones.length])
 
   function confirmPendingZone() {
     if (!pendingZone) return
@@ -84,8 +99,8 @@ export function PropertySubStepDelineate({
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <Card>
+    <div className="flex h-full flex-col gap-4">
+      <Card className="shrink-0">
         <h2 className="mb-1 text-subtitle font-semibold text-reca-black">Délimiter les zones</h2>
         <p className="text-body text-reca-gray-medium">
           {isMapboxConfigured && !mapUnavailable
@@ -95,29 +110,12 @@ export function PropertySubStepDelineate({
       </Card>
 
       {isMapboxConfigured && !mapUnavailable ? (
-        <>
+        <div className="min-h-0 flex-1">
           <PropertyMap center={center} onMapReady={setMap} onError={onMapError} />
           <PolygonEditor map={map} onZoneDrawn={(geojson, surfaceM2) => setPendingZone({ geojson, surfaceM2 })} />
-          {pendingZone && (
-            <Card>
-              <p className="mb-2 text-body text-reca-black">Zone tracée : {pendingZone.surfaceM2.toFixed(2)} m²</p>
-              <div className="flex items-end gap-3">
-                <Input
-                  label="Nom de la zone"
-                  icon={MapPin}
-                  value={label}
-                  onChange={(event) => setLabel(event.target.value)}
-                  placeholder="Entrée, Stationnement, Trottoir…"
-                />
-                <Button type="button" onClick={confirmPendingZone}>
-                  Ajouter la zone
-                </Button>
-              </div>
-            </Card>
-          )}
-        </>
+        </div>
       ) : (
-        <Card>
+        <Card className="shrink-0">
           <div className="flex items-end gap-3">
             <Input
               label="Nom de la zone"
@@ -141,12 +139,26 @@ export function PropertySubStepDelineate({
         </Card>
       )}
 
-      <SurfaceSummary zones={zones} onRemove={onRemoveZone} />
+      {pendingZone && (
+        <Card className="shrink-0">
+          <p className="mb-2 text-body text-reca-black">Zone tracée : {pendingZone.surfaceM2.toFixed(2)} m²</p>
+          <div className="flex items-end gap-3">
+            <Input
+              label="Nom de la zone"
+              icon={MapPin}
+              value={label}
+              onChange={(event) => setLabel(event.target.value)}
+              placeholder="Entrée, Stationnement, Trottoir…"
+            />
+            <Button type="button" onClick={confirmPendingZone}>
+              Ajouter la zone
+            </Button>
+          </div>
+        </Card>
+      )}
 
-      <div className="flex justify-end">
-        <Button type="button" disabled={zones.length === 0} onClick={onContinue}>
-          Continuer vers la validation
-        </Button>
+      <div className="shrink-0">
+        <SurfaceSummary zones={zones} onRemove={onRemoveZone} />
       </div>
     </div>
   )

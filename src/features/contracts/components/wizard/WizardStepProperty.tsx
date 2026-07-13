@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useWatch } from 'react-hook-form'
 import type { Control, UseFormSetValue } from 'react-hook-form'
 import type { Client } from '@/features/clients/types/client.types'
+import type { WizardFooterAction } from '@/components/layout/WizardFooter'
 import { isMapboxConfigured } from '@/lib/mapboxClient'
 import type { ContractCreationFormValues, ContractZoneFormValues } from '../../schemas/contractCreation.schema'
 import type { GeocodeResult } from '../../services/geocoding.service'
@@ -10,6 +11,16 @@ import { PropertySubStepDelineate } from './PropertySubStepDelineate'
 import { PropertySubStepValidate } from './PropertySubStepValidate'
 
 type PropertySubStep = 'locate' | 'delineate' | 'validate'
+
+/**
+ * Nav rapportée par l'étape "Analyse de la propriété" au Footer unique du Wizard
+ * (sprint008.5) — remplace les boutons autrefois rendus dans la zone de carte.
+ */
+export type PropertyNav = {
+  onNext: () => void
+  nextDisabled: boolean
+  action?: WizardFooterAction | null
+}
 
 const SUB_STEP_ORDER: PropertySubStep[] = ['locate', 'delineate', 'validate']
 const SUB_STEP_LABELS: Record<PropertySubStep, string> = {
@@ -25,6 +36,10 @@ type WizardStepPropertyProps = {
   control: Control<ContractCreationFormValues>
   setValue: UseFormSetValue<ContractCreationFormValues>
   onCompletionChange: (complete: boolean) => void
+  /** Rapporte la nav (Suivant/action) de la sous-étape courante au Footer du Wizard. */
+  onNavChange: (nav: PropertyNav) => void
+  /** goNext du Wizard — utilisé par la sous-étape Valider pour sortir vers Services. */
+  onAdvanceStep: () => void
 }
 
 /** Étape 2 — "Analyse de la propriété" : mini-stepper interne à 3 sous-phases fluides. */
@@ -34,6 +49,8 @@ export function WizardStepProperty({
   control,
   setValue,
   onCompletionChange,
+  onNavChange,
+  onAdvanceStep,
 }: WizardStepPropertyProps) {
   const [subStep, setSubStep] = useState<PropertySubStep>('locate')
   const [geocode, setGeocode] = useState<GeocodeResult | null>(null)
@@ -45,6 +62,13 @@ export function WizardStepProperty({
   useEffect(() => {
     onCompletionChange(subStep === 'validate')
   }, [subStep, onCompletionChange])
+
+  useEffect(() => {
+    // Validate n'a pas de nav propre (juste "passer à Services") — rapportée directement
+    // ici plutôt que par PropertySubStepValidate, qui reste un composant de résumé simple.
+    if (subStep !== 'validate') return
+    onNavChange({ onNext: onAdvanceStep, nextDisabled: false, action: null })
+  }, [subStep, onAdvanceStep, onNavChange])
 
   function handleGeocoded(result: GeocodeResult | null) {
     setGeocode(result)
@@ -69,8 +93,8 @@ export function WizardStepProperty({
   const currentIndex = SUB_STEP_ORDER.indexOf(subStep)
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2 text-label text-reca-gray-medium">
+    <div className="flex h-full flex-col gap-3">
+      <div className="flex shrink-0 items-center gap-2 text-label text-reca-gray-medium">
         {SUB_STEP_ORDER.map((step, index) => (
           <div key={step} className="flex items-center gap-2">
             <span className={index <= currentIndex ? 'font-medium text-reca-red' : ''}>{SUB_STEP_LABELS[step]}</span>
@@ -79,31 +103,35 @@ export function WizardStepProperty({
         ))}
       </div>
 
-      {subStep === 'locate' && (
-        <PropertySubStepLocate
-          client={client}
-          contractId={contractId}
-          capturePath={capturePath}
-          mapUnavailable={mapUnavailable}
-          onMapError={setMapError}
-          onCaptured={setCapturePath}
-          onGeocoded={handleGeocoded}
-          onContinue={() => setSubStep('delineate')}
-        />
-      )}
-      {subStep === 'delineate' && (
-        <PropertySubStepDelineate
-          center={center}
-          capturePath={capturePath}
-          mapUnavailable={mapUnavailable}
-          onMapError={setMapError}
-          zones={zones}
-          onAddZone={addZone}
-          onRemoveZone={removeZone}
-          onContinue={() => setSubStep('validate')}
-        />
-      )}
-      {subStep === 'validate' && <PropertySubStepValidate zones={zones} capturePath={capturePath} />}
+      <div className="min-h-0 flex-1">
+        {subStep === 'locate' && (
+          <PropertySubStepLocate
+            client={client}
+            contractId={contractId}
+            capturePath={capturePath}
+            mapUnavailable={mapUnavailable}
+            onMapError={setMapError}
+            onCaptured={setCapturePath}
+            onGeocoded={handleGeocoded}
+            onContinue={() => setSubStep('delineate')}
+            onNavChange={onNavChange}
+          />
+        )}
+        {subStep === 'delineate' && (
+          <PropertySubStepDelineate
+            center={center}
+            capturePath={capturePath}
+            mapUnavailable={mapUnavailable}
+            onMapError={setMapError}
+            zones={zones}
+            onAddZone={addZone}
+            onRemoveZone={removeZone}
+            onContinue={() => setSubStep('validate')}
+            onNavChange={onNavChange}
+          />
+        )}
+        {subStep === 'validate' && <PropertySubStepValidate zones={zones} capturePath={capturePath} />}
+      </div>
     </div>
   )
 }

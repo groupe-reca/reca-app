@@ -1,5 +1,35 @@
 # Plans — RECA Centre des opérations
 
+## [x] Sprint 008.5 — Optimisation UX du Wizard (carte plein écran, Footer unifié), branche `sprint008-analyse-propriete` (suite, pas de nouvelle branche) — terminé et vérifié
+
+Demande (`.input/sprint85`) : suite du sprint008, purement UX/layout (aucune nouvelle fonctionnalité métier). Supprimer l'en-tête de page du Wizard (titre+sous-titre, redondant avec le Breadcrumb) sur les 6 étapes, faire remonter `WizardProgress` juste sous le Breadcrumb, faire de la carte le composant dominant (hauteur max, zéro scroll) sur les 3 sous-étapes de "Analyse de la propriété", sortir tous les boutons de navigation/action de la zone de carte vers un Footer unique et réutilisable (slot `action` générique, pensé pour tous les futurs Wizards), redimensionnement Mapbox automatique (`map.resize()` via `ResizeObserver`), et préparer l'automatisation future de la capture (composant `CaptureButton` → hook `usePropertyCapture`).
+
+Décision validée avec l'utilisateur : le regroupement dans le Footer s'étend aux 3 sous-étapes (Localiser/Délimiter/Valider), pas seulement Localiser (seul exemple concret du brief) — cohérence sur toute l'étape. Le mini-formulaire "Ajouter la zone" (Délimiter) reste sur la carte (ce n'est pas une navigation).
+
+Plan détaillé complet (mécanisme de remontée de navigation "nav lifting", chaîne flex `h-full`/`min-h-0`, fichiers) : `/root/.claude/plans/ouvre-une-nouvelle-branche-gleaming-goblet.md` (même fichier que le sprint008 précédent, contenu remplacé — le plan du sprint008 reste archivé dans l'entrée ci-dessous et dans `tasks.md`/`memory.md`).
+
+**Fichiers prévus** :
+- `WizardLayout.tsx` (retrait header), `WizardFooter.tsx` (slot `action` générique)
+- `ContractWizard.tsx`, `WizardStepProperty.tsx`, `PropertySubStepLocate.tsx`, `PropertySubStepDelineate.tsx` (nav lifting + hauteur flex)
+- `PropertyMap.tsx` (hauteur flexible), `useMapboxMap.ts` (ResizeObserver)
+- Nouveau : `src/features/contracts/hooks/usePropertyCapture.ts` — Supprimé : `CaptureButton.tsx`
+
+**Étapes réalisées** : toutes implémentées + 1 bug réel (boucle infinie React, voir `memory/memory.md`/`tasks.md`) trouvé et corrigé pendant la vérification navigateur. `tsc -b`/`npm run lint`/`npm run build` propres. Vérifié en navigateur de bout en bout (Playwright, compte admin, port 3011) jusqu'à la création réelle d'un contrat, resize de fenêtre testé (1440/1024/1920px) sans espace vide ni débordement sur la carte. 4 clients de test (+1 contrat/2 factures/1 zone) créés puis supprimés après vérification (confirmation utilisateur). Pas encore commité.
+
+## [x] Sprint 008 — Analyse de la propriété V1 (carte immersive), branche `sprint008-analyse-propriete` — terminé et vérifié
+
+Demande (`.input/sprint008`) : améliorer la sous-étape **Localiser** de l'étape "Analyse de la propriété" du Wizard Contrats (sprint007). V1 sans données cadastrales : contour GeoJSON de démonstration (généré, pas une vraie parcelle), `fitBounds` automatique, masque assombrissant l'extérieur du terrain, panneau d'information à gauche (30%) + carte (70%), animation discrète (200-300ms), bouton Capturer qui prépare (sans encore persister) zoom/centre/polygone. Délimiter/Valider non touchés (pas de calcul de superficie, pas de dessin de zones dans ce sprint).
+
+Plan détaillé complet (composants, techniques masque/contour, fichiers) : `/root/.claude/plans/ouvre-une-nouvelle-branche-gleaming-goblet.md`.
+
+**Fichiers touchés** :
+- Nouveaux : `src/features/contracts/utils/propertyBoundary.ts`, `src/features/contracts/components/wizard/{PropertyBoundaryLayer,PropertyMaskLayer,MapViewportController,PropertyInfoPanel}.tsx`
+- Renommé + étendu : `MapCapture.tsx` → `CaptureButton.tsx`
+- Réécrit (rendu) : `PropertySubStepLocate.tsx`
+- Inchangés : `PropertyMap.tsx`, `PropertySubStepDelineate.tsx`, `PropertySubStepValidate.tsx`, `WizardStepProperty.tsx`, `PolygonEditor.tsx`, schémas/DB
+
+**Étapes réalisées** : implémentation complète + 3 bugs réels trouvés et corrigés en vérification navigateur (détail technique complet dans `memory/memory.md` et `memory/tasks.md` — piège `isStyleLoaded()`, masque en "donut" invisible au rendu malgré géométrie logique correcte remplacé par 4 rectangles, piège React `setState(fn)`). `tsc -b`/`npm run lint`/`npm run build` propres. Vérifié en navigateur de bout en bout (Playwright, compte admin, port 3011, token Mapbox public réel) jusqu'à la création réelle d'un contrat. 17 clients de test (+ 1 contrat/2 factures/1 zone) créés pendant le débogage, tous supprimés après vérification (confirmé vide en base, avec confirmation explicite de l'utilisateur pour la suppression). Pas encore commité.
+
 ## [x] J. Paramètres — archivé, terminé le 2026-07-11 (voir `tasks.md` pour le détail exact de ce qui a été livré et de ce qui reste non vérifié en navigateur)
 
 **Objectif** : finir le dernier des 10 modules du scope — config entreprise/taxes + gestion des rôles de comptes, réservé aux administrateurs.

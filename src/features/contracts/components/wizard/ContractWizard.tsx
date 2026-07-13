@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useWatch } from 'react-hook-form'
 import { useNavigate, useSearchParams } from 'react-router'
@@ -14,6 +14,7 @@ import { SERVICE_OPTIONS } from '../../constants/wizardOptions'
 import { toast } from '@/stores/toastStore'
 import { WizardStepClient } from './WizardStepClient'
 import { WizardStepProperty } from './WizardStepProperty'
+import type { PropertyNav } from './WizardStepProperty'
 import { WizardStepServices } from './WizardStepServices'
 import { WizardStepObligations } from './WizardStepObligations'
 import { WizardStepPayment } from './WizardStepPayment'
@@ -63,6 +64,7 @@ export function ContractWizard() {
 
   const [activeStepId, setActiveStepId] = useState<WizardStepId>('client')
   const [propertyStepComplete, setPropertyStepComplete] = useState(false)
+  const [propertyNav, setPropertyNav] = useState<PropertyNav | null>(null)
 
   const {
     register,
@@ -94,6 +96,22 @@ export function ContractWizard() {
   const activeIndex = STEP_ORDER.indexOf(activeStepId)
   const canGoNext = STEP_COMPLETION[activeStepId]
 
+  // Mémoïsé : passé à WizardStepProperty (prop onAdvanceStep) qui le redonne au Footer via
+  // un effet — une identité instable ici (ex: fonction recréée à chaque rendu) reboucle à
+  // l'infini (l'effet se redéclenche sur chaque nouveau goNext, qui redéclenche un rendu).
+  const goNext = useCallback(() => {
+    if (!canGoNext || activeIndex >= STEP_ORDER.length - 1) return
+    setActiveStepId(STEP_ORDER[activeIndex + 1])
+  }, [canGoNext, activeIndex])
+
+  // Sur l'étape "Analyse de la propriété", le Footer unique (sprint008.5) est piloté par
+  // la nav rapportée par la sous-étape courante (Localiser/Délimiter/Valider) plutôt que
+  // par le goNext/canGoNext du wizard — les boutons ne sont plus rendus dans la carte.
+  const isPropertyActive = activeStepId === 'property'
+  const footerOnNext = isPropertyActive ? (propertyNav?.onNext ?? undefined) : goNext
+  const footerNextDisabled = isPropertyActive ? (propertyNav?.nextDisabled ?? true) : !canGoNext
+  const footerAction = isPropertyActive ? propertyNav?.action : null
+
   const steps: WizardStep[] = STEP_ORDER.map((id, index) => {
     let status: WizardStepStatus = 'todo'
     if (id === activeStepId) status = 'current'
@@ -103,11 +121,6 @@ export function ContractWizard() {
     else if (index < activeIndex && STEP_COMPLETION[id]) status = 'done'
     return { id, label: STEP_LABELS[id], status }
   })
-
-  function goNext() {
-    if (!canGoNext || activeIndex >= STEP_ORDER.length - 1) return
-    setActiveStepId(STEP_ORDER[activeIndex + 1])
-  }
 
   function goBack() {
     if (activeIndex <= 0) return
@@ -145,8 +158,6 @@ export function ContractWizard() {
 
   return (
     <WizardLayout
-      title="Nouveau contrat"
-      subtitle="Répondez aux questions pour créer le contrat — chaque étape se complète en moins d'une minute."
       steps={steps}
       onStepClick={goToStep}
       footer={
@@ -154,8 +165,9 @@ export function ContractWizard() {
           onCancel={() => navigate('/contracts')}
           onBack={activeIndex > 0 ? goBack : undefined}
           isLastStep={activeStepId === 'validation'}
-          onNext={goNext}
-          nextDisabled={!canGoNext}
+          onNext={footerOnNext}
+          nextDisabled={footerNextDisabled}
+          action={footerAction}
           onDraft={submitAs(false)}
           draftDisabled={!selectedClient || mutation.isPending}
           onCreate={submitAs(true)}
@@ -179,6 +191,8 @@ export function ContractWizard() {
           control={control}
           setValue={setValue}
           onCompletionChange={setPropertyStepComplete}
+          onNavChange={setPropertyNav}
+          onAdvanceStep={goNext}
         />
       )}
       {activeStepId === 'services' && <WizardStepServices register={register} />}
