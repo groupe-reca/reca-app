@@ -37,3 +37,21 @@ Avant toute tâche non-triviale (nouvelle section, nouvelle fonctionnalité, ref
 Ne jamais considérer une tâche "terminée" tant que ces fichiers ne sont pas à jour. Une tâche non reflétée dans `memory/` est une tâche qui n'existe pas pour la prochaine session.
 
 ---
+
+## 5. Le module Contrats — Assistant (Wizard) de création
+
+La création d'un contrat (`/contracts/new`) n'est **plus** un formulaire à onglets : c'est un Assistant linéaire et verrouillé à 6 étapes (impossible d'avancer sans compléter l'étape courante ; revenir à une étape déjà complétée reste possible). Orchestrateur : `src/features/contracts/components/wizard/ContractWizard.tsx`.
+
+Étapes : **Client** → **Analyse de la propriété** (sous-étapes internes Localiser/Délimiter/Valider) → **Services** → **Obligations** → **Paiement** → **Validation**.
+
+Points clés à connaître avant de toucher ce module :
+- **Carte** : Mapbox GL JS + Mapbox GL Draw + Turf.js géocodent l'adresse du client, affichent une vue satellite, permettent de tracer plusieurs zones au clic avec calcul de superficie GPS (précision maximale, aucune approximation pixel). Nécessite `VITE_MAPBOX_TOKEN` dans `.env` — **doit être un token public (`pk.*`), jamais un token secret (`sk.*`)**, Mapbox GL JS refuse ces derniers côté navigateur. Sans token configuré, un mode de secours manuel (saisie du nom + surface en m² à la main) prend le relais automatiquement.
+- **Clauses générées automatiquement** : l'étape Obligations est une série de questions/réponses structurées ; le texte des clauses (`obligations_client`, `exclusions`, `nettoyage_final`, `responsabilites`) est assemblé par `src/features/contracts/utils/generateClauses.ts` (fonction pure), plus jamais rédigé en texte libre par l'utilisateur.
+- **`contracts.superficie`** est maintenant la somme calculée des zones tracées (m²), plus une estimation manuelle en pi².
+- **`contract_zones`** est une table dédiée (une ligne par polygone tracé, `contract_id` FK). Les captures satellite sont stockées dans le bucket Storage **privé** `contract-captures` (accès via URLs signées, chemin `contracts/{contractId}/zones/{zoneId}.jpg`).
+- **L'id du contrat est généré côté client** (`crypto.randomUUID()`) dès l'ouverture du Wizard, avant même que la ligne `contracts` n'existe — nécessaire car les captures satellite sont uploadées avant l'insertion finale. Contrat + zones sont insérés en une seule fois au submit (`contractsService.createContractWithZones`).
+- **Composants layout génériques** `WizardLayout`/`WizardProgress`/`WizardFooter` (`src/components/layout/`) sont **verrouillés/linéaires**, à la différence de `PageLayout`/`PageTabs` (librement cliquables, utilisés par les autres modules) — ne pas les confondre ni essayer de les fusionner.
+- **`ContractDetailPage.tsx` n'affiche pas encore** les zones/carte/clauses générées/services créés par le Wizard — fast-follow connu, pas un oubli si on le remarque.
+- Migration de référence pour le schéma exact : `supabase/migrations/20260713000000_contract_wizard.sql`.
+
+---
