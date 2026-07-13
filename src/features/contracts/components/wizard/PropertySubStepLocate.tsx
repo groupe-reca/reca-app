@@ -7,11 +7,7 @@ import type { Client } from '@/features/clients/types/client.types'
 import { geocodeAddress } from '../../services/geocoding.service'
 import type { GeocodeResult } from '../../services/geocoding.service'
 import { usePropertyCapture } from '../../hooks/usePropertyCapture'
-import { buildDemoBoundary } from '../../utils/propertyBoundary'
-import { PropertyMap } from './PropertyMap'
-import { PropertyBoundaryLayer } from './PropertyBoundaryLayer'
-import { PropertyMaskLayer } from './PropertyMaskLayer'
-import { MapViewportController } from './MapViewportController'
+import { PropertyMapStage } from './PropertyMapStage'
 import { PropertyInfoPanel } from './PropertyInfoPanel'
 import type { PropertyNav } from './WizardStepProperty'
 
@@ -20,6 +16,7 @@ const QUEBEC_CENTER: [number, number] = [-71.2082, 46.8139]
 type PropertySubStepLocateProps = {
   client: Client
   contractId: string
+  boundary: Polygon
   capturePath: string | null
   mapUnavailable: boolean
   onMapError: (message: string) => void
@@ -40,6 +37,7 @@ type PropertySubStepLocateProps = {
 export function PropertySubStepLocate({
   client,
   contractId,
+  boundary,
   capturePath,
   mapUnavailable,
   onMapError,
@@ -80,10 +78,6 @@ export function PropertySubStepLocate({
   const showMap = isMapboxConfigured && !mapUnavailable && !isGeocoding
   const canContinue = showMap ? Boolean(capturePath) : true
 
-  // Placeholder de démonstration (pas de données cadastrales dans ce sprint) — stable
-  // tant que le centre géocodé ne change pas, pour ne pas recréer les layers en boucle.
-  const boundary: Polygon | null = useMemo(() => (showMap ? buildDemoBoundary(center) : null), [showMap, center])
-
   const { capture, isCapturing } = usePropertyCapture(map, contractId, boundary)
 
   useEffect(() => {
@@ -122,31 +116,22 @@ export function PropertySubStepLocate({
         recenterDisabled={!recenter}
       />
 
-      <div className="h-full min-h-0">
-        {showMap ? (
-          <>
-            <PropertyMap center={center} onMapReady={setMap} onError={onMapError} />
-            <PropertyMaskLayer map={map} boundary={boundary} reveal={revealed} />
-            <PropertyBoundaryLayer map={map} boundary={boundary} reveal={revealed} />
-            <MapViewportController
-              map={map}
-              boundary={boundary}
-              onSettled={() => setRevealed(true)}
-              onReady={(fn) => setRecenter(() => fn)}
-            />
-          </>
-        ) : (
-          <div className="flex h-full w-full items-center justify-center rounded-card border border-dashed border-reca-gray-light bg-reca-snow px-6 text-center">
-            <p className="text-body text-reca-gray-medium">
-              {!isMapboxConfigured
-                ? "Le géocodage automatique et la carte satellite nécessitent un token Mapbox (VITE_MAPBOX_TOKEN)."
-                : mapUnavailable
-                  ? 'La carte est indisponible pour le moment — ajoutez les zones manuellement à la prochaine sous-étape.'
-                  : "Géocodage de l'adresse du client en cours…"}
-            </p>
-          </div>
-        )}
-      </div>
+      <PropertyMapStage
+        ready={showMap}
+        unavailableMessage={
+          !isMapboxConfigured
+            ? "Le géocodage automatique et la carte satellite nécessitent un token Mapbox (VITE_MAPBOX_TOKEN)."
+            : mapUnavailable
+              ? 'La carte est indisponible pour le moment — ajoutez les zones manuellement à la prochaine sous-étape.'
+              : "Géocodage de l'adresse du client en cours…"
+        }
+        center={center}
+        boundary={boundary}
+        onMapError={onMapError}
+        onMapReady={setMap}
+        onRevealChange={setRevealed}
+        onRecenterReady={(fn) => setRecenter(() => fn)}
+      />
     </div>
   )
 }

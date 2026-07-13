@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useWatch } from 'react-hook-form'
 import type { Control, UseFormSetValue } from 'react-hook-form'
 import type { Client } from '@/features/clients/types/client.types'
@@ -6,6 +6,7 @@ import type { WizardFooterAction } from '@/components/layout/WizardFooter'
 import { isMapboxConfigured } from '@/lib/mapboxClient'
 import type { ContractCreationFormValues, ContractZoneFormValues } from '../../schemas/contractCreation.schema'
 import type { GeocodeResult } from '../../services/geocoding.service'
+import { buildDemoBoundary } from '../../utils/propertyBoundary'
 import { PropertySubStepLocate } from './PropertySubStepLocate'
 import { PropertySubStepDelineate } from './PropertySubStepDelineate'
 import { PropertySubStepValidate } from './PropertySubStepValidate'
@@ -81,6 +82,14 @@ export function WizardStepProperty({
     setValue('zones', [...zones, zone], { shouldValidate: true })
   }
 
+  function updateZone(id: string, patch: Partial<ContractZoneFormValues>) {
+    setValue(
+      'zones',
+      zones.map((zone) => (zone.id === id ? { ...zone, ...patch } : zone)),
+      { shouldValidate: true },
+    )
+  }
+
   function removeZone(id: string) {
     setValue(
       'zones',
@@ -89,8 +98,16 @@ export function WizardStepProperty({
     )
   }
 
-  const center: [number, number] = geocode ? [geocode.lng, geocode.lat] : QUEBEC_CENTER
+  const center: [number, number] = useMemo(
+    () => (geocode ? [geocode.lng, geocode.lat] : QUEBEC_CENTER),
+    [geocode],
+  )
   const currentIndex = SUB_STEP_ORDER.indexOf(subStep)
+
+  // Placeholder de démonstration (pas de données cadastrales) — calculé une seule fois ici
+  // et transmis aux deux sous-étapes, pour qu'elles affichent exactement le même contour
+  // (tâche 3 : Localiser et Délimiter doivent montrer la même vue).
+  const boundary = useMemo(() => buildDemoBoundary(center), [center])
 
   return (
     <div className="flex h-full flex-col gap-3">
@@ -108,6 +125,7 @@ export function WizardStepProperty({
           <PropertySubStepLocate
             client={client}
             contractId={contractId}
+            boundary={boundary}
             capturePath={capturePath}
             mapUnavailable={mapUnavailable}
             onMapError={setMapError}
@@ -120,11 +138,13 @@ export function WizardStepProperty({
         {subStep === 'delineate' && (
           <PropertySubStepDelineate
             center={center}
+            boundary={boundary}
             capturePath={capturePath}
             mapUnavailable={mapUnavailable}
             onMapError={setMapError}
             zones={zones}
             onAddZone={addZone}
+            onUpdateZone={updateZone}
             onRemoveZone={removeZone}
             onContinue={() => setSubStep('validate')}
             onNavChange={onNavChange}

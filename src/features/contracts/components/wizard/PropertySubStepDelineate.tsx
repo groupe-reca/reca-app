@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
 import type { Polygon } from 'geojson'
-import { MapPin, Ruler } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
-import { Input } from '@/components/ui/Input'
 import { isMapboxConfigured } from '@/lib/mapboxClient'
-import { PropertyMap } from './PropertyMap'
+import { PropertyMapStage } from './PropertyMapStage'
 import { PolygonEditor } from './PolygonEditor'
-import { SurfaceSummary } from './SurfaceSummary'
+import type { PolygonEditorHandle } from './PolygonEditor'
+import { PropertyZonesPanel } from './PropertyZonesPanel'
+import { ZoneToolbar } from './ZoneToolbar'
+import { ZoneNamingModal } from './ZoneNamingModal'
+import { boundsFromPolygon } from '../../utils/propertyBoundary'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
+import type { ZoneType } from '../../types/contract.types'
 import type { PropertyNav } from './WizardStepProperty'
 
 const EMPTY_POLYGON: Polygon = {
@@ -25,13 +26,17 @@ const EMPTY_POLYGON: Polygon = {
   ],
 }
 
+type DelineateMode = 'idle' | 'drawing' | 'editing'
+
 type PropertySubStepDelineateProps = {
   center: [number, number]
+  boundary: Polygon
   capturePath: string | null
   mapUnavailable: boolean
   onMapError: (message: string) => void
   zones: ContractZoneFormValues[]
   onAddZone: (zone: ContractZoneFormValues) => void
+  onUpdateZone: (id: string, patch: Partial<ContractZoneFormValues>) => void
   onRemoveZone: (id: string) => void
   onContinue: () => void
   onNavChange: (nav: PropertyNav) => void
@@ -39,26 +44,29 @@ type PropertySubStepDelineateProps = {
 
 /**
  * Sous-étape 2/3 : tracé des polygones (ou saisie manuelle si la carte n'est pas
- * disponible). Depuis sprint008.5, le "Continuer vers la validation" n'est plus rendu ici
- * — rapporté au Footer du Wizard via `onNavChange`. Le mini-formulaire "Ajouter la zone"
- * reste sur la carte : il est lié au polygone qui vient d'être tracé, pas une navigation.
+ * disponible). Sprint009 : le dessin est déclenché explicitement (barre d'outils
+ * "+ Nouvelle zone"), chaque zone est typée avec une couleur associée, une zone
+ * existante peut être sélectionnée pour être modifiée (sommets), zoomée ou supprimée
+ * (carte ET liste — corrige la désynchronisation qui existait avant ce sprint).
  */
 export function PropertySubStepDelineate({
   center,
+  boundary,
   capturePath,
   mapUnavailable,
   onMapError,
   zones,
   onAddZone,
+  onUpdateZone,
   onRemoveZone,
   onContinue,
   onNavChange,
 }: PropertySubStepDelineateProps) {
   const [map, setMap] = useState<MapboxMap | null>(null)
+  const [mode, setMode] = useState<DelineateMode>('idle')
+  const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
   const [pendingZone, setPendingZone] = useState<{ geojson: Polygon; surfaceM2: number } | null>(null)
-  const [label, setLabel] = useState('')
-  const [manualLabel, setManualLabel] = useState('')
-  const [manualSurface, setManualSurface] = useState('')
+  const polygonEditorRef = useRef<PolygonEditorHandle>(null)
 
   useEffect(() => {
     onNavChange({ onNext: onContinue, nextDisabled: zones.length === 0, action: null })
@@ -67,99 +75,137 @@ export function PropertySubStepDelineate({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [zones.length])
 
-  function confirmPendingZone() {
+  const mapReady = isMapboxConfigured && !mapUnavailable
+
+  function handleAddZoneClick() {
+    polygonEditorRef.current?.startDrawing()
+    setMode('drawing')
+  }
+
+  function handleZoneDrawn(geojson: Polygon, surfaceM2: number) {
+    setPendingZone({ geojson, surfaceM2 })
+    setMode('idle')
+  }
+
+  function handleConfirmNaming(type: ZoneType, label: string) {
     if (!pendingZone) return
+    const id = crypto.randomUUID()
     onAddZone({
-      id: crypto.randomUUID(),
-      label: label.trim() || `Zone ${zones.length + 1}`,
+      id,
+      type,
+      label,
       geojson: pendingZone.geojson,
       surfaceM2: pendingZone.surfaceM2,
       imageStoragePath: capturePath ?? 'manuel',
       ordre: zones.length,
       capturedAt: new Date().toISOString(),
     })
+    polygonEditorRef.current?.confirmPending(id, type)
     setPendingZone(null)
-    setLabel('')
   }
 
-  function addManualZone() {
-    const surface = Number(manualSurface)
-    if (!manualLabel.trim() || !Number.isFinite(surface) || surface <= 0) return
+  function handleCancelNaming() {
+    polygonEditorRef.current?.discardPending()
+    setPendingZone(null)
+  }
+
+  function handleZoneUpdated(zoneId: string, geojson: Polygon, surfaceM2: number) {
+    onUpdateZone(zoneId, { geojson, surfaceM2 })
+  }
+
+  function handleEditZone(id: string) {
+    setSelectedZoneId(id)
+    polygonEditorRef.current?.editZone(id)
+    setMode('editing')
+  }
+
+  function handleToggleEdit() {
+    if (!selectedZoneId) return
+    if (mode === 'editing') {
+      polygonEditorRef.current?.stopEditing()
+      setMode('idle')
+    } else {
+      handleEditZone(selectedZoneId)
+    }
+  }
+
+  function handleDeleteZone(id: string) {
+    polygonEditorRef.current?.deleteZone(id)
+    onRemoveZone(id)
+    if (selectedZoneId === id) {
+      setSelectedZoneId(null)
+      setMode('idle')
+    }
+  }
+
+  function handleZoomZone(zone: ContractZoneFormValues) {
+    if (!map) return
+    map.fitBounds(boundsFromPolygon(zone.geojson), { padding: 40, duration: 250 })
+  }
+
+  function handleModeChange(drawMode: string) {
+    if (drawMode !== 'draw_polygon' && mode === 'drawing') setMode('idle')
+  }
+
+  function addManualZone(type: ZoneType, label: string, surfaceM2: number) {
     onAddZone({
       id: crypto.randomUUID(),
-      label: manualLabel.trim(),
+      type,
+      label,
       geojson: EMPTY_POLYGON,
-      surfaceM2: Math.round(surface * 100) / 100,
+      surfaceM2: Math.round(surfaceM2 * 100) / 100,
       imageStoragePath: 'manuel',
       ordre: zones.length,
       capturedAt: new Date().toISOString(),
     })
-    setManualLabel('')
-    setManualSurface('')
   }
 
   return (
-    <div className="flex h-full flex-col gap-4">
-      <Card className="shrink-0">
-        <h2 className="mb-1 text-subtitle font-semibold text-reca-black">Délimiter les zones</h2>
-        <p className="text-body text-reca-gray-medium">
-          {isMapboxConfigured && !mapUnavailable
-            ? 'Tracez un polygone autour de chaque zone à déneiger (clic, clic, clic… puis terminer). Vous pouvez tracer plusieurs zones.'
-            : "La carte n'est pas disponible pour le moment — ajoutez les zones manuellement en attendant."}
-        </p>
-      </Card>
+    <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)]">
+      <PropertyZonesPanel
+        zones={zones}
+        selectedZoneId={selectedZoneId}
+        onSelectZone={setSelectedZoneId}
+        onEditZone={handleEditZone}
+        onZoomZone={handleZoomZone}
+        onRemoveZone={handleDeleteZone}
+        mapAvailable={mapReady}
+        onAddManualZone={addManualZone}
+      />
 
-      {isMapboxConfigured && !mapUnavailable ? (
+      <div className="flex h-full min-h-0 flex-col gap-2">
+        {mapReady && (
+          <ZoneToolbar
+            onAddZone={handleAddZoneClick}
+            addDisabled={mode !== 'idle' || pendingZone !== null}
+            selectedZoneId={selectedZoneId}
+            editing={mode === 'editing'}
+            onToggleEdit={handleToggleEdit}
+            onDelete={() => selectedZoneId && handleDeleteZone(selectedZoneId)}
+          />
+        )}
         <div className="min-h-0 flex-1">
-          <PropertyMap center={center} onMapReady={setMap} onError={onMapError} />
-          <PolygonEditor map={map} onZoneDrawn={(geojson, surfaceM2) => setPendingZone({ geojson, surfaceM2 })} />
+          <PropertyMapStage
+            ready={mapReady}
+            unavailableMessage="La carte est indisponible pour le moment — ajoutez les zones manuellement dans le panneau de gauche."
+            center={center}
+            boundary={boundary}
+            onMapError={onMapError}
+            onMapReady={setMap}
+          />
+          {mapReady && (
+            <PolygonEditor
+              ref={polygonEditorRef}
+              map={map}
+              onZoneDrawn={handleZoneDrawn}
+              onZoneUpdated={handleZoneUpdated}
+              onModeChange={handleModeChange}
+            />
+          )}
         </div>
-      ) : (
-        <Card className="shrink-0">
-          <div className="flex items-end gap-3">
-            <Input
-              label="Nom de la zone"
-              icon={MapPin}
-              value={manualLabel}
-              onChange={(event) => setManualLabel(event.target.value)}
-              placeholder="Entrée, Stationnement, Trottoir…"
-            />
-            <Input
-              label="Surface (m²)"
-              icon={Ruler}
-              type="number"
-              step="0.01"
-              value={manualSurface}
-              onChange={(event) => setManualSurface(event.target.value)}
-            />
-            <Button type="button" onClick={addManualZone}>
-              Ajouter la zone
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      {pendingZone && (
-        <Card className="shrink-0">
-          <p className="mb-2 text-body text-reca-black">Zone tracée : {pendingZone.surfaceM2.toFixed(2)} m²</p>
-          <div className="flex items-end gap-3">
-            <Input
-              label="Nom de la zone"
-              icon={MapPin}
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-              placeholder="Entrée, Stationnement, Trottoir…"
-            />
-            <Button type="button" onClick={confirmPendingZone}>
-              Ajouter la zone
-            </Button>
-          </div>
-        </Card>
-      )}
-
-      <div className="shrink-0">
-        <SurfaceSummary zones={zones} onRemove={onRemoveZone} />
       </div>
+
+      <ZoneNamingModal pendingZone={pendingZone} onConfirm={handleConfirmNaming} onCancel={handleCancelNaming} />
     </div>
   )
 }

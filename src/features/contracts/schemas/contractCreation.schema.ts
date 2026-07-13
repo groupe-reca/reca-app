@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { ZONE_TYPES } from '../types/contract.types'
 
 const numericString = z
   .string()
@@ -19,6 +20,7 @@ export const paymentScheduleEntrySchema = z.object({
 
 export const contractZoneSchema = z.object({
   id: z.string(),
+  type: z.enum(ZONE_TYPES),
   label: z.string().min(1, 'Nom de zone requis'),
   geojson: z.custom<GeoJSON.Polygon>(),
   surfaceM2: z.number().positive(),

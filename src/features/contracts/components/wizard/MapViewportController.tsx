@@ -3,7 +3,7 @@ import type { Map as MapboxMap } from 'mapbox-gl'
 import type { Polygon } from 'geojson'
 import { boundsFromPolygon } from '../../utils/propertyBoundary'
 
-const FIT_BOUNDS_PADDING = 60
+const FIT_BOUNDS_PADDING = 20
 const FIT_BOUNDS_DURATION_MS = 250
 
 type MapViewportControllerProps = {
