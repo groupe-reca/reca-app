@@ -16,7 +16,7 @@ import { QuotesListPage } from '@/features/quotes/pages/QuotesListPage'
 import { ClientCreatePage } from '@/features/clients/pages/ClientCreatePage'
 import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage'
 import { ClientsListPage } from '@/features/clients/pages/ClientsListPage'
-import { ContractCreatePage } from '@/features/contracts/pages/ContractCreatePage'
+import { ContractWizardPage } from '@/features/contracts/pages/ContractWizardPage'
 import { ContractDetailPage } from '@/features/contracts/pages/ContractDetailPage'
 import { ContractsListPage } from '@/features/contracts/pages/ContractsListPage'
 import { InvoiceCreatePage } from '@/features/invoices/pages/InvoiceCreatePage'
@@ -82,7 +82,7 @@ export const router = createBrowserRouter([
                 handle: { breadcrumb: 'Contrats' },
                 children: [
                   { index: true, element: <ContractsListPage /> },
-                  { path: 'new', element: <ContractCreatePage />, handle: { breadcrumb: 'Nouveau contrat' } },
+                  { path: 'new', element: <ContractWizardPage />, handle: { breadcrumb: 'Nouveau contrat' } },
                   { path: ':id', element: <ContractDetailPage />, handle: { breadcrumb: 'Détail' } },
                 ],
               },

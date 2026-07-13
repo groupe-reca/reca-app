@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient'
+import { generateClauses } from '../utils/generateClauses'
 import type { ContractFormValues } from '../schemas/contract.schema'
 import type { ContractCreationFormValues } from '../schemas/contractCreation.schema'
 import type {
@@ -6,6 +7,7 @@ import type {
   ContractClientRef,
   ContractRow,
   ContractStatus,
+  ContractZoneRow,
   PaymentScheduleEntry,
 } from '../types/contract.types'
 
@@ -40,6 +42,13 @@ function mapContract(row: ContractRowWithClient): Contract {
     obligationsClient: row.obligations_client,
     responsabilites: row.responsabilites,
     modalitesPaiement: row.modalites_paiement,
+    adresseGeocodee: row.adresse_geocodee,
+    latitude: row.latitude,
+    longitude: row.longitude,
+    modePaiement: row.mode_paiement,
+    services: row.services,
+    obligationsReponses: row.obligations_reponses,
+    accumulationMaximaleCm: row.accumulation_maximale_cm,
     createdAt: row.created_at,
     client: row.client,
   }
@@ -58,7 +67,10 @@ function toRowInput(values: ContractFormValues): Partial<ContractRow> {
   }
 }
 
-function toCreationRowInput(values: ContractCreationFormValues): Partial<ContractRow> {
+function toWizardRowInput(values: ContractCreationFormValues): Partial<ContractRow> {
+  const generated = generateClauses(values.obligations)
+  const superficie = Math.round(values.zones.reduce((sum, zone) => sum + zone.surfaceM2, 0) * 100) / 100
+
   return {
     type: values.type || null,
     saison: values.saison || null,
@@ -68,22 +80,26 @@ function toCreationRowInput(values: ContractCreationFormValues): Partial<Contrac
     date_fin: values.dateFin || null,
     renouvellement: values.renouvellement ?? false,
     notes: values.notes || null,
-    zone_desservie: values.zoneDesservie,
-    superficie: values.superficie ? Number(values.superficie) : null,
-    exclusions: values.exclusions,
-    seuil_declenchement_cm: Number(values.seuilDeclenchementCm),
-    heure_premier_passage: values.heurePremierPassage,
-    nettoyage_final: values.nettoyageFinal,
-    distance_securite_cm: Number(values.distanceSecuriteCm),
-    balises_requises: values.balisesRequises ?? true,
-    obligations_client: values.obligationsClient,
-    responsabilites: values.responsabilites,
+    superficie,
+    exclusions: generated.exclusions,
+    seuil_declenchement_cm: values.obligations.seuilDeclenchementCm,
+    nettoyage_final: generated.nettoyageFinal,
+    balises_requises: values.obligations.balisesRequises,
+    obligations_client: generated.obligationsClient,
+    responsabilites: generated.responsabilites,
     modalites_paiement: values.modalitesPaiement.map((entry) => ({
       description: entry.description,
       type: entry.type,
       valeur: Number(entry.valeur),
       dateEcheance: entry.dateEcheance,
     })),
+    adresse_geocodee: values.adresseGeocodee || null,
+    latitude: values.latitude ?? null,
+    longitude: values.longitude ?? null,
+    mode_paiement: values.modePaiement,
+    services: values.services,
+    obligations_reponses: values.obligations,
+    accumulation_maximale_cm: values.obligations.accumulationMaximaleCm,
   }
 }
 
@@ -116,20 +132,16 @@ export async function getContract(id: string): Promise<Contract> {
   return mapContract(data as unknown as ContractRowWithClient)
 }
 
-export async function createContract(
-  values: ContractCreationFormValues,
-  clientId: string,
-  statut: ContractStatus,
-): Promise<Contract> {
-  const input = { ...toCreationRowInput(values), client_id: clientId, statut }
+export async function listContractZones(contractId: string): Promise<ContractZoneRow[]> {
   const { data, error } = await supabase
-    .from('contracts')
-    .insert(input as never)
-    .select(SELECT_WITH_CLIENT)
-    .single()
+    .from('contract_zones')
+    .select('*')
+    .eq('contract_id', contractId)
+    .is('deleted_at', null)
+    .order('ordre', { ascending: true })
 
   if (error) throw error
-  return mapContract(data as unknown as ContractRowWithClient)
+  return (data ?? []) as unknown as ContractZoneRow[]
 }
 
 function computeInstallmentAmount(entry: PaymentScheduleEntry, prix: number | null): number {
@@ -159,12 +171,41 @@ async function generateInvoicesFromSchedule(contract: Contract): Promise<{ gener
   return { generated }
 }
 
-export async function createContractWithInvoices(
+/**
+ * Crée le contrat du Wizard (id fourni par l'appelant — généré au début du parcours,
+ * pour que les captures satellite puissent être stockées avant même que le contrat
+ * n'existe en base) ainsi que ses zones tracées, puis génère les factures si finalisé.
+ */
+export async function createContractWithZones(
+  contractId: string,
   values: ContractCreationFormValues,
   clientId: string,
   finalize: boolean,
 ): Promise<{ contract: Contract; invoicesGenerated: number; invoicesTotal: number }> {
-  const contract = await createContract(values, clientId, finalize ? 'actif' : 'en_attente')
+  const input = {
+    ...toWizardRowInput(values),
+    id: contractId,
+    client_id: clientId,
+    statut: (finalize ? 'actif' : 'en_attente') as ContractStatus,
+  }
+
+  const { data, error } = await supabase.from('contracts').insert(input as never).select(SELECT_WITH_CLIENT).single()
+  if (error) throw error
+  const contract = mapContract(data as unknown as ContractRowWithClient)
+
+  const zoneRows = values.zones.map((zone) => ({
+    id: zone.id,
+    contract_id: contractId,
+    label: zone.label,
+    geojson: zone.geojson,
+    surface_m2: zone.surfaceM2,
+    image_storage_path: zone.imageStoragePath,
+    ordre: zone.ordre,
+    captured_at: zone.capturedAt,
+  }))
+  const { error: zonesError } = await supabase.from('contract_zones').insert(zoneRows as never)
+  if (zonesError) throw zonesError
+
   if (!finalize || contract.modalitesPaiement.length === 0) {
     return { contract, invoicesGenerated: 0, invoicesTotal: 0 }
   }
