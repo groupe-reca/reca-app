@@ -4,6 +4,7 @@ import type { Role } from '@/features/auth/types/auth.types'
 export type Account = {
   id: string
   email: string
+  nom: string | null
   role: Role
   actif: boolean
   derniereConnexion: string | null
@@ -12,17 +13,19 @@ export type Account = {
 type AccountRow = {
   id: string
   email: string
+  nom: string | null
   role: Role
   actif: boolean
   derniere_connexion: string | null
 }
 
-const SELECT_FIELDS = 'id, email, role, actif, derniere_connexion'
+const SELECT_FIELDS = 'id, email, nom, role, actif, derniere_connexion'
 
 function mapAccount(row: AccountRow): Account {
   return {
     id: row.id,
     email: row.email,
+    nom: row.nom,
     role: row.role,
     actif: row.actif,
     derniereConnexion: row.derniere_connexion,

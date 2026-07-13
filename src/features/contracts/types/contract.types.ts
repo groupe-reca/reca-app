@@ -25,6 +25,50 @@ export type PaymentScheduleEntry = {
   dateEcheance: string
 }
 
+export type ServiceCode = 'deneigement' | 'epandage' | 'soufflage' | 'escaliers' | 'toiture' | 'autres'
+
+export type ServiceEntry = {
+  code: ServiceCode
+  label: string
+  active: boolean
+  precisions: string | null
+}
+
+export type SeuilDeclenchementCm = 2 | 3 | 5
+
+export type ObligationsAnswers = {
+  balisesRequises: boolean
+  seuilDeclenchementCm: SeuilDeclenchementCm
+  accumulationMaximaleCm: number | null
+  entreeLibreObligatoire: boolean
+  animaux: boolean
+  portail: boolean
+  autresParticularites: string
+}
+
+export type ContractZoneRow = {
+  id: string
+  contract_id: string
+  label: string
+  geojson: GeoJSON.Polygon
+  surface_m2: number
+  image_storage_path: string
+  ordre: number
+  captured_at: string
+  created_at: string
+  created_by: string | null
+}
+
+export type ContractZone = {
+  id: string
+  label: string
+  geojson: GeoJSON.Polygon
+  surfaceM2: number
+  imageStoragePath: string
+  ordre: number
+  capturedAt: string
+}
+
 export type ContractRow = {
   id: string
   numero: string
@@ -49,6 +93,13 @@ export type ContractRow = {
   obligations_client: string
   responsabilites: string
   modalites_paiement: PaymentScheduleEntry[]
+  adresse_geocodee: string | null
+  latitude: number | null
+  longitude: number | null
+  mode_paiement: string | null
+  services: ServiceEntry[]
+  obligations_reponses: ObligationsAnswers | Record<string, never>
+  accumulation_maximale_cm: number | null
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -78,6 +129,13 @@ export type Contract = {
   obligationsClient: string
   responsabilites: string
   modalitesPaiement: PaymentScheduleEntry[]
+  adresseGeocodee: string | null
+  latitude: number | null
+  longitude: number | null
+  modePaiement: string | null
+  services: ServiceEntry[]
+  obligationsReponses: ObligationsAnswers | Record<string, never>
+  accumulationMaximaleCm: number | null
   createdAt: string
   client: ContractClientRef | null
 }

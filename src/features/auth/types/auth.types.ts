@@ -3,6 +3,7 @@ export type Role = 'administrateur' | 'employe'
 export type User = {
   id: string
   email: string
+  nom: string | null
   role: Role
   actif: boolean
   derniereConnexion: string | null

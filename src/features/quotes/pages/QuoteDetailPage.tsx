@@ -4,9 +4,7 @@ import { Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Dropdown, DropdownItem } from '@/components/ui/Dropdown'
-import { ClientFormModal } from '@/features/clients/components/ClientFormModal'
 import { formatCurrency } from '@/lib/format'
-import { useConvertQuoteToClient } from '../hooks/useConvertQuoteToClient'
 import { useDeleteQuote } from '../hooks/useDeleteQuote'
 import { useQuote } from '../hooks/useQuote'
 import { useUpdateQuoteStatus } from '../hooks/useUpdateQuoteStatus'
@@ -20,9 +18,7 @@ export function QuoteDetailPage() {
   const { data: quote, isLoading } = useQuote(id)
   const updateStatus = useUpdateQuoteStatus(id)
   const deleteQuote = useDeleteQuote()
-  const convertToClient = useConvertQuoteToClient(id)
   const [editOpen, setEditOpen] = useState(false)
-  const [clientModalOpen, setClientModalOpen] = useState(false)
 
   if (isLoading || !quote) {
     return <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
@@ -99,7 +95,7 @@ export function QuoteDetailPage() {
           ) : (
             <div className="flex items-center justify-between gap-4">
               <p className="text-body text-reca-gray-medium">Aucun client associé.</p>
-              <Button variant="secondary" onClick={() => setClientModalOpen(true)}>
+              <Button variant="secondary" onClick={() => navigate(`/clients/new?convertQuoteId=${quote.id}`)}>
                 Transformer en client
               </Button>
             </div>
@@ -108,13 +104,6 @@ export function QuoteDetailPage() {
       </div>
 
       <QuoteFormModal open={editOpen} onClose={() => setEditOpen(false)} quote={quote} />
-
-      <ClientFormModal
-        open={clientModalOpen}
-        onClose={() => setClientModalOpen(false)}
-        initialValues={quote.lead ? { prenom: quote.lead.prenom, nom: quote.lead.nom } : undefined}
-        onCreated={(client) => convertToClient.mutate(client.id)}
-      />
     </div>
   )
 }

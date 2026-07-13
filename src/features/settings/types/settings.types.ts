@@ -8,6 +8,19 @@ export type SettingsColors = {
   secondaire: string
 }
 
+export type ModuleKey =
+  | 'leads'
+  | 'quotes'
+  | 'clients'
+  | 'contracts'
+  | 'invoices'
+  | 'payments'
+  | 'routes'
+  | 'equipment'
+  | 'employees'
+
+export type SettingsModules = Record<ModuleKey, boolean>
+
 export type SettingsRow = {
   id: boolean
   nom: string | null
@@ -17,6 +30,7 @@ export type SettingsRow = {
   taxes: Partial<SettingsTaxes> | null
   adresse: string | null
   couleurs: Partial<SettingsColors> | null
+  modules: Partial<SettingsModules> | null
   created_at: string
   updated_at: string
 }
@@ -29,5 +43,6 @@ export type Settings = {
   taxes: SettingsTaxes
   adresse: string | null
   couleurs: SettingsColors
+  modules: SettingsModules
   updatedAt: string
 }

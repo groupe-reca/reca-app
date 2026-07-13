@@ -1,9 +1,20 @@
 import { supabase } from '@/lib/supabaseClient'
 import type { SettingsFormValues } from '../schemas/settings.schema'
-import type { Settings, SettingsRow } from '../types/settings.types'
+import type { Settings, SettingsModules, SettingsRow } from '../types/settings.types'
 
 const DEFAULT_TAXES = { tps: 5, tvq: 9.975 }
 const DEFAULT_COLORS = { primaire: '#DA291C', secondaire: '#0F172A' }
+const DEFAULT_MODULES: SettingsModules = {
+  leads: true,
+  quotes: true,
+  clients: true,
+  contracts: true,
+  invoices: true,
+  payments: true,
+  routes: true,
+  equipment: true,
+  employees: true,
+}
 
 function mapSettings(row: SettingsRow): Settings {
   return {
@@ -14,6 +25,7 @@ function mapSettings(row: SettingsRow): Settings {
     taxes: { ...DEFAULT_TAXES, ...row.taxes },
     adresse: row.adresse,
     couleurs: { ...DEFAULT_COLORS, ...row.couleurs },
+    modules: { ...DEFAULT_MODULES, ...row.modules },
     updatedAt: row.updated_at,
   }
 }
@@ -41,6 +53,18 @@ export async function updateSettings(values: SettingsFormValues): Promise<Settin
   const { data, error } = await supabase
     .from('settings')
     .update(input as never)
+    .eq('id', true)
+    .select('*')
+    .single()
+
+  if (error) throw error
+  return mapSettings(data as SettingsRow)
+}
+
+export async function updateModules(modules: SettingsModules): Promise<Settings> {
+  const { data, error } = await supabase
+    .from('settings')
+    .update({ modules } as never)
     .eq('id', true)
     .select('*')
     .single()

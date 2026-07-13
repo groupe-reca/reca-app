@@ -39,10 +39,16 @@ function LeadTableContent({ leads, onRowClick }: { leads: Lead[]; onRowClick: (l
 
   const columns: TableColumn<Lead>[] = [
     { key: 'numero', header: 'Numéro', sortable: true, render: (lead) => lead.numero },
-    { key: 'nom', header: 'Nom', sortable: true, render: (lead) => `${lead.prenom} ${lead.nom}` },
+    {
+      key: 'nom',
+      header: 'Nom',
+      sortable: true,
+      primary: true,
+      render: (lead) => <span className="font-medium text-reca-black">{`${lead.prenom} ${lead.nom}`}</span>,
+    },
     { key: 'telephone', header: 'Téléphone', render: (lead) => lead.telephone ?? '—' },
     { key: 'typeService', header: 'Service', render: (lead) => lead.typeService ?? '—' },
-    { key: 'statut', header: 'Statut', render: (lead) => <LeadStatusBadge status={lead.statut} /> },
+    { key: 'statut', header: 'Statut', primary: true, render: (lead) => <LeadStatusBadge status={lead.statut} /> },
   ]
 
   return (

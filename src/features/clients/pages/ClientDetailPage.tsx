@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { ContractStatusBadge } from '@/features/contracts/components/ContractStatusBadge'
 import { useClientContracts } from '@/features/contracts/hooks/useClientContracts'
-import { InvoiceFormModal } from '@/features/invoices/components/InvoiceFormModal'
 import { InvoiceStatusBadge } from '@/features/invoices/components/InvoiceStatusBadge'
 import { useClientInvoices } from '@/features/invoices/hooks/useClientInvoices'
 import { formatCurrency } from '@/lib/format'
@@ -21,7 +20,6 @@ export function ClientDetailPage() {
   const { data: contracts } = useClientContracts(id)
   const { data: invoices } = useClientInvoices(id)
   const [editOpen, setEditOpen] = useState(false)
-  const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
 
   if (isLoading || !client) {
     return <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
@@ -131,7 +129,7 @@ export function ClientDetailPage() {
       <Card>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-subtitle font-semibold text-reca-black">Factures</h2>
-          <Button variant="secondary" onClick={() => setInvoiceModalOpen(true)}>
+          <Button variant="secondary" onClick={() => navigate(`/invoices/new?clientId=${client.id}`)}>
             <Plus className="size-4" aria-hidden="true" />
             Créer une facture
           </Button>
@@ -158,12 +156,6 @@ export function ClientDetailPage() {
       </Card>
 
       <ClientFormModal open={editOpen} onClose={() => setEditOpen(false)} client={client} />
-
-      <InvoiceFormModal
-        open={invoiceModalOpen}
-        onClose={() => setInvoiceModalOpen(false)}
-        clientId={client.id}
-      />
     </div>
   )
 }

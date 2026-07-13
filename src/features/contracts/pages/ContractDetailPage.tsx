@@ -95,7 +95,7 @@ export function ContractDetailPage() {
           <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Clauses du contrat</h2>
           <div className="flex flex-col gap-2 text-body text-reca-gray-medium">
             <p>Zone desservie : {contract.zoneDesservie}</p>
-            <p>Superficie : {contract.superficie != null ? `${contract.superficie} pi²` : '—'}</p>
+            <p>Superficie : {contract.superficie != null ? `${contract.superficie} m²` : '—'}</p>
             <p>Exclusions : {contract.exclusions}</p>
             <p>Seuil de déclenchement : {contract.seuilDeclenchementCm} cm</p>
             <p>Premier passage garanti : {contract.heurePremierPassage}</p>

@@ -4,7 +4,6 @@ import { Mail, Pencil, Phone, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Dropdown, DropdownItem } from '@/components/ui/Dropdown'
-import { QuoteFormModal } from '@/features/quotes/components/QuoteFormModal'
 import { useDeleteLead } from '../hooks/useDeleteLead'
 import { useLead } from '../hooks/useLead'
 import { useUpdateLeadStatus } from '../hooks/useUpdateLeadStatus'
@@ -20,7 +19,6 @@ export function LeadDetailPage() {
   const updateStatus = useUpdateLeadStatus(id)
   const deleteLead = useDeleteLead()
   const [editOpen, setEditOpen] = useState(false)
-  const [quoteModalOpen, setQuoteModalOpen] = useState(false)
 
   if (isLoading || !lead) {
     return <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
@@ -34,7 +32,7 @@ export function LeadDetailPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-label text-reca-gray-medium">{lead.numero}</p>
           <h1 className="text-section font-semibold text-reca-black">
@@ -44,7 +42,7 @@ export function LeadDetailPage() {
             <LeadStatusBadge status={lead.statut} />
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button variant="secondary" onClick={() => setEditOpen(true)}>
             <Pencil className="size-4" aria-hidden="true" />
             Modifier
@@ -111,25 +109,13 @@ export function LeadDetailPage() {
             <h2 className="text-subtitle font-semibold text-reca-black">Prochaine étape</h2>
             <p className="text-body text-reca-gray-medium">Créer une soumission pour ce lead.</p>
           </div>
-          <Button variant="secondary" onClick={() => setQuoteModalOpen(true)}>
+          <Button variant="secondary" onClick={() => navigate(`/quotes/new?leadId=${lead.id}`)}>
             Créer une soumission
           </Button>
         </div>
       </Card>
 
       <LeadFormModal open={editOpen} onClose={() => setEditOpen(false)} lead={lead} />
-
-      <QuoteFormModal
-        open={quoteModalOpen}
-        onClose={() => setQuoteModalOpen(false)}
-        leadId={lead.id}
-        onCreated={(quote) => {
-          if (lead.statut === 'nouveau' || lead.statut === 'contacte') {
-            updateStatus.mutate('soumission_envoyee')
-          }
-          navigate(`/quotes/${quote.id}`)
-        }}
-      />
     </div>
   )
 }

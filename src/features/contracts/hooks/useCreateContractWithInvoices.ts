@@ -5,12 +5,12 @@ import * as contractsService from '../services/contracts.service'
 import type { ContractCreationFormValues } from '../schemas/contractCreation.schema'
 import { contractKeys } from './contractKeys'
 
-export function useCreateContractWithInvoices(clientId: string) {
+export function useCreateContractWithInvoices(contractId: string, clientId: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
     mutationFn: ({ values, finalize }: { values: ContractCreationFormValues; finalize: boolean }) =>
-      contractsService.createContractWithInvoices(values, clientId, finalize),
+      contractsService.createContractWithZones(contractId, values, clientId, finalize),
     onSuccess: ({ invoicesGenerated, invoicesTotal }) => {
       queryClient.invalidateQueries({ queryKey: contractKeys.all })
       if (invoicesTotal > 0) queryClient.invalidateQueries({ queryKey: invoiceKeys.all })

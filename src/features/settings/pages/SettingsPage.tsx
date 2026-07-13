@@ -2,6 +2,7 @@ import { Card } from '@/components/ui/Card'
 import { QueryState } from '@/components/ui/QueryState'
 import { AccountsTable } from '../components/AccountsTable'
 import { CompanySettingsForm } from '../components/CompanySettingsForm'
+import { ModulesTable } from '../components/ModulesTable'
 import { useSettings } from '../hooks/useSettings'
 import { useUpdateSettings } from '../hooks/useUpdateSettings'
 
@@ -37,6 +38,21 @@ export function SettingsPage() {
       <Card>
         <h2 className="mb-4 text-label font-semibold text-reca-black">Comptes</h2>
         <AccountsTable />
+      </Card>
+
+      <Card>
+        <h2 className="mb-4 text-label font-semibold text-reca-black">Modules</h2>
+        <p className="mb-4 text-body text-reca-gray-medium">
+          Activez ou désactivez les modules accessibles aux utilisateurs.
+        </p>
+        <QueryState
+          isLoading={isLoading}
+          isError={isError}
+          data={settings}
+          errorLabel="Impossible de charger les modules."
+        >
+          {(data) => <ModulesTable settings={data} />}
+        </QueryState>
       </Card>
     </div>
   )
