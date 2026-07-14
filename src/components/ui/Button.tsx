@@ -7,6 +7,7 @@ type ButtonVariant = 'primary' | 'secondary' | 'ghost'
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant
   isLoading?: boolean
+  fullWidth?: boolean
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
@@ -19,14 +20,14 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = 'primary', isLoading = false, disabled, className = '', children, ...props },
+  { variant = 'primary', isLoading = false, fullWidth = false, disabled, className = '', children, ...props },
   ref,
 ) {
   return (
     <button
       ref={ref}
       disabled={disabled || isLoading}
-      className={`inline-flex h-11 items-center justify-center gap-2 rounded-control px-4 text-body font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${VARIANT_CLASSES[variant]} ${className}`}
+      className={`inline-flex h-11 items-center justify-center gap-2 rounded-control px-4 text-body font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${fullWidth ? 'w-full' : ''} ${VARIANT_CLASSES[variant]} ${className}`}
       {...props}
     >
       {isLoading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}

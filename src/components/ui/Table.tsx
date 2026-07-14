@@ -56,7 +56,7 @@ export function Table<T>({ columns, rows, rowKey, onRowClick, sort, onSortChange
         </div>
       )}
 
-      <div className="hidden overflow-x-auto rounded-card border border-reca-gray-light bg-white md:block">
+      <div className="hidden overflow-x-auto rounded-card bg-white shadow-card md:block">
         <table className="w-full text-left text-body">
           <thead>
             <tr className="border-b border-reca-gray-light text-label text-reca-gray-medium">
@@ -124,7 +124,7 @@ function TableCardRow<T>({
       onClick={() => onClick?.(row)}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      className={`rounded-card border border-reca-gray-light bg-white p-4 ${
+      className={`rounded-card bg-white p-4 shadow-card ${
         onClick ? 'cursor-pointer active:bg-reca-snow' : ''
       }`}
     >

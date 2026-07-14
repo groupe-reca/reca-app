@@ -1,5 +1,29 @@
 # Plans — RECA Centre des opérations
 
+## [x] Sprint 013 — Design System, socle visuel Phase 1 (branche `sprint013-design-system`, depuis `sprint012-mobile-contrats`) — terminé et vérifié
+
+Demande (`.input/sprint013.md`) : poser **uniquement le socle visuel commun** (tokens + primitives `src/components/ui/`) dérivé de 3 maquettes de référence (`.input/ui_dashboard.png`, `ui_mobile.png`, `ui_add_contract.png`) — cartes plus arrondies/douces (ombre plutôt que bordure dure), badges pastel-sur-fond-teinté, nouvelles primitives `StatCard`/`ListRow`/`Avatar`, appliqué sur **une seule page pilote** (Dashboard/`OperationsCenterPage.tsx`). Pas de nouvelle fonctionnalité produit, pas de refonte du Wizard (Phase 2 = sprint014, séparé), les 9 autres modules héritent passivement (aucun fichier de module touché individuellement).
+
+Correctifs aux hypothèses du brief, vérifiés avant de coder : le préalable "committer `sprint012-mobile-contrats` avant d'ouvrir la branche" était déjà fait (`6673d16`) — branche créée directement depuis là. Les rayons (`--radius-card: 16px`, `--radius-control: 10px`) et `Badge` (déjà pastel-bg/texte-foncé) satisfaisaient déjà la cible — le vrai chantier tokens était les **ombres**, absentes avant ce sprint.
+
+Plan détaillé complet (props exactes, classes Tailwind, décisions Card-vs-ListRow) : `/root/.claude/plans/r-cup-re-ta-nouvelle-dans-foamy-yeti.md`.
+
+**Fichiers touchés** :
+- Tokens : `src/styles/index.css` (`--shadow-card`/`--shadow-floating`, teinte `reca-night-blue`, pas de nouveau token couleur/rayon/espacement — `gap-4/5/6` suffisent).
+- Primitives existantes : `Card.tsx` (retrait bordure dure → `shadow-card`, + `variant="clickable"`/`chevron` additifs), `Badge.tsx` (+ `size="sm"|"md"`, logique couleur extraite dans le nouveau `statusColors.ts` partagé), `Button.tsx` (+ `fullWidth` additif, non branché ce sprint), `Table.tsx` (2 classes alignées sur le nouveau style Card, fonctionnellement inchangé). `Input.tsx`/`Select.tsx` non touchés (déjà conformes).
+- Nouvelles primitives : `StatCard.tsx`, `ListRow.tsx`, `Avatar.tsx`, `statusColors.ts` (tous `src/components/ui/`).
+- `src/features/contracts/constants/contractStatusColors.ts` (nouveau) : `CONTRACT_STATUS_COLORS` déplacé hors de `ContractStatusBadge.tsx` (règle Fast Refresh un-seul-export-composant-par-fichier, déjà rencontrée sprint009) pour être réutilisable par la page pilote.
+- `src/lib/format.ts` : + `formatRelativeTime()` (Intl.RelativeTimeFormat, même convention que `formatCurrency`).
+- `src/pages/OperationsCenterPage.tsx` : réécriture complète (était un stub quasi vide) — 3 `StatCard` (Contrats actifs, Clients, Factures en attente + solde) via `useContracts`/`useClients`/`useInvoices` (hooks déjà existants, aucun nouveau), section "Activité récente" en `ListRow` limitée aux 5 contrats les plus récents (`createdAt` desc) — pas de flux d'activité inter-module fabriqué.
+
+**Décisions de portée à connaître pour sprint014 (Phase 2 Wizard v2)**, pour ne pas les rediscuter :
+- `Card` a une variante `clickable`+`chevron` générique (conteneur agnostique, chevron aligné à droite) — construite mais **non démontrée** ce sprint (le seul call site visuel du brief pour ce pattern, les rangées Client/Propriété/Zones/Clauses/Notes de la fiche contrat mobile, n'est pas la page pilote). `ListRow` est le composant réellement utilisé pour ce pattern précis (icône+titre+sous-titre+chevron) et reste distinct de `Card` pour éviter de dupliquer la logique de layout icône/texte à deux endroits.
+- `Avatar.tsx` construit mais **non branché** — le bloc initiales ad hoc de `Sidebar.tsx` n'a pas été retouché (aurait été une modification active d'un fichier non-pilote).
+- `Button.fullWidth` construit mais **non branché** — le CTA "Modifier le contrat" (pleine largeur) vit dans `MobileContractDetailPage.tsx`, hors périmètre pilote.
+- Explicitement omis, aucun placeholder construit (aucune donnée réelle disponible et non demandé par le brief) : météo, notifications, recherche ⌘K, carte temps réel, donut "Répartition des contrats", stat "Équipes actives", photos de propriété.
+
+**Vérification (2026-07-14)** : `tsc -b`, `npm run lint`, `npm run build` propres (avertissement pré-existant sur la taille du bundle, non lié à ce sprint). Vérifié en navigateur (Playwright, compte admin, port 3011, viewports 390/768/1280px) : Dashboard pilote conforme aux maquettes (StatCards avec icône teintée + valeur + libellé, ListRow avec icône/titre/sous-titre/prix/chevron, cliquable vers la fiche contrat), aucune erreur console. Non-régression confirmée : Leads (liste), Contrats (liste desktop+carte mobile, détail desktop+mobile), un Dropdown (changement de statut contrat), un Modal (édition client), un Toast (déclenché via un login invalide, non lié à une mutation de données) — les 3 derniers pixel-identiques, comme attendu puisque non touchés (vérifié : ils ne partagent aucune classe modifiée avec `Card`/`Table`). Aucune donnée de test créée pendant cette vérification (uniquement lecture des données déjà présentes en base). Pas encore commité.
+
 ## [x] Sprint 012 — Expérience mobile du module Contrats (branche `sprint012-mobile-contrats`) — terminé et vérifié en entier (Phases A-E)
 
 Demande (`.input/tache4.md`) : refonte mobile "app native" du module Contrats (pas un simple responsive) — Bottom Navigation, Header compact, Wizard plein écran à transitions horizontales, carte plein écran + Bottom Sheets redimensionnables façon Google Maps, barre d'action flottante, outils de dessin flottants.
