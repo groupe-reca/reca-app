@@ -1,53 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import {
-  ChevronDown,
-  ChevronUp,
-  CreditCard,
-  FileSignature,
-  FileText,
-  LayoutDashboard,
-  LogOut,
-  Receipt,
-  Route as RouteIcon,
-  Settings,
-  Truck,
-  UserCog,
-  UserPlus,
-  Users,
-  X,
-} from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
+import { ChevronDown, ChevronUp, LogOut, X } from 'lucide-react'
 import { NavLink } from 'react-router'
 import logo from '@/assets/logo-sombre.svg'
 import { useLogout } from '@/features/auth/hooks/useLogout'
 import { useSession } from '@/features/auth/hooks/useSession'
-import { useSettings } from '@/features/settings/hooks/useSettings'
-import type { ModuleKey } from '@/features/settings/types/settings.types'
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock'
 import { useElementSize } from '@/hooks/useElementSize'
 import { useFocusTrap } from '@/hooks/useFocusTrap'
-
-type NavItemConfig = {
-  label: string
-  to: string
-  icon: LucideIcon
-  moduleKey?: ModuleKey
-}
-
-const NAV_ITEMS: NavItemConfig[] = [
-  { label: 'Centre des opérations', to: '/dashboard', icon: LayoutDashboard },
-  { label: 'Leads', to: '/leads', icon: UserPlus, moduleKey: 'leads' },
-  { label: 'Soumissions', to: '/quotes', icon: FileText, moduleKey: 'quotes' },
-  { label: 'Clients', to: '/clients', icon: Users, moduleKey: 'clients' },
-  { label: 'Contrats', to: '/contracts', icon: FileSignature, moduleKey: 'contracts' },
-  { label: 'Factures', to: '/invoices', icon: Receipt, moduleKey: 'invoices' },
-  { label: 'Paiements', to: '/payments', icon: CreditCard, moduleKey: 'payments' },
-  { label: 'Routes', to: '/routes', icon: RouteIcon, moduleKey: 'routes' },
-  { label: 'Équipements', to: '/equipment', icon: Truck, moduleKey: 'equipment' },
-  { label: 'Employés', to: '/employees', icon: UserCog, moduleKey: 'employees' },
-]
-
-const SETTINGS_ITEM: NavItemConfig = { label: 'Paramètres', to: '/settings', icon: Settings }
+import { SETTINGS_ITEM, useVisibleNavItems } from './navItems'
+import type { NavItemConfig } from './navItems'
 
 const ITEM_HEIGHT = 44 // matches h-11 on SidebarNavItem
 const ITEM_GAP = 4 // matches gap-1 on <nav>
@@ -60,7 +21,6 @@ type SidebarProps = {
 
 export function Sidebar({ open, onClose }: SidebarProps) {
   const { data: session } = useSession()
-  const { data: settings, isLoading: isSettingsLoading } = useSettings()
   const logout = useLogout()
   const asideRef = useRef<HTMLElement>(null)
   const navRef = useRef<HTMLElement>(null)
@@ -79,15 +39,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     return () => document.removeEventListener('keydown', handleKeyDown)
   }, [open, onClose])
 
-  const visibleItems = useMemo(
-    () =>
-      NAV_ITEMS.filter((item) => {
-        if (!item.moduleKey) return true
-        if (isSettingsLoading || !settings) return false
-        return settings.modules[item.moduleKey]
-      }),
-    [settings, isSettingsLoading],
-  )
+  const { items: visibleItems } = useVisibleNavItems()
 
   const itemsPerPage = useMemo(() => {
     if (navHeight === 0) return visibleItems.length || 1

@@ -41,3 +41,17 @@ body {
  * use Tailwind's `duration-150` for micro-interactions (hover, tooltip),
  * `duration-200` for layout transitions (drawer, modal open/close).
  */
+
+/*
+ * Safari (iOS) zoomes automatiquement la page au focus d'un champ dont le
+ * font-size calculé est < 16px — `--text-body` (15px) est sous ce seuil. On ne
+ * touche pas au token partagé (affecterait desktop/tablette) : on relève
+ * uniquement le font-size réel des contrôles de formulaire sous 768px.
+ */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

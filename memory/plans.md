@@ -1,5 +1,25 @@
 # Plans — RECA Centre des opérations
 
+## [x] Sprint 012 — Expérience mobile du module Contrats (branche `sprint012-mobile-contrats`) — terminé et vérifié en entier (Phases A-E)
+
+Demande (`.input/tache4.md`) : refonte mobile "app native" du module Contrats (pas un simple responsive) — Bottom Navigation, Header compact, Wizard plein écran à transitions horizontales, carte plein écran + Bottom Sheets redimensionnables façon Google Maps, barre d'action flottante, outils de dessin flottants.
+
+Décisions validées avant implémentation : Bottom Nav/Header app-wide mais chrome seulement (contenu des 9 autres modules inchangé, seul Contrats reçoit la refonte complète) ; tablette hérite du Desktop ce sprint ; branche committée d'abord (`75adafe`) puis nouvelle branche **depuis `sprint008-analyse-propriete`** (piège rencontré : une première tentative l'a créée depuis `main` par erreur, corrigée avant tout commit — voir `memory/memory.md`).
+
+Plan détaillé complet (5 phases A-E, signatures exactes, architecture) : `/root/.claude/plans/recupere-ta-nouvelle-tache-harmonic-patterson.md`.
+
+**Phase A (infra device-tier + `BottomSheet` + bascule nav app-wide) — terminée et vérifiée** : `useDeviceTier.ts`, `BottomSheet.tsx` (drag/snap via `motion`, poignée dédiée), `viewport-fit=cover` + fix zoom iOS, `AppLayout.tsx` → dispatcher `DesktopAppShell`/`MobileAppShell`, `navItems.ts` (extrait de `Sidebar.tsx`), `MobileBottomNavigation.tsx`, `MobileHeader.tsx` + `useMobileHeaderActions.ts`. `tsc -b`/`npm run lint` propres. Vérifié en navigateur (Playwright, 390/768/1280px) : Bottom Nav+Header app-wide sans régression du contenu des autres modules, tiroir Sidebar intact ≥768px, glisser de la feuille "Menu" testé (peek→full), Bottom Nav masqué sur `/contracts/new`. 1 correctif pendant la vérification : bouton retour affiché à tort sur les racines de module (Leads/Clients/Contrats/Factures) — corrigé (retour seulement si ≥2 crumbs réels, pas sur un onglet racine).
+
+**Phase B (pages Contrats mobiles liste/détail) — terminée et vérifiée** : dispatchers triviaux + `pages/desktop/`+`pages/mobile/` séparés, `MobileContractLayout.tsx`, liste mobile réutilise `ContractTable`/`Table` tel quel, détail mobile condense les actions dans un menu `⋮`. Vérifié en navigateur (390px) avec un contrat réel (créé via le Wizard desktop, toujours utilisé tel quel — Phase C pas encore faite).
+
+**Phase C (`MobileWizard` + 5 étapes simples) — terminée et vérifiée** : `useContractWizardState.ts` (extraction neutre depuis `ContractWizard.tsx`), `components/layout/mobile/{MobileStepLayout,MobileWizard,FloatingActionBar}.tsx`, `MobileContractWizard.tsx` (5 étapes réutilisées telles quelles, Property en placeholder desktop temporaire). Piège eslint `react-hooks/refs` (plus strict que `set-state-in-effect`) — corrigé via 2 `useState` au lieu d'une ref pour détecter le sens du glissement. Vérifié en navigateur (390px + régression 1280px) jusqu'à la création réelle d'un contrat.
+
+**Phase D (étape Property mobile — carte plein écran + bottom sheets + outils flottants) — terminée et vérifiée** : extraction `useDelineateState.ts`/`usePropertyStepState.ts` (même principe que `useContractWizardState`), éclatement `PropertyInfoPanel`/`PropertyZonesPanel` en contenu pur + wrapper, nouveaux `PropertyInfoSheet`/`PropertyZonesSheet`/`ZoneToolbarFloating`/`ZoneDetailSheet`/`MobilePropertySubStepLocate`/`MobilePropertySubStepDelineate`/`MobileWizardStepProperty`. **3 bugs réels de `BottomSheet` trouvés et corrigés** (portail par-dessus la FloatingActionBar, clip incomplet interceptant les clics, pattern `useDragControls` non fiable au 2e glissement — détail technique complet dans `memory/memory.md`). Vérifié en navigateur de bout en bout jusqu'à la création réelle de plusieurs contrats mobiles avec zones typées, glissement peek/half/full répété avec succès.
+
+**Phase E (régression finale) — terminée et vérifiée** : smoke test mobile sur les 6 modules restants + re-vérification tablette/desktop, aucune régression.
+
+Pas encore commité (reste sur `sprint012-mobile-contrats`).
+
 ## [x] Sprint 009 — Dessin des zones de déneigement & calcul des superficies (branche `sprint008-analyse-propriete`, suite) — implémenté et vérifié en entier, y compris la persistance DB
 
 Demande (`.input/sprint009`) : transformer le tracé basique de zones (sprint007/tâche3) en vrai outil de préparation des opérations — dessin déclenché explicitement, zones typées avec couleur sobre par type (Entrée/Stationnement/Trottoir/Escaliers/Aire de manœuvre/Terrasse/Autre), barre d'outils dédiée, édition des sommets, zoom sur zone, suppression réelle, résumé par catégorie.

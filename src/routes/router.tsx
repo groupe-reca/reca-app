@@ -82,7 +82,11 @@ export const router = createBrowserRouter([
                 handle: { breadcrumb: 'Contrats' },
                 children: [
                   { index: true, element: <ContractsListPage /> },
-                  { path: 'new', element: <ContractWizardPage />, handle: { breadcrumb: 'Nouveau contrat' } },
+                  {
+                    path: 'new',
+                    element: <ContractWizardPage />,
+                    handle: { breadcrumb: 'Nouveau contrat', hideMobileNav: true },
+                  },
                   { path: ':id', element: <ContractDetailPage />, handle: { breadcrumb: 'Détail' } },
                 ],
               },
