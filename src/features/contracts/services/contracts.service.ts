@@ -196,6 +196,7 @@ export async function createContractWithZones(
   const zoneRows = values.zones.map((zone) => ({
     id: zone.id,
     contract_id: contractId,
+    type: zone.type,
     label: zone.label,
     geojson: zone.geojson,
     surface_m2: zone.surfaceM2,

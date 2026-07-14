@@ -1,5 +1,87 @@
 # Plans — RECA Centre des opérations
 
+## [x] Sprint 012 — Expérience mobile du module Contrats (branche `sprint012-mobile-contrats`) — terminé et vérifié en entier (Phases A-E)
+
+Demande (`.input/tache4.md`) : refonte mobile "app native" du module Contrats (pas un simple responsive) — Bottom Navigation, Header compact, Wizard plein écran à transitions horizontales, carte plein écran + Bottom Sheets redimensionnables façon Google Maps, barre d'action flottante, outils de dessin flottants.
+
+Décisions validées avant implémentation : Bottom Nav/Header app-wide mais chrome seulement (contenu des 9 autres modules inchangé, seul Contrats reçoit la refonte complète) ; tablette hérite du Desktop ce sprint ; branche committée d'abord (`75adafe`) puis nouvelle branche **depuis `sprint008-analyse-propriete`** (piège rencontré : une première tentative l'a créée depuis `main` par erreur, corrigée avant tout commit — voir `memory/memory.md`).
+
+Plan détaillé complet (5 phases A-E, signatures exactes, architecture) : `/root/.claude/plans/recupere-ta-nouvelle-tache-harmonic-patterson.md`.
+
+**Phase A (infra device-tier + `BottomSheet` + bascule nav app-wide) — terminée et vérifiée** : `useDeviceTier.ts`, `BottomSheet.tsx` (drag/snap via `motion`, poignée dédiée), `viewport-fit=cover` + fix zoom iOS, `AppLayout.tsx` → dispatcher `DesktopAppShell`/`MobileAppShell`, `navItems.ts` (extrait de `Sidebar.tsx`), `MobileBottomNavigation.tsx`, `MobileHeader.tsx` + `useMobileHeaderActions.ts`. `tsc -b`/`npm run lint` propres. Vérifié en navigateur (Playwright, 390/768/1280px) : Bottom Nav+Header app-wide sans régression du contenu des autres modules, tiroir Sidebar intact ≥768px, glisser de la feuille "Menu" testé (peek→full), Bottom Nav masqué sur `/contracts/new`. 1 correctif pendant la vérification : bouton retour affiché à tort sur les racines de module (Leads/Clients/Contrats/Factures) — corrigé (retour seulement si ≥2 crumbs réels, pas sur un onglet racine).
+
+**Phase B (pages Contrats mobiles liste/détail) — terminée et vérifiée** : dispatchers triviaux + `pages/desktop/`+`pages/mobile/` séparés, `MobileContractLayout.tsx`, liste mobile réutilise `ContractTable`/`Table` tel quel, détail mobile condense les actions dans un menu `⋮`. Vérifié en navigateur (390px) avec un contrat réel (créé via le Wizard desktop, toujours utilisé tel quel — Phase C pas encore faite).
+
+**Phase C (`MobileWizard` + 5 étapes simples) — terminée et vérifiée** : `useContractWizardState.ts` (extraction neutre depuis `ContractWizard.tsx`), `components/layout/mobile/{MobileStepLayout,MobileWizard,FloatingActionBar}.tsx`, `MobileContractWizard.tsx` (5 étapes réutilisées telles quelles, Property en placeholder desktop temporaire). Piège eslint `react-hooks/refs` (plus strict que `set-state-in-effect`) — corrigé via 2 `useState` au lieu d'une ref pour détecter le sens du glissement. Vérifié en navigateur (390px + régression 1280px) jusqu'à la création réelle d'un contrat.
+
+**Phase D (étape Property mobile — carte plein écran + bottom sheets + outils flottants) — terminée et vérifiée** : extraction `useDelineateState.ts`/`usePropertyStepState.ts` (même principe que `useContractWizardState`), éclatement `PropertyInfoPanel`/`PropertyZonesPanel` en contenu pur + wrapper, nouveaux `PropertyInfoSheet`/`PropertyZonesSheet`/`ZoneToolbarFloating`/`ZoneDetailSheet`/`MobilePropertySubStepLocate`/`MobilePropertySubStepDelineate`/`MobileWizardStepProperty`. **3 bugs réels de `BottomSheet` trouvés et corrigés** (portail par-dessus la FloatingActionBar, clip incomplet interceptant les clics, pattern `useDragControls` non fiable au 2e glissement — détail technique complet dans `memory/memory.md`). Vérifié en navigateur de bout en bout jusqu'à la création réelle de plusieurs contrats mobiles avec zones typées, glissement peek/half/full répété avec succès.
+
+**Phase E (régression finale) — terminée et vérifiée** : smoke test mobile sur les 6 modules restants + re-vérification tablette/desktop, aucune régression.
+
+Pas encore commité (reste sur `sprint012-mobile-contrats`).
+
+## [x] Sprint 009 — Dessin des zones de déneigement & calcul des superficies (branche `sprint008-analyse-propriete`, suite) — implémenté et vérifié en entier, y compris la persistance DB
+
+Demande (`.input/sprint009`) : transformer le tracé basique de zones (sprint007/tâche3) en vrai outil de préparation des opérations — dessin déclenché explicitement, zones typées avec couleur sobre par type (Entrée/Stationnement/Trottoir/Escaliers/Aire de manœuvre/Terrasse/Autre), barre d'outils dédiée, édition des sommets, zoom sur zone, suppression réelle, résumé par catégorie.
+
+Décisions validées avec l'utilisateur avant implémentation : (1) étendre `contract_zones` (colonne `type`) plutôt que créer `contract_areas` comme suggéré par le brief ; (2) la barre d'outils locale n'ajoute que + Nouvelle zone/Modifier/Supprimer, Recentrer/Capturer restent dans le Footer global (sprint008.5) ; (3) suite sur la même branche, pas de nouvelle branche.
+
+Plan détaillé complet (signatures exactes, wiring, thème Mapbox GL Draw) : `/root/.claude/plans/recupere-ta-nouvelle-tache-harmonic-patterson.md`.
+
+**Fichiers touchés** :
+- Nouveaux : `supabase/migrations/20260713010000_contract_zones_type.sql`, `src/features/contracts/constants/zoneDrawStyles.ts`, `src/features/contracts/hooks/useZoneTypeSelection.ts`, `src/features/contracts/components/wizard/{ZoneToolbar,ZoneTypeSelector,ZoneNamingModal,PolygonCard,PolygonList,ZoneAreaSummary}.tsx`
+- Modifiés : `types/contract.types.ts`, `constants/wizardOptions.ts`, `schemas/contractCreation.schema.ts`, `services/contracts.service.ts`, `components/wizard/SurfaceSummary.tsx`
+- Réécrits : `components/wizard/PolygonEditor.tsx` (piloté par ref), `PropertySubStepDelineate.tsx`, `PropertyZonesPanel.tsx`, `WizardStepProperty.tsx` (ajout `updateZone`)
+
+**Étapes réalisées** : toutes implémentées. `tsc -b`/`npm run lint`/`npm run build` propres. Vérifié en navigateur (Playwright, compte admin, port 3011, token Mapbox réel) : tous les critères d'acceptation UI confirmés, y compris les 2 tests de non-régression (Annuler retire le polygone, Supprimer retire carte+liste). **1 bug réel trouvé et corrigé en test réel** : `MapboxDraw` nécessite `userProperties: true` au constructeur pour exposer les propriétés custom (`zoneType`) aux expressions de style (`user_zoneType`) — sans ce flag, la couleur retombait silencieusement sur le bleu par défaut dès qu'une zone était désélectionnée (2e/3e zone bleues au lieu de leur couleur de type). Détail technique complet dans `memory/memory.md`.
+
+**Persistance confirmée (2026-07-13)** : migration appliquée par l'utilisateur, 2 contrats de test créés de bout en bout (1 zone puis 5 zones couvrant les 6 types) — sonde REST confirme `type` correctement écrit pour chaque zone. Données de test supprimées. Pas encore commité.
+
+## [x] Tâche 3 — Cadrage carte + parité Localiser/Délimiter + noms de zone en liste déroulante (branche `sprint008-analyse-propriete`, suite) — terminé et vérifié
+
+Demande (`.input/tache3.md`, retour utilisateur après sprint008/008.5) : (1) cadrage caméra de Localiser trop large — zoomer davantage (`fitBounds` padding réduit) ; (2) Délimiter doit reprendre exactement la même vue que Localiser (2 colonnes, contour rouge + masque, même zoom) — seul le panneau gauche change de contenu (zones tracées au lieu de l'adresse) ; (3) nom de zone : champ texte libre → menu déroulant (Stationnement défaut, Entrée, Trottoir, Autres), avec champ "Précisez" additionnel (pas de remplacement) quand Autres est choisi.
+
+Décisions validées avec l'utilisateur : dropdown + champ additionnel pour Autres (pas de remplacement du menu) ; Délimiter reprend le contour+masque complet, pas seulement le layout.
+
+Plan détaillé complet : `/root/.claude/plans/ouvre-une-nouvelle-branche-gleaming-goblet.md` (contenu remplacé — sprints 008/008.5 archivés dans les entrées ci-dessous et dans `tasks.md`/`memory.md`).
+
+**Fichiers prévus** :
+- Nouveaux : `src/features/contracts/components/wizard/PropertyMapStage.tsx`, `PropertyZonesPanel.tsx`
+- Modifiés : `MapViewportController.tsx` (padding), `WizardStepProperty.tsx` (calcul `boundary` centralisé), `PropertySubStepLocate.tsx`, `PropertySubStepDelineate.tsx`
+- Inchangés : `PropertyMap.tsx`, `PropertyBoundaryLayer.tsx`, `PropertyMaskLayer.tsx`, `PropertyInfoPanel.tsx`, `PolygonEditor.tsx`, `SurfaceSummary.tsx`, `PropertySubStepValidate.tsx`, schémas/DB
+
+**Étapes réalisées** : toutes implémentées. `tsc -b`/`npm run lint`/`npm run build` propres. Vérifié en navigateur de bout en bout (Playwright, compte admin, port 3011) : zoom resserré confirmé, même cadre/contour/masque sur Localiser et Délimiter, panneau zones + dropdown fonctionnels (dont le cas "Autres"), création réelle d'un contrat jusqu'au bout. 2 clients de test (+1 contrat/2 factures/1 zone) créés puis supprimés après vérification (confirmation utilisateur). Pas encore commité.
+
+## [x] Sprint 008.5 — Optimisation UX du Wizard (carte plein écran, Footer unifié), branche `sprint008-analyse-propriete` (suite, pas de nouvelle branche) — terminé et vérifié
+
+Demande (`.input/sprint85`) : suite du sprint008, purement UX/layout (aucune nouvelle fonctionnalité métier). Supprimer l'en-tête de page du Wizard (titre+sous-titre, redondant avec le Breadcrumb) sur les 6 étapes, faire remonter `WizardProgress` juste sous le Breadcrumb, faire de la carte le composant dominant (hauteur max, zéro scroll) sur les 3 sous-étapes de "Analyse de la propriété", sortir tous les boutons de navigation/action de la zone de carte vers un Footer unique et réutilisable (slot `action` générique, pensé pour tous les futurs Wizards), redimensionnement Mapbox automatique (`map.resize()` via `ResizeObserver`), et préparer l'automatisation future de la capture (composant `CaptureButton` → hook `usePropertyCapture`).
+
+Décision validée avec l'utilisateur : le regroupement dans le Footer s'étend aux 3 sous-étapes (Localiser/Délimiter/Valider), pas seulement Localiser (seul exemple concret du brief) — cohérence sur toute l'étape. Le mini-formulaire "Ajouter la zone" (Délimiter) reste sur la carte (ce n'est pas une navigation).
+
+Plan détaillé complet (mécanisme de remontée de navigation "nav lifting", chaîne flex `h-full`/`min-h-0`, fichiers) : `/root/.claude/plans/ouvre-une-nouvelle-branche-gleaming-goblet.md` (même fichier que le sprint008 précédent, contenu remplacé — le plan du sprint008 reste archivé dans l'entrée ci-dessous et dans `tasks.md`/`memory.md`).
+
+**Fichiers prévus** :
+- `WizardLayout.tsx` (retrait header), `WizardFooter.tsx` (slot `action` générique)
+- `ContractWizard.tsx`, `WizardStepProperty.tsx`, `PropertySubStepLocate.tsx`, `PropertySubStepDelineate.tsx` (nav lifting + hauteur flex)
+- `PropertyMap.tsx` (hauteur flexible), `useMapboxMap.ts` (ResizeObserver)
+- Nouveau : `src/features/contracts/hooks/usePropertyCapture.ts` — Supprimé : `CaptureButton.tsx`
+
+**Étapes réalisées** : toutes implémentées + 1 bug réel (boucle infinie React, voir `memory/memory.md`/`tasks.md`) trouvé et corrigé pendant la vérification navigateur. `tsc -b`/`npm run lint`/`npm run build` propres. Vérifié en navigateur de bout en bout (Playwright, compte admin, port 3011) jusqu'à la création réelle d'un contrat, resize de fenêtre testé (1440/1024/1920px) sans espace vide ni débordement sur la carte. 4 clients de test (+1 contrat/2 factures/1 zone) créés puis supprimés après vérification (confirmation utilisateur). Pas encore commité.
+
+## [x] Sprint 008 — Analyse de la propriété V1 (carte immersive), branche `sprint008-analyse-propriete` — terminé et vérifié
+
+Demande (`.input/sprint008`) : améliorer la sous-étape **Localiser** de l'étape "Analyse de la propriété" du Wizard Contrats (sprint007). V1 sans données cadastrales : contour GeoJSON de démonstration (généré, pas une vraie parcelle), `fitBounds` automatique, masque assombrissant l'extérieur du terrain, panneau d'information à gauche (30%) + carte (70%), animation discrète (200-300ms), bouton Capturer qui prépare (sans encore persister) zoom/centre/polygone. Délimiter/Valider non touchés (pas de calcul de superficie, pas de dessin de zones dans ce sprint).
+
+Plan détaillé complet (composants, techniques masque/contour, fichiers) : `/root/.claude/plans/ouvre-une-nouvelle-branche-gleaming-goblet.md`.
+
+**Fichiers touchés** :
+- Nouveaux : `src/features/contracts/utils/propertyBoundary.ts`, `src/features/contracts/components/wizard/{PropertyBoundaryLayer,PropertyMaskLayer,MapViewportController,PropertyInfoPanel}.tsx`
+- Renommé + étendu : `MapCapture.tsx` → `CaptureButton.tsx`
+- Réécrit (rendu) : `PropertySubStepLocate.tsx`
+- Inchangés : `PropertyMap.tsx`, `PropertySubStepDelineate.tsx`, `PropertySubStepValidate.tsx`, `WizardStepProperty.tsx`, `PolygonEditor.tsx`, schémas/DB
+
+**Étapes réalisées** : implémentation complète + 3 bugs réels trouvés et corrigés en vérification navigateur (détail technique complet dans `memory/memory.md` et `memory/tasks.md` — piège `isStyleLoaded()`, masque en "donut" invisible au rendu malgré géométrie logique correcte remplacé par 4 rectangles, piège React `setState(fn)`). `tsc -b`/`npm run lint`/`npm run build` propres. Vérifié en navigateur de bout en bout (Playwright, compte admin, port 3011, token Mapbox public réel) jusqu'à la création réelle d'un contrat. 17 clients de test (+ 1 contrat/2 factures/1 zone) créés pendant le débogage, tous supprimés après vérification (confirmé vide en base, avec confirmation explicite de l'utilisateur pour la suppression). Pas encore commité.
+
 ## [x] J. Paramètres — archivé, terminé le 2026-07-11 (voir `tasks.md` pour le détail exact de ce qui a été livré et de ce qui reste non vérifié en navigateur)
 
 **Objectif** : finir le dernier des 10 modules du scope — config entreprise/taxes + gestion des rôles de comptes, réservé aux administrateurs.

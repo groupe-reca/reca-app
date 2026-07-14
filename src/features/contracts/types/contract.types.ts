@@ -46,9 +46,21 @@ export type ObligationsAnswers = {
   autresParticularites: string
 }
 
+export const ZONE_TYPES = [
+  'entree',
+  'stationnement',
+  'trottoir',
+  'escaliers',
+  'aire_manoeuvre',
+  'terrasse',
+  'autre',
+] as const
+export type ZoneType = (typeof ZONE_TYPES)[number]
+
 export type ContractZoneRow = {
   id: string
   contract_id: string
+  type: ZoneType
   label: string
   geojson: GeoJSON.Polygon
   surface_m2: number
@@ -61,6 +73,7 @@ export type ContractZoneRow = {
 
 export type ContractZone = {
   id: string
+  type: ZoneType
   label: string
   geojson: GeoJSON.Polygon
   surfaceM2: number

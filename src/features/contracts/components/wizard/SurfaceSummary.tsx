@@ -1,5 +1,5 @@
-import { Trash2 } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
+import { PolygonCard } from './PolygonCard'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
 
 type SurfaceSummaryProps = {
@@ -17,20 +17,7 @@ export function SurfaceSummary({ zones, onRemove }: SurfaceSummaryProps) {
       {zones.length === 0 && <p className="text-body text-reca-gray-medium">Aucune zone tracée pour l'instant.</p>}
       <div className="flex flex-col gap-2">
         {zones.map((zone) => (
-          <div
-            key={zone.id}
-            className="flex items-center justify-between rounded-control border border-reca-gray-light px-3 py-2"
-          >
-            <span className="text-body text-reca-black">{zone.label}</span>
-            <div className="flex items-center gap-3">
-              <span className="text-body font-medium text-reca-black">{zone.surfaceM2.toFixed(2)} m²</span>
-              {onRemove && (
-                <button type="button" onClick={() => onRemove(zone.id)} aria-label="Retirer la zone">
-                  <Trash2 className="size-4 text-reca-gray-medium hover:text-red-600" aria-hidden="true" />
-                </button>
-              )}
-            </div>
-          </div>
+          <PolygonCard key={zone.id} zone={zone} actions={onRemove ? { onRemove: () => onRemove(zone.id) } : undefined} />
         ))}
       </div>
       {zones.length > 0 && (

@@ -1,20 +1,13 @@
-import { useState } from 'react'
-import { Outlet } from 'react-router'
-import { Breadcrumb } from './Breadcrumb'
-import { Sidebar } from './Sidebar'
+import { useDeviceTier } from '@/hooks/useDeviceTier'
+import { DesktopAppShell } from './DesktopAppShell'
+import { MobileAppShell } from './MobileAppShell'
 
+/**
+ * Point de bascule Desktop/Mobile de l'app entière (sprint012) — les deux shells
+ * sont des arbres 100% séparés (aucun JSX partagé), donc ce dispatcher est le seul
+ * endroit en dehors des pages Contrats où un `if (tier === 'mobile')` apparaît.
+ */
 export function AppLayout() {
-  const [mobileNavOpen, setMobileNavOpen] = useState(false)
-
-  return (
-    <div className="flex h-screen overflow-hidden bg-reca-snow">
-      <Sidebar open={mobileNavOpen} onClose={() => setMobileNavOpen(false)} />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <Breadcrumb onOpenMenu={() => setMobileNavOpen(true)} />
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <Outlet />
-        </main>
-      </div>
-    </div>
-  )
+  const tier = useDeviceTier()
+  return tier === 'mobile' ? <MobileAppShell /> : <DesktopAppShell />
 }
