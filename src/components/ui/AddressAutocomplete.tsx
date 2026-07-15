@@ -45,9 +45,15 @@ export function AddressAutocomplete({ label, value, onChange, onSelect, error }:
   const [open, setOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const justSelectedRef = useRef(false)
 
   useEffect(() => {
     if (!isMapboxConfigured) return
+
+    if (justSelectedRef.current) {
+      justSelectedRef.current = false
+      return
+    }
 
     const query = value.trim()
     if (query.length < 3) {
@@ -78,6 +84,7 @@ export function AddressAutocomplete({ label, value, onChange, onSelect, error }:
 
   function handleSelect(feature: MapboxFeature) {
     const suggestion = parseFeature(feature)
+    justSelectedRef.current = true
     onChange(suggestion.adresse)
     onSelect(suggestion)
     setSuggestions([])
