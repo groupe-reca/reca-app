@@ -13,6 +13,11 @@ function addMonths(dateStr: string, months: number): string {
   return date.toISOString().slice(0, 10)
 }
 
+/** Échéance la plus proche (date croissante) d'un échéancier — réutilisé partout où une "prochaine échéance" est affichée. */
+export function getNextPaymentEntry<T extends { dateEcheance: string }>(entries: T[]): T | undefined {
+  return [...entries].sort((a, b) => a.dateEcheance.localeCompare(b.dateEcheance))[0]
+}
+
 /** Génère l'échéancier `modalitesPaiement` pour un preset donné — remplace la saisie manuelle par défaut. */
 export function buildPaymentSchedule(
   preset: PaymentPresetId,

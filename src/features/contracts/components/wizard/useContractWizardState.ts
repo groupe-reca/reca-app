@@ -206,7 +206,12 @@ export function useContractWizardState() {
       toast.error('Le prix du contrat est requis pour calculer les échéances en pourcentage.')
       return
     }
-    createMutation.mutate(values, { onSuccess: (result) => navigate(`/contracts/${result.contract.id}`) })
+    createMutation.mutate(values, {
+      onSuccess: (result) =>
+        navigate(`/contracts/${result.contract.id}/created`, {
+          state: { contract: result.contract, client: selectedClient, zones: values.zones },
+        }),
+    })
   })
 
   // "Enregistrer le brouillon" — disponible dès l'étape 1, contrairement à "Créer" ne

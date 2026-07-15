@@ -22,6 +22,12 @@ export function formatAddress(
   return lignePrincipale ? `${lignePrincipale}, ${suffixe}` : suffixe
 }
 
+const longDateFormatter = new Intl.DateTimeFormat('fr-CA', { dateStyle: 'long' })
+
+export function formatDateLong(iso: string): string {
+  return longDateFormatter.format(new Date(iso))
+}
+
 const relativeTimeFormatter = new Intl.RelativeTimeFormat('fr-CA', { numeric: 'auto' })
 
 export function formatRelativeTime(iso: string): string {

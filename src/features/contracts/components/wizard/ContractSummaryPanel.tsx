@@ -4,6 +4,7 @@ import { Card } from '@/components/ui/Card'
 import { formatCurrency } from '@/lib/format'
 import type { Client } from '@/features/clients/types/client.types'
 import type { ContractCreationFormValues } from '../../schemas/contractCreation.schema'
+import { getNextPaymentEntry } from '../../utils/paymentPresets'
 
 const CLIENT_TYPE_LABELS: Record<string, string> = {
   residentiel: 'Résidentiel',
@@ -28,7 +29,7 @@ export function ContractSummaryPanel({ client, control }: ContractSummaryPanelPr
   const modalitesPaiement = useWatch({ control, name: 'modalitesPaiement' }) ?? []
 
   const totalSurface = zones.reduce((sum, zone) => sum + zone.surfaceM2, 0)
-  const nextPayment = [...modalitesPaiement].sort((a, b) => a.dateEcheance.localeCompare(b.dateEcheance))[0]
+  const nextPayment = getNextPaymentEntry(modalitesPaiement)
 
   return (
     <Card className="flex h-fit flex-col gap-4">

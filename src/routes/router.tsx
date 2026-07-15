@@ -17,6 +17,7 @@ import { ClientCreatePage } from '@/features/clients/pages/ClientCreatePage'
 import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage'
 import { ClientsListPage } from '@/features/clients/pages/ClientsListPage'
 import { ContractWizardPage } from '@/features/contracts/pages/ContractWizardPage'
+import { ContractCreatedPage } from '@/features/contracts/pages/ContractCreatedPage'
 import { ContractDetailPage } from '@/features/contracts/pages/ContractDetailPage'
 import { ContractsListPage } from '@/features/contracts/pages/ContractsListPage'
 import { ContractWizardSettingsPage } from '@/features/contracts/pages/ContractWizardSettingsPage'
@@ -89,6 +90,11 @@ export const router = createBrowserRouter([
                     handle: { breadcrumb: 'Nouveau contrat', hideMobileNav: true },
                   },
                   { path: ':id', element: <ContractDetailPage />, handle: { breadcrumb: 'Détail' } },
+                  {
+                    path: ':id/created',
+                    element: <ContractCreatedPage />,
+                    handle: { breadcrumb: 'Contrat enregistré', hideMobileNav: true },
+                  },
                   {
                     element: <RequireRole roles={['administrateur']} />,
                     children: [
