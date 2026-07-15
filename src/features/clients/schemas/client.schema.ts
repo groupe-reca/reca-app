@@ -14,7 +14,7 @@ export const clientSchema = z
     prenom: z.string().min(1, 'Le prénom est requis'),
     nom: z.string().min(1, 'Le nom est requis'),
     entreprise: z.string().optional(),
-    telephone: z.string().optional(),
+    telephone: z.string().min(1, 'Le téléphone est requis'),
     courriel: z.union([z.literal(''), z.string().email('Courriel invalide')]).optional(),
     adresse: z.string().optional(),
     ville: z.string().optional(),

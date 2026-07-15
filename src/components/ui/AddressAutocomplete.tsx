@@ -15,6 +15,7 @@ export type AddressSuggestion = {
 type MapboxFeature = {
   place_name: string
   text: string
+  address?: string
   center: [number, number]
   context?: { id: string; text: string }[]
 }
@@ -24,7 +25,8 @@ function parseFeature(feature: MapboxFeature): AddressSuggestion {
   const ville = context.find((entry) => entry.id.startsWith('place'))?.text ?? null
   const codePostal = context.find((entry) => entry.id.startsWith('postcode'))?.text ?? null
   const [longitude, latitude] = feature.center
-  return { placeName: feature.place_name, adresse: feature.text, ville, codePostal, latitude, longitude }
+  const adresse = feature.address ? `${feature.address} ${feature.text}` : feature.text
+  return { placeName: feature.place_name, adresse, ville, codePostal, latitude, longitude }
 }
 
 type AddressAutocompleteProps = {
