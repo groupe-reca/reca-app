@@ -28,6 +28,11 @@ const SECONDARY =
  * mêmes props sans `onCancel` (le retour natif est porté par le bouton retour du
  * `MobileHeader`, pas un bouton persistant ici). Réutilise le type `WizardFooterAction`
  * importé (pas redéfini) pour garder le contrat d'action en phase avec le desktop.
+ *
+ * sprint014 : "Brouillon" (`onDraft`) est désormais rendu sur **chaque étape** (pas
+ * seulement la dernière) — pas de barre de header dédiée côté mobile (contrairement au
+ * Desktop, cf. `WizardLayout.headerActions`), décision de portée pragmatique : aucune
+ * maquette mobile ne montre le Wizard, donc pas de contrainte visuelle à respecter ici.
  */
 export function FloatingActionBar({
   onBack,
@@ -64,17 +69,16 @@ export function FloatingActionBar({
           {action.label}
         </button>
       )}
+      {onDraft && (
+        <button type="button" className={SECONDARY} disabled={draftDisabled || isSubmitting} onClick={onDraft}>
+          Brouillon
+        </button>
+      )}
       {isLastStep ? (
-        <div className="ml-auto flex items-center gap-2">
-          <button type="button" className={SECONDARY} disabled={draftDisabled || isSubmitting} onClick={onDraft}>
-            {isSubmitting && <Loader2 className="mr-2 inline size-4 animate-spin" aria-hidden="true" />}
-            Brouillon
-          </button>
-          <button type="button" className={PRIMARY} disabled={createDisabled || isSubmitting} onClick={onCreate}>
-            {isSubmitting && <Loader2 className="mr-2 inline size-4 animate-spin" aria-hidden="true" />}
-            Créer
-          </button>
-        </div>
+        <button type="button" className={PRIMARY} disabled={createDisabled || isSubmitting} onClick={onCreate}>
+          {isSubmitting && <Loader2 className="mr-2 inline size-4 animate-spin" aria-hidden="true" />}
+          Créer
+        </button>
       ) : (
         <button type="button" className={PRIMARY} disabled={nextDisabled} onClick={onNext}>
           {nextLabel}

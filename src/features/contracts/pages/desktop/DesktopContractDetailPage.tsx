@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
-import { Pencil, Trash2 } from 'lucide-react'
+import { FileEdit, Pencil, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Dropdown, DropdownItem } from '@/components/ui/Dropdown'
@@ -13,6 +13,7 @@ import { useUpdateContractStatus } from '../../hooks/useUpdateContractStatus'
 import { ContractFormModal } from '../../components/ContractFormModal'
 import { ContractStatusBadge } from '../../components/ContractStatusBadge'
 import { CONTRACT_STATUSES, CONTRACT_STATUS_LABELS } from '../../types/contract.types'
+import { DEPOT_NEIGE_OPTIONS, MODE_CONCLUSION_LABELS } from '../../constants/wizardOptions'
 
 /** Contenu Desktop/Tablette — inchangé, seulement déplacé/renommé depuis `ContractDetailPage.tsx` (sprint012). */
 export function DesktopContractDetailPage() {
@@ -47,6 +48,12 @@ export function DesktopContractDetailPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {contract.statut === 'en_attente' && (
+            <Button variant="secondary" onClick={() => navigate(`/contracts/new?draftId=${contract.id}`)}>
+              <FileEdit className="size-4" aria-hidden="true" />
+              Reprendre le brouillon
+            </Button>
+          )}
           <Button variant="secondary" onClick={() => setEditOpen(true)}>
             <Pencil className="size-4" aria-hidden="true" />
             Modifier
@@ -69,6 +76,7 @@ export function DesktopContractDetailPage() {
           <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Détails</h2>
           <div className="flex flex-col gap-2 text-body text-reca-gray-medium">
             <p>Prix : {contract.prix != null ? formatCurrency(contract.prix) : '—'}</p>
+            <p>Mode de conclusion : {MODE_CONCLUSION_LABELS[contract.modeConclusion]}</p>
             <p>Signature : {contract.dateSignature ?? '—'}</p>
             <p>Début : {contract.dateDebut ?? '—'}</p>
             <p>Fin : {contract.dateFin ?? '—'}</p>
@@ -99,12 +107,26 @@ export function DesktopContractDetailPage() {
             <p>Superficie : {contract.superficie != null ? `${contract.superficie} m²` : '—'}</p>
             <p>Exclusions : {contract.exclusions}</p>
             <p>Seuil de déclenchement : {contract.seuilDeclenchementCm} cm</p>
-            <p>Premier passage garanti : {contract.heurePremierPassage}</p>
+            <p>Heure limite de dégagement : {contract.heurePremierPassage}</p>
+            <p>
+              Accumulation max. par précipitation :{' '}
+              {contract.accumulationMaximaleCm != null ? `${contract.accumulationMaximaleCm} cm` : '—'}
+            </p>
+            <p>
+              Dépôt de la neige :{' '}
+              {DEPOT_NEIGE_OPTIONS.find((option) => option.value === contract.depotNeige)?.label ?? '—'}
+              {contract.depotNeige !== 'sur_terrain' &&
+                ` (permis municipal ${contract.permisMunicipalObtenu ? 'obtenu' : 'non obtenu'})`}
+            </p>
             <p>Nettoyage final : {contract.nettoyageFinal}</p>
             <p>Distance de sécurité : {contract.distanceSecuriteCm} cm</p>
             <p>Balises requises : {contract.balisesRequises ? 'Oui' : 'Non'}</p>
             <p>Obligations du client : {contract.obligationsClient}</p>
             <p>Responsabilités : {contract.responsabilites}</p>
+            {contract.clauseAnnulation && <p>Annulation / résolution : {contract.clauseAnnulation}</p>}
+            {contract.clausePrix && <p>Prix : {contract.clausePrix}</p>}
+            {contract.clauseExecution && <p>Exécution : {contract.clauseExecution}</p>}
+            {contract.clauseAssurance && <p>Assurance et responsabilité : {contract.clauseAssurance}</p>}
           </div>
         </Card>
 

@@ -36,15 +36,23 @@ export type ServiceEntry = {
 
 export type SeuilDeclenchementCm = 2 | 3 | 5
 
+// Tâche 5 : l'étape "Modalités & Obligations" ne collecte plus de réponses
+// Q&R par contrat — seuil/heure/dépôt de neige viennent désormais des
+// paramètres par défaut du Wizard (`ContractWizardDefaults`, settings.contract_wizard_defaults),
+// et balises/entrée libre/animaux/portail/autres particularités/accumulation
+// max./plafond saisonnier sont retirés entièrement (voir generateClauses.ts).
 export type ObligationsAnswers = {
-  balisesRequises: boolean
   seuilDeclenchementCm: SeuilDeclenchementCm
-  accumulationMaximaleCm: number | null
-  entreeLibreObligatoire: boolean
-  animaux: boolean
-  portail: boolean
-  autresParticularites: string
+  heurePremierPassage: string
+  depotNeige: DepotNeige
+  permisMunicipalObtenu: boolean
 }
+
+export const MODE_CONCLUSION = ['en_personne', 'a_distance', 'itinerant'] as const
+export type ModeConclusion = (typeof MODE_CONCLUSION)[number]
+
+export const DEPOT_NEIGE = ['sur_terrain', 'bordure_rue', 'transport_hors_site'] as const
+export type DepotNeige = (typeof DEPOT_NEIGE)[number]
 
 export const ZONE_TYPES = [
   'entree',
@@ -82,6 +90,21 @@ export type ContractZone = {
   capturedAt: string
 }
 
+export type ContractPhotoRow = {
+  id: string
+  contract_id: string
+  storage_path: string
+  ordre: number
+  created_at: string
+  created_by: string | null
+}
+
+export type ContractPhoto = {
+  id: string
+  storagePath: string
+  ordre: number
+}
+
 export type ContractRow = {
   id: string
   numero: string
@@ -113,6 +136,13 @@ export type ContractRow = {
   services: ServiceEntry[]
   obligations_reponses: ObligationsAnswers | Record<string, never>
   accumulation_maximale_cm: number | null
+  mode_conclusion: ModeConclusion
+  depot_neige: DepotNeige
+  permis_municipal_obtenu: boolean
+  clause_annulation: string | null
+  clause_prix: string | null
+  clause_execution: string | null
+  clause_assurance: string | null
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -149,6 +179,13 @@ export type Contract = {
   services: ServiceEntry[]
   obligationsReponses: ObligationsAnswers | Record<string, never>
   accumulationMaximaleCm: number | null
+  modeConclusion: ModeConclusion
+  depotNeige: DepotNeige
+  permisMunicipalObtenu: boolean
+  clauseAnnulation: string | null
+  clausePrix: string | null
+  clauseExecution: string | null
+  clauseAssurance: string | null
   createdAt: string
   client: ContractClientRef | null
 }

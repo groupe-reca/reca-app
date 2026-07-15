@@ -1,4 +1,4 @@
-import type { ServiceCode, ZoneType } from '../types/contract.types'
+import type { DepotNeige, ModeConclusion, ServiceCode, ZoneType } from '../types/contract.types'
 
 export const SERVICE_OPTIONS: { code: ServiceCode; label: string }[] = [
   { code: 'deneigement', label: 'Déneigement' },
@@ -17,6 +17,21 @@ export const MODE_PAIEMENT_OPTIONS = [
   { value: 'cheque', label: 'Chèque' },
   { value: 'comptant', label: 'Comptant' },
 ] as const
+
+export const DEPOT_NEIGE_OPTIONS: { value: DepotNeige; label: string }[] = [
+  { value: 'sur_terrain', label: 'Sur le terrain du client' },
+  { value: 'bordure_rue', label: 'En bordure de rue' },
+  { value: 'transport_hors_site', label: 'Transport hors site' },
+]
+
+export const MODE_CONCLUSION_OPTIONS: { value: ModeConclusion; label: string }[] = [
+  { value: 'en_personne', label: 'En personne' },
+  { value: 'a_distance', label: 'À distance (téléphone ou Internet)' },
+  { value: 'itinerant', label: 'Itinérant (sollicitation au domicile du client)' },
+]
+export const MODE_CONCLUSION_LABELS: Record<ModeConclusion, string> = Object.fromEntries(
+  MODE_CONCLUSION_OPTIONS.map((option) => [option.value, option.label]),
+) as Record<ModeConclusion, string>
 
 /**
  * Sous-étape Délimiter — type de zone (menu déroulant, "Autre" révèle un champ libre),

@@ -31,6 +31,7 @@ export type SettingsRow = {
   adresse: string | null
   couleurs: Partial<SettingsColors> | null
   modules: Partial<SettingsModules> | null
+  assurance_police_no: string | null
   created_at: string
   updated_at: string
 }
@@ -44,5 +45,6 @@ export type Settings = {
   adresse: string | null
   couleurs: SettingsColors
   modules: SettingsModules
+  assurancePoliceNo: string | null
   updatedAt: string
 }

@@ -5,19 +5,27 @@ const optionalCoordinate = z
   .optional()
   .refine((value) => !value || !Number.isNaN(Number(value)), 'Doit être un nombre')
 
-export const clientSchema = z.object({
-  prenom: z.string().min(1, 'Le prénom est requis'),
-  nom: z.string().min(1, 'Le nom est requis'),
-  entreprise: z.string().optional(),
-  telephone: z.string().optional(),
-  courriel: z.union([z.literal(''), z.string().email('Courriel invalide')]).optional(),
-  adresse: z.string().optional(),
-  ville: z.string().optional(),
-  codePostal: z.string().optional(),
-  latitude: optionalCoordinate,
-  longitude: optionalCoordinate,
-  typeClient: z.string().optional(),
-  notes: z.string().optional(),
-})
+export const CLIENT_TYPES = ['residentiel', 'commercial'] as const
+export type ClientType = (typeof CLIENT_TYPES)[number]
+
+export const clientSchema = z
+  .object({
+    typeClient: z.enum(CLIENT_TYPES),
+    prenom: z.string().min(1, 'Le prénom est requis'),
+    nom: z.string().min(1, 'Le nom est requis'),
+    entreprise: z.string().optional(),
+    telephone: z.string().optional(),
+    courriel: z.union([z.literal(''), z.string().email('Courriel invalide')]).optional(),
+    adresse: z.string().optional(),
+    ville: z.string().optional(),
+    codePostal: z.string().optional(),
+    latitude: optionalCoordinate,
+    longitude: optionalCoordinate,
+    notes: z.string().optional(),
+  })
+  .refine((values) => values.typeClient !== 'commercial' || Boolean(values.entreprise?.trim()), {
+    message: "Le nom de l'entreprise est requis pour un client commercial",
+    path: ['entreprise'],
+  })
 
 export type ClientFormValues = z.infer<typeof clientSchema>

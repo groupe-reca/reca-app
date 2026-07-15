@@ -19,6 +19,7 @@ import { ClientsListPage } from '@/features/clients/pages/ClientsListPage'
 import { ContractWizardPage } from '@/features/contracts/pages/ContractWizardPage'
 import { ContractDetailPage } from '@/features/contracts/pages/ContractDetailPage'
 import { ContractsListPage } from '@/features/contracts/pages/ContractsListPage'
+import { ContractWizardSettingsPage } from '@/features/contracts/pages/ContractWizardSettingsPage'
 import { InvoiceCreatePage } from '@/features/invoices/pages/InvoiceCreatePage'
 import { InvoiceDetailPage } from '@/features/invoices/pages/InvoiceDetailPage'
 import { InvoicesListPage } from '@/features/invoices/pages/InvoicesListPage'
@@ -88,6 +89,16 @@ export const router = createBrowserRouter([
                     handle: { breadcrumb: 'Nouveau contrat', hideMobileNav: true },
                   },
                   { path: ':id', element: <ContractDetailPage />, handle: { breadcrumb: 'Détail' } },
+                  {
+                    element: <RequireRole roles={['administrateur']} />,
+                    children: [
+                      {
+                        path: 'parametres',
+                        element: <ContractWizardSettingsPage />,
+                        handle: { breadcrumb: 'Paramètres du Wizard' },
+                      },
+                    ],
+                  },
                 ],
               },
             ],

@@ -1,9 +1,16 @@
 import { useMemo, useRef, useState } from 'react'
 import { Mail, Phone, Plus, Search } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { formatAddress, formatPhone } from '@/lib/format'
 import { useClients } from '../hooks/useClients'
 import { ClientFormModal } from './ClientFormModal'
 import type { Client } from '../types/client.types'
+
+const CLIENT_TYPE_BADGE: Record<string, { label: string; color: 'blue' | 'orange' }> = {
+  residentiel: { label: 'Résidentiel', color: 'blue' },
+  commercial: { label: 'Commercial', color: 'orange' },
+}
 
 type ClientSearchPickerProps = {
   value: Client | null
@@ -49,7 +56,14 @@ export function ClientSearchPicker({ value, onChange }: ClientSearchPickerProps)
     return (
       <Card>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-subtitle font-semibold text-reca-black">Client</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-subtitle font-semibold text-reca-black">Client</h2>
+            {value.typeClient && CLIENT_TYPE_BADGE[value.typeClient] && (
+              <Badge color={CLIENT_TYPE_BADGE[value.typeClient].color} size="sm">
+                {CLIENT_TYPE_BADGE[value.typeClient].label}
+              </Badge>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => setOpen(true)}
@@ -73,10 +87,12 @@ export function ClientSearchPicker({ value, onChange }: ClientSearchPickerProps)
               {value.prenom} {value.nom}
               {value.entreprise && <span className="text-reca-gray-medium"> — {value.entreprise}</span>}
             </p>
-            <p className="text-reca-gray-medium">{value.adresse ?? 'Adresse non renseignée'}</p>
+            <p className="text-reca-gray-medium">
+              {formatAddress(value.adresse, value.ville, value.codePostal) || 'Adresse non renseignée'}
+            </p>
             <div className="flex items-center gap-2 text-reca-gray-medium">
               <Phone className="size-4" aria-hidden="true" />
-              {value.telephone ?? '—'}
+              {formatPhone(value.telephone) || '—'}
             </div>
             <div className="flex items-center gap-2 text-reca-gray-medium">
               <Mail className="size-4" aria-hidden="true" />

@@ -25,16 +25,15 @@ type WizardFooterProps = {
    * quelle sans modifier ce composant.
    */
   action?: WizardFooterAction | null
-  onDraft?: () => void
-  draftDisabled?: boolean
   onCreate?: () => void
   createDisabled?: boolean
   isSubmitting?: boolean
 }
 
 /**
- * Footer fixe du Wizard : Retour/Suivant sur les étapes intermédiaires, Brouillon/Créer
- * sur la dernière (Validation) — même barre, boutons différents, jamais les deux à la fois.
+ * Footer fixe du Wizard : Retour/Suivant sur les étapes intermédiaires, Créer sur la
+ * dernière (Révision). "Enregistrer le brouillon" est disponible à toute étape depuis un
+ * autre emplacement (header du Wizard, sprint014) — plus dans ce footer.
  */
 export function WizardFooter({
   onCancel,
@@ -44,8 +43,6 @@ export function WizardFooter({
   nextLabel = 'Suivant',
   nextDisabled,
   action,
-  onDraft,
-  draftDisabled,
   onCreate,
   createDisabled,
   isSubmitting,
@@ -73,16 +70,10 @@ export function WizardFooter({
         </Button>
       )}
       {isLastStep ? (
-        <>
-          <Button type="button" variant="secondary" disabled={draftDisabled || isSubmitting} onClick={onDraft}>
-            {isSubmitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            Enregistrer comme brouillon
-          </Button>
-          <Button type="button" disabled={createDisabled || isSubmitting} onClick={onCreate}>
-            {isSubmitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
-            Créer
-          </Button>
-        </>
+        <Button type="button" disabled={createDisabled || isSubmitting} onClick={onCreate}>
+          {isSubmitting && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
+          Créer
+        </Button>
       ) : (
         <Button type="button" disabled={nextDisabled} onClick={onNext}>
           {nextLabel}

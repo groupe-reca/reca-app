@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useWatch } from 'react-hook-form'
 import type { Control, UseFormSetValue } from 'react-hook-form'
 import { isMapboxConfigured } from '@/lib/mapboxClient'
-import type { ContractCreationFormValues, ContractZoneFormValues } from '../schemas/contractCreation.schema'
+import type { ContractCreationFormValues, ContractPhotoFormValues, ContractZoneFormValues } from '../schemas/contractCreation.schema'
 import type { GeocodeResult } from '../services/geocoding.service'
 import { buildDemoBoundary } from '../utils/propertyBoundary'
 import type { PropertyNav } from '../components/wizard/WizardStepProperty'
@@ -41,6 +41,7 @@ export function usePropertyStepState({
   const [capturePath, setCapturePath] = useState<string | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const zones = useWatch({ control, name: 'zones' }) ?? []
+  const photos = useWatch({ control, name: 'photos' }) ?? []
   const mapUnavailable = !isMapboxConfigured || Boolean(mapError)
 
   useEffect(() => {
@@ -81,6 +82,18 @@ export function usePropertyStepState({
     )
   }
 
+  function addPhoto(photo: ContractPhotoFormValues) {
+    setValue('photos', [...photos, photo], { shouldValidate: true })
+  }
+
+  function removePhoto(id: string) {
+    setValue(
+      'photos',
+      photos.filter((photo) => photo.id !== id),
+      { shouldValidate: true },
+    )
+  }
+
   const center: [number, number] = useMemo(() => (geocode ? [geocode.lng, geocode.lat] : QUEBEC_CENTER), [geocode])
   const currentIndex = SUB_STEP_ORDER.indexOf(subStep)
 
@@ -97,6 +110,7 @@ export function usePropertyStepState({
     mapError,
     setMapError,
     zones,
+    photos,
     mapUnavailable,
     center,
     boundary,
@@ -105,5 +119,7 @@ export function usePropertyStepState({
     addZone,
     updateZone,
     removeZone,
+    addPhoto,
+    removePhoto,
   }
 }

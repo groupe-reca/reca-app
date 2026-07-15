@@ -4,6 +4,24 @@ export function formatCurrency(value: number): string {
   return currencyFormatter.format(value)
 }
 
+export function formatPhone(value: string | null | undefined): string {
+  if (!value) return ''
+  const digits = value.replace(/\D/g, '').slice(-10)
+  if (digits.length !== 10) return value
+  return `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}`
+}
+
+export function formatAddress(
+  adresse: string | null | undefined,
+  ville: string | null | undefined,
+  codePostal: string | null | undefined,
+): string {
+  const lignePrincipale = [adresse, ville].filter(Boolean).join(', ')
+  const suffixe = ['QC', codePostal].filter(Boolean).join(' ')
+  if (!suffixe) return lignePrincipale
+  return lignePrincipale ? `${lignePrincipale}, ${suffixe}` : suffixe
+}
+
 const relativeTimeFormatter = new Intl.RelativeTimeFormat('fr-CA', { numeric: 'auto' })
 
 export function formatRelativeTime(iso: string): string {

@@ -51,6 +51,7 @@ export function WizardStepProperty({
     mapUnavailable,
     setMapError,
     zones,
+    photos,
     center,
     boundary,
     currentIndex,
@@ -58,6 +59,8 @@ export function WizardStepProperty({
     addZone,
     updateZone,
     removeZone,
+    addPhoto,
+    removePhoto,
   } = usePropertyStepState({ control, setValue, onCompletionChange, onNavChange, onAdvanceStep })
 
   return (
@@ -101,7 +104,16 @@ export function WizardStepProperty({
             onNavChange={onNavChange}
           />
         )}
-        {subStep === 'validate' && <PropertySubStepValidate zones={zones} capturePath={capturePath} />}
+        {subStep === 'validate' && (
+          <PropertySubStepValidate
+            zones={zones}
+            capturePath={capturePath}
+            contractId={contractId}
+            photos={photos}
+            onAddPhoto={addPhoto}
+            onRemovePhoto={removePhoto}
+          />
+        )}
       </div>
     </div>
   )

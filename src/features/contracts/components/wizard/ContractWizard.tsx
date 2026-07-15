@@ -1,12 +1,13 @@
+import { Loader2 } from 'lucide-react'
 import { WizardLayout } from '@/components/layout/WizardLayout'
 import { WizardFooter } from '@/components/layout/WizardFooter'
+import { Button } from '@/components/ui/Button'
 import { useContractWizardState } from './useContractWizardState'
 import { WizardStepClient } from './WizardStepClient'
 import { WizardStepProperty } from './WizardStepProperty'
-import { WizardStepServices } from './WizardStepServices'
-import { WizardStepObligations } from './WizardStepObligations'
-import { WizardStepPayment } from './WizardStepPayment'
+import { WizardStepTerms } from './WizardStepTerms'
 import { WizardStepValidation } from './WizardStepValidation'
+import { ContractSummaryPanel } from './ContractSummaryPanel'
 
 /** Wizard Desktop/Tablette — inchangé, consomme désormais `useContractWizardState` (extraction sprint012) au lieu de porter sa propre logique. */
 export function ContractWizard() {
@@ -15,13 +16,15 @@ export function ContractWizard() {
     contractId,
     selectedClient,
     setManuallySelectedClient,
+    isLoadingDraft,
+    isDraftError,
     activeStepId,
     activeIndex,
     steps,
     goNext,
     goBack,
     goToStep,
-    canFinalize,
+    openPropertyAnalysis,
     setPropertyNav,
     setPropertyStepComplete,
     footerOnNext,
@@ -31,27 +34,66 @@ export function ContractWizard() {
     control,
     setValue,
     errors,
-    mutation,
-    submitAs,
+    isSubmitting,
+    handleCreate,
+    createDisabled,
+    handleSaveDraft,
+    draftDisabled,
   } = useContractWizardState()
+
+  if (isLoadingDraft) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="size-6 animate-spin text-reca-gray-medium" aria-hidden="true" />
+      </div>
+    )
+  }
+
+  if (isDraftError) {
+    return (
+      <div className="flex h-full flex-col items-center justify-center gap-2 text-center">
+        <p className="text-body text-reca-black">Impossible de charger ce brouillon.</p>
+        <Button variant="secondary" onClick={() => navigate('/contracts')}>
+          Retour aux contrats
+        </Button>
+      </div>
+    )
+  }
 
   return (
     <WizardLayout
       steps={steps}
       onStepClick={goToStep}
+      sidePanel={
+        activeStepId === 'property' ? undefined : <ContractSummaryPanel client={selectedClient} control={control} />
+      }
+      headerActions={
+        <>
+          <Button type="button" variant="ghost" onClick={() => navigate('/contracts')}>
+            Annuler
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={draftDisabled}
+            isLoading={isSubmitting}
+            onClick={handleSaveDraft}
+          >
+            Enregistrer le brouillon
+          </Button>
+        </>
+      }
       footer={
         <WizardFooter
           onCancel={() => navigate('/contracts')}
           onBack={activeIndex > 0 ? goBack : undefined}
-          isLastStep={activeStepId === 'validation'}
+          isLastStep={activeStepId === 'review'}
           onNext={footerOnNext}
           nextDisabled={footerNextDisabled}
           action={footerAction}
-          onDraft={submitAs(false)}
-          draftDisabled={!selectedClient || mutation.isPending}
-          onCreate={submitAs(true)}
-          createDisabled={!canFinalize || mutation.isPending}
-          isSubmitting={mutation.isPending}
+          onCreate={handleCreate}
+          createDisabled={createDisabled}
+          isSubmitting={isSubmitting}
         />
       }
     >
@@ -59,8 +101,7 @@ export function ContractWizard() {
         <WizardStepClient
           client={selectedClient}
           onClientChange={setManuallySelectedClient}
-          register={register}
-          errors={errors}
+          onOpenMeasurementTool={openPropertyAnalysis}
         />
       )}
       {activeStepId === 'property' && selectedClient && (
@@ -74,12 +115,10 @@ export function ContractWizard() {
           onAdvanceStep={goNext}
         />
       )}
-      {activeStepId === 'services' && <WizardStepServices register={register} />}
-      {activeStepId === 'obligations' && <WizardStepObligations register={register} errors={errors} />}
-      {activeStepId === 'payment' && (
-        <WizardStepPayment control={control} register={register} errors={errors} setValue={setValue} />
+      {activeStepId === 'terms' && (
+        <WizardStepTerms control={control} register={register} errors={errors} setValue={setValue} />
       )}
-      {activeStepId === 'validation' && selectedClient && (
+      {activeStepId === 'review' && selectedClient && (
         <WizardStepValidation client={selectedClient} control={control} />
       )}
     </WizardLayout>

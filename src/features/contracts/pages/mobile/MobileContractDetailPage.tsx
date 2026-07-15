@@ -13,6 +13,7 @@ import { useUpdateContractStatus } from '../../hooks/useUpdateContractStatus'
 import { ContractFormModal } from '../../components/ContractFormModal'
 import { ContractStatusBadge } from '../../components/ContractStatusBadge'
 import { CONTRACT_STATUSES, CONTRACT_STATUS_LABELS } from '../../types/contract.types'
+import { DEPOT_NEIGE_OPTIONS, MODE_CONCLUSION_LABELS } from '../../constants/wizardOptions'
 
 export function MobileContractDetailPage() {
   const { id = '' } = useParams()
@@ -52,6 +53,11 @@ export function MobileContractDetailPage() {
           }
         >
           <DropdownItem onClick={() => setEditOpen(true)}>Modifier</DropdownItem>
+          {contract.statut === 'en_attente' && (
+            <DropdownItem onClick={() => navigate(`/contracts/new?draftId=${contract.id}`)}>
+              Reprendre le brouillon
+            </DropdownItem>
+          )}
           {CONTRACT_STATUSES.map((status) => (
             <DropdownItem key={status} onClick={() => updateStatus.mutate(status)}>
               Statut : {CONTRACT_STATUS_LABELS[status]}
@@ -75,6 +81,7 @@ export function MobileContractDetailPage() {
         <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Détails</h2>
         <div className="flex flex-col gap-2 text-body text-reca-gray-medium">
           <p>Prix : {contract.prix != null ? formatCurrency(contract.prix) : '—'}</p>
+          <p>Mode de conclusion : {MODE_CONCLUSION_LABELS[contract.modeConclusion]}</p>
           <p>Signature : {contract.dateSignature ?? '—'}</p>
           <p>Début : {contract.dateDebut ?? '—'}</p>
           <p>Fin : {contract.dateFin ?? '—'}</p>
@@ -103,12 +110,26 @@ export function MobileContractDetailPage() {
           <p>Superficie : {contract.superficie != null ? `${contract.superficie} m²` : '—'}</p>
           <p>Exclusions : {contract.exclusions}</p>
           <p>Seuil de déclenchement : {contract.seuilDeclenchementCm} cm</p>
-          <p>Premier passage garanti : {contract.heurePremierPassage}</p>
+          <p>Heure limite de dégagement : {contract.heurePremierPassage}</p>
+          <p>
+            Accumulation max. par précipitation :{' '}
+            {contract.accumulationMaximaleCm != null ? `${contract.accumulationMaximaleCm} cm` : '—'}
+          </p>
+          <p>
+            Dépôt de la neige :{' '}
+            {DEPOT_NEIGE_OPTIONS.find((option) => option.value === contract.depotNeige)?.label ?? '—'}
+            {contract.depotNeige !== 'sur_terrain' &&
+              ` (permis municipal ${contract.permisMunicipalObtenu ? 'obtenu' : 'non obtenu'})`}
+          </p>
           <p>Nettoyage final : {contract.nettoyageFinal}</p>
           <p>Distance de sécurité : {contract.distanceSecuriteCm} cm</p>
           <p>Balises requises : {contract.balisesRequises ? 'Oui' : 'Non'}</p>
           <p>Obligations du client : {contract.obligationsClient}</p>
           <p>Responsabilités : {contract.responsabilites}</p>
+          {contract.clauseAnnulation && <p>Annulation / résolution : {contract.clauseAnnulation}</p>}
+          {contract.clausePrix && <p>Prix : {contract.clausePrix}</p>}
+          {contract.clauseExecution && <p>Exécution : {contract.clauseExecution}</p>}
+          {contract.clauseAssurance && <p>Assurance et responsabilité : {contract.clauseAssurance}</p>}
         </div>
       </Card>
 

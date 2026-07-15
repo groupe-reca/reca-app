@@ -26,6 +26,7 @@ function mapSettings(row: SettingsRow): Settings {
     adresse: row.adresse,
     couleurs: { ...DEFAULT_COLORS, ...row.couleurs },
     modules: { ...DEFAULT_MODULES, ...row.modules },
+    assurancePoliceNo: row.assurance_police_no,
     updatedAt: row.updated_at,
   }
 }
@@ -48,6 +49,7 @@ export async function updateSettings(values: SettingsFormValues): Promise<Settin
       primaire: values.couleurPrimaire || DEFAULT_COLORS.primaire,
       secondaire: values.couleurSecondaire || DEFAULT_COLORS.secondaire,
     },
+    assurance_police_no: values.assurancePoliceNo || null,
   }
 
   const { data, error } = await supabase

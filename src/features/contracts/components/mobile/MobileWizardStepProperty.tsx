@@ -42,12 +42,15 @@ export function MobileWizardStepProperty({
     mapUnavailable,
     setMapError,
     zones,
+    photos,
     center,
     boundary,
     handleGeocoded,
     addZone,
     updateZone,
     removeZone,
+    addPhoto,
+    removePhoto,
   } = usePropertyStepState({ control, setValue, onCompletionChange, onNavChange, onAdvanceStep })
 
   return (
@@ -83,7 +86,14 @@ export function MobileWizardStepProperty({
       )}
       {subStep === 'validate' && (
         <div className="h-full overflow-y-auto p-4">
-          <PropertySubStepValidate zones={zones} capturePath={capturePath} />
+          <PropertySubStepValidate
+            zones={zones}
+            capturePath={capturePath}
+            contractId={contractId}
+            photos={photos}
+            onAddPhoto={addPhoto}
+            onRemovePhoto={removePhoto}
+          />
         </div>
       )}
     </div>
