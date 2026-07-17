@@ -1,4 +1,5 @@
 import type { DepotNeige, ModeConclusion, ServiceCode, ZoneType } from '../types/contract.types'
+import type { AiModel, AiProvider } from '../types/contractWizardDefaults.types'
 
 export const SERVICE_OPTIONS: { code: ServiceCode; label: string }[] = [
   { code: 'deneigement', label: 'Déneigement' },
@@ -32,6 +33,32 @@ export const MODE_CONCLUSION_OPTIONS: { value: ModeConclusion; label: string }[]
 export const MODE_CONCLUSION_LABELS: Record<ModeConclusion, string> = Object.fromEntries(
   MODE_CONCLUSION_OPTIONS.map((option) => [option.value, option.label]),
 ) as Record<ModeConclusion, string>
+
+/** Tâche 2 — fournisseur IA pour la détection automatique du stationnement (étape Délimiter). */
+export const AI_PROVIDER_OPTIONS: { value: AiProvider; label: string }[] = [
+  { value: 'google', label: 'Google' },
+  { value: 'tokenrouter', label: 'TokenRouter' },
+]
+
+/**
+ * Tâche 14 (Google) / tâche 2 (TokenRouter) — modèle pour la détection automatique du
+ * stationnement (étape Délimiter), liste dépendante du fournisseur choisi
+ * (`AI_PROVIDER_OPTIONS`). Le sélecteur "Modèle" de `ContractWizardDefaultsForm.tsx`
+ * doit toujours piocher dans la liste correspondant au fournisseur actuellement
+ * sélectionné, jamais dans une liste à plat.
+ */
+export const AI_MODEL_OPTIONS_BY_PROVIDER: Record<AiProvider, { value: AiModel; label: string }[]> = {
+  google: [
+    { value: 'flash', label: 'Gemini 2.5 Flash' },
+    { value: 'pro', label: 'Gemini 2.5 Pro' },
+  ],
+  tokenrouter: [
+    { value: 'google/gemini-3.1-flash-lite-image', label: 'Gemini 3.1 Flash Lite (Image)' },
+    { value: 'google/gemini-2.5-flash-image', label: 'Gemini 2.5 Flash (Image)' },
+    { value: 'google/gemini-3.5-flash', label: 'Gemini 3.5 Flash' },
+    { value: 'openai/gpt-5.4-mini', label: 'GPT-5.4 Mini' },
+  ],
+}
 
 /**
  * Sous-étape Délimiter — type de zone (menu déroulant, "Autre" révèle un champ libre),

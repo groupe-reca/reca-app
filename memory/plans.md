@@ -1,5 +1,28 @@
 # Plans — RECA Centre des opérations
 
+## [x] Tâche 3 (nom de fichier réutilisé une 3e fois) — Ajout de `openai/gpt-5.4-mini` aux modèles TokenRouter, branche `optimisation-outil-de-mesure` — implémenté et vérifié (client), déploiement Edge Function requis pour le test réel
+
+Demande (`.input/tache3.md`) : ajouter `openai/gpt-5.4-mini` à la liste des modèles TokenRouter du sélecteur (tâche 2). Différence structurelle importante par rapport aux 3 modèles TokenRouter déjà branchés (tâche 2, tous `google/...` via l'endpoint Gemini-natif `/v1beta/models/{model}:generateContent`) : la doc fournie montre ce modèle appelé via l'**endpoint OpenAI-compatible** `/v1/chat/completions` (SDK `openai`, format `messages`/`response_format`), pas le format `contents`/`generationConfig` de Gemini.
+
+**Vérifié par curl direct avant implémentation** (clé réelle `.input/tokenrouter`) : (1) appel texte simple ✓, (2) `response_format: {type: "json_schema", json_schema: {...,strict:true}}` avec un schéma JSON Schema standard (types minuscules, `additionalProperties: false`) → JSON strictement conforme retourné ✓, (3) vision via `image_url: {url: "data:image/...;base64,..."}}` ✓, (4) **test de bout en bout avec le vrai prompt système de production (`SATELLITE_ANALYSIS_SYSTEM_PROMPT`) + le schéma JSON Schema équivalent à `GEMINI_RESPONSE_SCHEMA`, sur une vraie capture d'écran contenant de l'imagerie satellite** → `200`, JSON strictement conforme au schéma, 3 zones détectées avec contours plausibles. **Ce modèle est donc pleinement viable pour cette fonctionnalité**, contrairement aux 2 modèles image de la tâche 2.
+
+**Plan d'implémentation** :
+1. `contractWizardDefaults.types.ts` — ajouter `'openai/gpt-5.4-mini'` à l'union `AiModel`.
+2. `wizardOptions.ts` — ajouter `{ value: 'openai/gpt-5.4-mini', label: 'GPT-5.4 Mini' }` à `AI_MODEL_OPTIONS_BY_PROVIDER.tokenrouter`.
+3. `supabase/functions/analyze-satellite-image/index.ts` — le chemin `tokenrouter` existant (tâche 2) se scinde en 2 styles d'API selon le préfixe du modèle (`aiModel.startsWith('openai/')` → OpenAI chat completions ; sinon → Gemini `generateContent`, inchangé) :
+   - Nouveau `buildOpenAiChatCompletionsBody(aiModel, imageBase64)` : `messages` (`system` = prompt, `user` = texte + `image_url` data URI), `response_format.json_schema` = équivalent JSON Schema strict de `GEMINI_RESPONSE_SCHEMA` (nouveau `OPENAI_RESPONSE_SCHEMA`, types minuscules, `additionalProperties: false`, tous les champs dans `required` y compris `raison_qualite` en `type: ['string','null']` — contrainte du mode `strict` d'OpenAI).
+   - URL : `https://api.tokenrouter.com/v1/chat/completions` (nouvelle constante, différente de la base Gemini-native déjà en place).
+   - Parsing de réponse : `data.choices[0].message.content` (au lieu de `data.candidates[0].content.parts[0].text` pour Gemini) — le code doit distinguer le style de réponse à parser, pas seulement la requête à construire.
+   - Auth : `Authorization: Bearer TOKENROUTER_API_KEY`, même secret déjà ajouté en tâche 2 (pas de nouveau secret).
+4. Pas de migration SQL (même jsonb `settings.contract_wizard_defaults`).
+
+**Implémenté conformément au plan** : `AiModel` étendu, `AI_MODEL_OPTIONS_BY_PROVIDER.tokenrouter` gagne `{ value: 'openai/gpt-5.4-mini', label: 'GPT-5.4 Mini' }`, Edge Function scindée en 2 styles d'API via `isOpenAiCompatible = aiProvider === 'tokenrouter' && aiModel.startsWith('openai/')` (dispatch sur l'URL, le corps de requête `buildOpenAiChatCompletionsBody`/nouveau `OPENAI_RESPONSE_SCHEMA`, et le chemin de parsing de la réponse `choices[0].message.content`). `tsc -b`/`npm run lint`/`npm run build` propres (pas de Deno CLI dans ce sandbox pour typechecker l'Edge Function isolément — relecture manuelle à la place).
+
+**Vérifié en navigateur (client uniquement)** : `/contracts/parametres`, Fournisseur IA → TokenRouter affiche bien "GPT-5.4 Mini" en 4e option, sélection + "Enregistrer" + rechargement de page confirment la persistance (`aiProvider=tokenrouter`/`aiModel=openai/gpt-5.4-mini`), zéro erreur console. Réglages remis à Google/Flash après vérification.
+
+**Test réel de détection (Edge Function) pas encore possible dans cette passe** — même contrainte que toutes les tâches touchant `analyze-satellite-image` : le code déployé sur Supabase est encore celui de la tâche 2 (ne connaît pas encore le style OpenAI), il faut un nouveau `supabase functions deploy analyze-satellite-image` par l'utilisateur avant de pouvoir cliquer "Détection automatique" avec ce modèle en conditions réelles. La viabilité technique du modèle est déjà confirmée hors Edge Function par 4 tests curl directs (texte simple, JSON schema strict, vision, et le test complet avec le vrai prompt système + le schéma complet sur une image satellite réelle — 200, JSON conforme, 3 zones plausibles détectées).
+
+
 ## [x] Tâche 6 — Bug autocomplétion d'adresse (fiche Client, branche `tache6-fix-adresse-autocomplete`, depuis `sprint014-wizard-contrat-v2`) — corrigé et vérifié
 
 Demande (`.input/tache6.md`) : dans la fiche "Ajouter un client" (module Contrats → `ClientSearchPicker` → `ClientFormModal`), sélectionner une suggestion d'adresse Mapbox déclenche une seconde recherche au lieu de se figer.

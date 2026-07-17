@@ -4,6 +4,7 @@ import { ContractWizardDefaultsForm } from '../components/ContractWizardDefaults
 import { useContractWizardDefaults } from '../hooks/useContractWizardDefaults'
 import { useUpdateContractWizardDefaults } from '../hooks/useUpdateContractWizardDefaults'
 import type { ServiceCode } from '../types/contract.types'
+import type { AiModel } from '../types/contractWizardDefaults.types'
 
 export function ContractWizardSettingsPage() {
   const { data: defaults, isLoading, isError } = useContractWizardDefaults()
@@ -31,7 +32,11 @@ export function ContractWizardSettingsPage() {
               defaults={data}
               isSubmitting={updateDefaults.isPending}
               onSubmit={(values) =>
-                updateDefaults.mutate({ ...values, serviceCodes: values.serviceCodes as ServiceCode[] })
+                updateDefaults.mutate({
+                  ...values,
+                  serviceCodes: values.serviceCodes as ServiceCode[],
+                  aiModel: values.aiModel as AiModel,
+                })
               }
             />
           )}

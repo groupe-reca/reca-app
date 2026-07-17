@@ -1,13 +1,21 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { Calendar, Clock, Handshake, Snowflake, Thermometer, Truck } from 'lucide-react'
+import { useEffect } from 'react'
+import { useForm, useWatch } from 'react-hook-form'
+import { Bot, Calendar, Clock, Handshake, Snowflake, Thermometer, Truck } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
 import { contractWizardDefaultsSchema } from '../schemas/contractWizardDefaults.schema'
 import type { ContractWizardDefaultsFormValues } from '../schemas/contractWizardDefaults.schema'
 import type { ContractWizardDefaults } from '../types/contractWizardDefaults.types'
-import { DEPOT_NEIGE_OPTIONS, MODE_CONCLUSION_OPTIONS, SEUIL_DECLENCHEMENT_OPTIONS, SERVICE_OPTIONS } from '../constants/wizardOptions'
+import {
+  AI_MODEL_OPTIONS_BY_PROVIDER,
+  AI_PROVIDER_OPTIONS,
+  DEPOT_NEIGE_OPTIONS,
+  MODE_CONCLUSION_OPTIONS,
+  SEUIL_DECLENCHEMENT_OPTIONS,
+  SERVICE_OPTIONS,
+} from '../constants/wizardOptions'
 
 type ContractWizardDefaultsFormProps = {
   defaults: ContractWizardDefaults
@@ -24,12 +32,25 @@ export function ContractWizardDefaultsForm({ defaults, isSubmitting, onSubmit }:
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
     formState: { errors },
   } = useForm<ContractWizardDefaultsFormValues>({
     resolver: zodResolver(contractWizardDefaultsSchema),
     mode: 'onTouched',
     defaultValues: defaults,
   })
+
+  const aiProvider = useWatch({ control, name: 'aiProvider' })
+  const aiModel = useWatch({ control, name: 'aiModel' })
+  const aiModelOptions = AI_MODEL_OPTIONS_BY_PROVIDER[aiProvider]
+
+  useEffect(() => {
+    if (!aiModelOptions.some((option) => option.value === aiModel)) {
+      setValue('aiModel', aiModelOptions[0].value, { shouldValidate: true })
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [aiProvider])
 
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
@@ -122,6 +143,28 @@ export function ContractWizardDefaultsForm({ defaults, isSubmitting, onSubmit }:
           {...register('modeConclusion')}
         >
           {MODE_CONCLUSION_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Select
+          label="Fournisseur IA (détection automatique du stationnement)"
+          icon={Bot}
+          error={errors.aiProvider?.message}
+          {...register('aiProvider')}
+        >
+          {AI_PROVIDER_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
+        <Select label="Modèle" icon={Bot} error={errors.aiModel?.message} {...register('aiModel')}>
+          {aiModelOptions.map((option) => (
             <option key={option.value} value={option.value}>
               {option.label}
             </option>

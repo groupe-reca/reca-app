@@ -6,8 +6,9 @@ import { isMapboxConfigured } from '@/lib/mapboxClient'
 import { toast } from '@/stores/toastStore'
 import type { PolygonEditorHandle } from '../components/wizard/PolygonEditor'
 import { boundsFromPolygon } from '../utils/propertyBoundary'
-import { boundingBoxToPolygon } from '../utils/satelliteZoneProjection'
+import { contourToPolygon } from '../utils/satelliteZoneProjection'
 import { analyzeSatelliteImage } from '../services/satelliteAnalysis.service'
+import { useContractWizardDefaults } from './useContractWizardDefaults'
 import type { ContractZoneFormValues } from '../schemas/contractCreation.schema'
 import type { ZoneType } from '../types/contract.types'
 import type { MapViewport } from './usePropertyCapture'
@@ -70,6 +71,7 @@ export function useDelineateState({
   const [pendingZone, setPendingZone] = useState<{ geojson: Polygon; surfaceM2: number } | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const polygonEditorRef = useRef<PolygonEditorHandle>(null)
+  const { data: wizardDefaults } = useContractWizardDefaults()
 
   useEffect(() => {
     onNavChange({ onNext: onContinue, nextDisabled: zones.length === 0, action: null })
@@ -154,7 +156,11 @@ export function useDelineateState({
     if (!capturePath || !map) return
     setIsAnalyzing(true)
     try {
-      const result = await analyzeSatelliteImage(capturePath)
+      const result = await analyzeSatelliteImage(
+        capturePath,
+        wizardDefaults?.aiProvider ?? 'google',
+        wizardDefaults?.aiModel ?? 'flash',
+      )
 
       if (result.qualite_image === 'insuffisante') {
         toast.error(
@@ -180,7 +186,7 @@ export function useDelineateState({
       // dernier survivrait). `addSuggestedZone` (Draw) reste appelé par zone : son état
       // interne est impératif, pas concerné par ce problème.
       const newZones: ContractZoneFormValues[] = result.zones.map((suggestion, index) => {
-        const geojson = boundingBoxToPolygon(suggestion.bounding_box, map)
+        const geojson = contourToPolygon(suggestion.contour, map)
         const surfaceM2 = Math.round(area({ type: 'Feature', properties: {}, geometry: geojson }) * 100) / 100
         const id = crypto.randomUUID()
         polygonEditorRef.current?.addSuggestedZone(geojson, id, 'stationnement')
@@ -197,13 +203,18 @@ export function useDelineateState({
       })
       onAddZones(newZones)
 
-      toast.success(
+      const lowConfidenceCount = result.zones.filter((zone) => zone.confiance !== 'haute').length
+      const zonesLabel =
         result.zones.length === 1
-          ? '1 zone de stationnement suggérée — ajustez le contour si nécessaire.'
-          : `${result.zones.length} zones de stationnement suggérées — ajustez les contours si nécessaire.`,
+          ? '1 zone de stationnement suggérée'
+          : `${result.zones.length} zones de stationnement suggérées`
+      toast.success(
+        lowConfidenceCount > 0
+          ? `${zonesLabel}, dont ${lowConfidenceCount} à confirmer manuellement (confiance faible/moyenne, possible occlusion) — ajustez les contours si nécessaire.`
+          : `${zonesLabel} — ajustez les contours si nécessaire.`,
       )
-    } catch {
-      toast.error("Impossible d'analyser l'image satellite.")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Impossible d'analyser l'image satellite.")
     } finally {
       setIsAnalyzing(false)
     }

@@ -1,14 +1,50 @@
-// Edge Function — Détection automatique du stationnement (Wizard Contrats, étape
-// "Délimiter"). Analyse l'image satellite déjà capturée (Storage privé
-// `contract-captures`) via Gemini (modèle flash) et renvoie des bounding boxes
-// suggérées.
+// Edge Function — Détection automatique des surfaces à déneiger (Wizard Contrats,
+// étape "Délimiter"). Analyse l'image satellite déjà capturée (Storage privé
+// `contract-captures`) via Gemini (Flash ou Pro au choix, prompté comme un estimateur
+// en déneigement) et renvoie, pour chaque surface asphaltée/bétonnée détectée
+// (stationnement, entrée carrossable — jamais la maison, la pelouse, un trottoir
+// public ou la rue), un contour (liste de points, un par coin) + un niveau de confiance
+// suggérés. Le type de zone créé côté client reste fixé à `'stationnement'` (voir
+// `useDelineateState.ts`) — la détection Gemini est plus large que ce seul mot, mais
+// l'app n'a qu'un type de zone auto-détectable pour l'instant (portée resserrée, voir
+// `memory/memory.md`).
 //
-// Modèle : `gemini-flash-latest` (alias maintenu par Google, pointe vers le modèle
-// flash courant — actuellement gemini-3.5-flash) plutôt qu'un nom de modèle figé
-// (`gemini-2.5-flash`, demandé initialement) — confirmé en test réel (2026-07-17,
-// curl direct sur l'API Gemini) que `gemini-2.5-flash` renvoie 404 "no longer
-// available to new users" malgré son apparition dans `models.list`. Utiliser l'alias
-// `-latest` évite de revivre cette même panne à la prochaine dépréciation.
+// Fournisseur/Modèle : choix exposé aux paramètres du Wizard Contrats
+// (`ContractWizardDefaultsForm.tsx`, champs `aiProvider`/`aiModel`), transmis par le
+// client dans le corps de la requête (défaut `'google'`/`'flash'` si absents).
+//
+// - Google (`aiProvider: 'google'`, `aiModel: 'flash'|'pro'`) : mappé vers un alias
+//   Google (`GEMINI_MODEL_BY_OPTION`) plutôt qu'un nom de modèle figé
+//   (`gemini-2.5-flash`, demandé initialement) — confirmé en test réel (2026-07-17,
+//   curl direct sur l'API Gemini) que `gemini-2.5-flash` renvoie 404 "no longer
+//   available to new users" malgré son apparition dans `models.list`. Utiliser les
+//   alias `-latest` évite de revivre cette même panne à la prochaine dépréciation
+//   (idem pour `gemini-pro-latest`, jamais testé directement faute de retour
+//   utilisateur sur ce point — à surveiller au premier essai réel de l'option "Pro").
+// - TokenRouter (`aiProvider: 'tokenrouter'`, tâche 2) : `aiModel` est l'identifiant
+//   TokenRouter exact, transmis tel quel — pas de table d'alias, TokenRouter route
+//   déjà lui-même vers le bon modèle sous-jacent. Authentification
+//   `Authorization: Bearer` (secret `TOKENROUTER_API_KEY`) dans tous les cas. **2
+//   styles d'API selon le préfixe du modèle** (`aiModel.startsWith('openai/')`,
+//   testé dans le handler via `isOpenAiCompatible`) :
+//   - `google/...` (ex. `google/gemini-3.5-flash`) : même forme de requête
+//     `generateContent` que Google direct (miroir confirmé par test curl réel
+//     2026-07-17). **Confirmé par test réel** : seul `google/gemini-3.5-flash`
+//     accepte `responseSchema`/`responseMimeType: application/json` (JSON structuré
+//     retourné correctement) — les 2 modèles `-image` (`gemini-3.1-flash-lite-image`,
+//     `gemini-2.5-flash-image`) sont des modèles de génération d'image et rejettent
+//     cette requête avec `400`. Restent proposés dans le sélecteur (demandés tels
+//     quels par l'utilisateur), mais ne fonctionneront pas pour cette fonctionnalité
+//     — voir `memory/memory.md`.
+//   - `openai/...` (ex. `openai/gpt-5.4-mini`, tâche 3) : endpoint OpenAI-compatible
+//     `/v1/chat/completions` (`messages`/`response_format.json_schema`), forme de
+//     requête ET de réponse différentes de Gemini — `buildOpenAiChatCompletionsBody`/
+//     `OPENAI_RESPONSE_SCHEMA` dédiés, réponse dans `choices[0].message.content` (pas
+//     `candidates[0].content.parts[0].text`). **Confirmé par test réel (curl,
+//     2026-07-17)** avec le vrai prompt système + le schéma complet, sur une image
+//     satellite réelle : JSON strictement conforme retourné, `gpt-5.4-mini` est
+//     pleinement viable pour cette fonctionnalité (contrairement aux 2 modèles image
+//     Gemini ci-dessus).
 //
 // Gemini ne calcule jamais de superficie ni de limites de propriété — il ne fait que
 // suggérer un point de départ visuel, le tracé final ajusté par l'utilisateur (côté
@@ -22,17 +58,40 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { z } from 'npm:zod@3'
 
 const SATELLITE_ANALYSIS_SYSTEM_PROMPT = `
-Tu analyses une image satellite d'une propriété résidentielle ou commerciale au
-Québec, dans le but d'aider une entreprise de déneigement à identifier le
-stationnement à déneiger.
+Tu es un estimateur en déneigement ayant 20 ans d'expérience au Québec. Tu analyses une
+image satellite d'une propriété résidentielle ou commerciale, dans le but de déterminer
+les surfaces que le tracteur devra déneiger.
 
-Ta tâche :
-1. Identifier chaque zone de stationnement distincte (aire pavée/carrossable utilisée
-   pour garer des véhicules) — PAS les entrées piétonnes, allées, trottoirs ou la rue.
-2. Pour chaque zone de stationnement : une bounding box approximative (elle servira
-   uniquement de point de départ visuel — l'utilisateur retracera le contour précis
-   lui-même).
-3. Évaluer la qualité de l'image pour cette tâche :
+Ta tâche, dans l'ordre :
+1. Repère d'abord, approximativement, les limites du terrain de la maison/du bâtiment
+   situé au centre de l'image — ignore les propriétés voisines visibles sur les bords
+   de l'image. Ce repérage ne sert qu'à savoir où chercher à l'étape suivante ; ne
+   l'inclus PAS dans la réponse et ne cherche pas une précision cadastrale, une
+   estimation visuelle suffit.
+2. À l'intérieur de ce terrain repéré seulement, détecte uniquement les surfaces
+   asphaltées ou bétonnées que le tracteur devra déneiger (stationnement, entrée
+   carrossable). Exclus la maison/le bâtiment, les pelouses, les arbres, les trottoirs
+   publics et la rue, ainsi que toute surface qui appartient visiblement à une
+   propriété voisine.
+3. Si une partie d'une surface est masquée par un véhicule stationné, un arbre ou une
+   ombre, estime raisonnablement son prolongement en te basant sur la géométrie
+   habituelle des entrées résidentielles (bords parallèles, largeur constante, raccord
+   logique avec la portion visible) — retourne un polygone qui représente la surface
+   normalement déneigée dans son ensemble, pas seulement la portion visible. Reste
+   prudent : si c'est l'existence même d'une surface qui est incertaine (pas juste son
+   contour exact sous l'occlusion), ne l'invente pas.
+4. Pour chaque surface détectée : place un point à chacun de ses coins réels (y compris
+   les coins estimés sous une occlusion), dans l'ordre en suivant le contour (peu
+   importe le sens), pour retourner un polygone précis qui suit fidèlement les limites
+   réelles de la surface asphaltée/bétonnée — elle n'est pas toujours
+   carrée/rectangulaire (en L, en trapèze, coin coupé, etc.) : ne simplifie jamais en
+   rectangle si la forme réelle est différente. Minimum 3 points, un point par coin
+   visible ou estimé (pas de point inutile sur un côté droit).
+5. Pour chaque surface détectée, indique un niveau de confiance ("haute", "moyenne" ou
+   "faible") dans confiance : "faible" si une bonne partie du contour a dû être estimée
+   sous occlusion ou si l'image est ambiguë à cet endroit, "haute" si le contour est
+   presque entièrement visible et net.
+6. Évalue la qualité de l'image pour cette tâche :
    - "insuffisante" si la zone est couverte de neige, floue, trop sombre, ou si la
      résolution ne permet pas de distinguer les contours.
    - "moyenne" si l'analyse est possible mais incertaine (ombres partielles, angle
@@ -43,10 +102,12 @@ Ta tâche :
 Règles strictes :
 - Ne PAS estimer de superficie en m² ou pi² — ce calcul est fait ailleurs à partir du
   tracé réel de l'utilisateur.
-- Ne PAS tenter de déterminer les limites de propriété exactes.
+- Le repérage du terrain (étape 1) reste une estimation grossière servant uniquement de
+  guide de recherche — le contour final retracé par l'utilisateur (étape 4) reste la
+  seule source de vérité.
 - Ne PAS halluciner de zones si l'image ne le permet pas clairement : dans le doute,
   indique "insuffisante" plutôt que d'inventer un contour. Zéro zone est une réponse
-  valide s'il n'y a visiblement aucun stationnement.
+  valide s'il n'y a visiblement aucune surface à déneiger.
 - Réponds uniquement selon le schéma JSON fourni, sans texte hors du JSON.
 `.trim()
 
@@ -59,13 +120,23 @@ const GEMINI_RESPONSE_SCHEMA = {
       items: {
         type: 'OBJECT',
         properties: {
-          bounding_box: {
+          contour: {
             type: 'ARRAY',
-            items: { type: 'NUMBER' },
-            description: '[ymin, xmin, ymax, xmax] normalisé 0-1000',
+            items: {
+              type: 'ARRAY',
+              items: { type: 'NUMBER' },
+              description: '[y, x] normalisé 0-1000',
+            },
+            description:
+              "Liste ordonnée des points du contour du stationnement, un par coin réel (minimum 3), suivant sa forme exacte plutôt qu'un rectangle englobant. Inclut les coins estimés sous occlusion (véhicule/arbre/ombre).",
+          },
+          confiance: {
+            type: 'STRING',
+            enum: ['haute', 'moyenne', 'faible'],
+            description: "Niveau de confiance dans ce contour — plus bas si une partie a dû être estimée sous occlusion.",
           },
         },
-        required: ['bounding_box'],
+        required: ['contour', 'confiance'],
       },
     },
     qualite_image: { type: 'STRING', enum: ['bonne', 'moyenne', 'insuffisante'] },
@@ -74,14 +145,67 @@ const GEMINI_RESPONSE_SCHEMA = {
   required: ['nombre_zones_detectees', 'zones', 'qualite_image'],
 } as const
 
+/**
+ * Équivalent JSON Schema standard de `GEMINI_RESPONSE_SCHEMA`, pour le mode `strict`
+ * d'OpenAI `response_format.json_schema` (tâche 3) — types en minuscules (pas
+ * `OBJECT`/`STRING`...), `additionalProperties: false` sur chaque objet, et **tous**
+ * les champs dans `required` (y compris les nullables, contrainte du mode strict :
+ * `raison_qualite` est optionnel côté Zod mais doit être listé ici avec
+ * `type: ['string','null']` plutôt qu'omis).
+ */
+const OPENAI_RESPONSE_SCHEMA = {
+  type: 'object',
+  properties: {
+    nombre_zones_detectees: { type: 'integer' },
+    zones: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          contour: {
+            type: 'array',
+            items: { type: 'array', items: { type: 'number' } },
+            description:
+              "Liste ordonnée des points [y, x] du contour du stationnement, un par coin réel (minimum 3), suivant sa forme exacte plutôt qu'un rectangle englobant.",
+          },
+          confiance: { type: 'string', enum: ['haute', 'moyenne', 'faible'] },
+        },
+        required: ['contour', 'confiance'],
+        additionalProperties: false,
+      },
+    },
+    qualite_image: { type: 'string', enum: ['bonne', 'moyenne', 'insuffisante'] },
+    raison_qualite: { type: ['string', 'null'] },
+  },
+  required: ['nombre_zones_detectees', 'zones', 'qualite_image', 'raison_qualite'],
+  additionalProperties: false,
+} as const
+
 const satelliteAnalysisSchema = z.object({
   nombre_zones_detectees: z.number().int().min(0),
-  zones: z.array(z.object({ bounding_box: z.tuple([z.number(), z.number(), z.number(), z.number()]) })),
+  zones: z.array(
+    z.object({
+      contour: z.array(z.tuple([z.number(), z.number()])).min(3),
+      confiance: z.enum(['haute', 'moyenne', 'faible']),
+    }),
+  ),
   qualite_image: z.enum(['bonne', 'moyenne', 'insuffisante']),
   raison_qualite: z.string().nullable().optional(),
 })
 
-const requestSchema = z.object({ storagePath: z.string().min(1) })
+const GEMINI_MODEL_BY_OPTION = {
+  flash: 'gemini-flash-latest',
+  pro: 'gemini-pro-latest',
+} as const
+
+const TOKENROUTER_API_BASE_URL = 'https://api.tokenrouter.com/v1beta/models'
+const TOKENROUTER_OPENAI_CHAT_COMPLETIONS_URL = 'https://api.tokenrouter.com/v1/chat/completions'
+
+const requestSchema = z.object({
+  storagePath: z.string().min(1),
+  aiProvider: z.enum(['google', 'tokenrouter']).optional(),
+  aiModel: z.string().min(1).optional(),
+})
 
 // Requis pour tout appel depuis le navigateur (supabase-js envoie un préflight OPTIONS avec
 // les headers Authorization/apikey/content-type) — sans ça, le navigateur bloque la réponse
@@ -102,17 +226,40 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: 'Method not allowed' }, 405)
   }
 
-  const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
-  if (!geminiApiKey) {
-    return jsonResponse({ error: 'GEMINI_API_KEY non configurée sur le projet Supabase.' }, 500)
-  }
-
   let storagePath: string
+  let aiProvider: 'google' | 'tokenrouter'
+  let aiModel: string
   try {
     const body = await req.json()
-    storagePath = requestSchema.parse(body).storagePath
+    const parsed = requestSchema.parse(body)
+    storagePath = parsed.storagePath
+    aiProvider = parsed.aiProvider ?? 'google'
+    aiModel = parsed.aiModel ?? 'flash'
   } catch {
     return jsonResponse({ error: 'Corps de requête invalide (storagePath requis).' }, 400)
+  }
+
+  const isOpenAiCompatible = aiProvider === 'tokenrouter' && aiModel.startsWith('openai/')
+
+  let requestUrl: string
+  let authHeaders: Record<string, string>
+  if (aiProvider === 'tokenrouter') {
+    const tokenRouterApiKey = Deno.env.get('TOKENROUTER_API_KEY')
+    if (!tokenRouterApiKey) {
+      return jsonResponse({ error: 'TOKENROUTER_API_KEY non configurée sur le projet Supabase.' }, 500)
+    }
+    requestUrl = isOpenAiCompatible
+      ? TOKENROUTER_OPENAI_CHAT_COMPLETIONS_URL
+      : `${TOKENROUTER_API_BASE_URL}/${aiModel}:generateContent`
+    authHeaders = { Authorization: `Bearer ${tokenRouterApiKey}` }
+  } else {
+    const geminiApiKey = Deno.env.get('GEMINI_API_KEY')
+    if (!geminiApiKey) {
+      return jsonResponse({ error: 'GEMINI_API_KEY non configurée sur le projet Supabase.' }, 500)
+    }
+    const geminiModel = GEMINI_MODEL_BY_OPTION[aiModel as keyof typeof GEMINI_MODEL_BY_OPTION] ?? GEMINI_MODEL_BY_OPTION.flash
+    requestUrl = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${geminiApiKey}`
+    authHeaders = {}
   }
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
@@ -128,46 +275,100 @@ Deno.serve(async (req) => {
 
   let rawText: string
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${geminiApiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          system_instruction: { parts: [{ text: SATELLITE_ANALYSIS_SYSTEM_PROMPT }] },
-          contents: [
-            {
-              role: 'user',
-              parts: [
-                { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
-                { text: 'Analyse cette image satellite selon les instructions.' },
-              ],
-            },
-          ],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: GEMINI_RESPONSE_SCHEMA,
-          },
-        }),
-      },
-    )
+    const response = await fetch(requestUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...authHeaders },
+      body: JSON.stringify(
+        isOpenAiCompatible
+          ? buildOpenAiChatCompletionsBody(aiModel, imageBase64)
+          : buildGenerateContentRequestBody(imageBase64),
+      ),
+    })
     if (!response.ok) {
-      return jsonResponse({ error: `Gemini API error: ${response.status}` }, 502)
+      return jsonResponse({ error: describeProviderError(aiProvider, response.status) }, 502)
     }
     const data = await response.json()
-    rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text
-    if (!rawText) return jsonResponse({ error: 'Réponse Gemini vide ou mal formée.' }, 502)
+    rawText = isOpenAiCompatible
+      ? data?.choices?.[0]?.message?.content
+      : data?.candidates?.[0]?.content?.parts?.[0]?.text
+    if (!rawText) return jsonResponse({ error: 'Réponse du fournisseur IA vide ou mal formée.' }, 502)
   } catch {
-    return jsonResponse({ error: "Échec de l'appel à Gemini." }, 502)
+    return jsonResponse({ error: "Échec de l'appel au fournisseur IA." }, 502)
   }
 
   try {
     const parsed = satelliteAnalysisSchema.parse(JSON.parse(rawText))
     return jsonResponse(parsed, 200)
   } catch {
-    return jsonResponse({ error: 'Réponse Gemini hors-schéma.' }, 502)
+    return jsonResponse({ error: 'Réponse du fournisseur IA hors-schéma.' }, 502)
   }
 })
+
+/**
+ * Corps de requête `generateContent` — même forme pour Google et TokenRouter (API
+ * documentée par TokenRouter comme un miroir de celle de Gemini), seuls l'URL et les
+ * headers d'authentification diffèrent entre les deux fournisseurs (voir l'appelant).
+ */
+function buildGenerateContentRequestBody(imageBase64: string) {
+  return {
+    system_instruction: { parts: [{ text: SATELLITE_ANALYSIS_SYSTEM_PROMPT }] },
+    contents: [
+      {
+        role: 'user',
+        parts: [
+          { inline_data: { mime_type: 'image/jpeg', data: imageBase64 } },
+          { text: 'Analyse cette image satellite selon les instructions.' },
+        ],
+      },
+    ],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: GEMINI_RESPONSE_SCHEMA,
+    },
+  }
+}
+
+/**
+ * Corps de requête OpenAI `chat.completions` (tâche 3, TokenRouter modèles `openai/...`
+ * uniquement) — forme différente de `buildGenerateContentRequestBody` (Gemini) :
+ * prompt système via `role: 'system'` plutôt que `system_instruction`, image via
+ * `image_url` en data URI plutôt que `inline_data`, JSON structuré via
+ * `response_format.json_schema` (mode `strict`) plutôt que `generationConfig`.
+ */
+function buildOpenAiChatCompletionsBody(model: string, imageBase64: string) {
+  return {
+    model,
+    messages: [
+      { role: 'system', content: SATELLITE_ANALYSIS_SYSTEM_PROMPT },
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Analyse cette image satellite selon les instructions.' },
+          { type: 'image_url', image_url: { url: `data:image/jpeg;base64,${imageBase64}` } },
+        ],
+      },
+    ],
+    response_format: {
+      type: 'json_schema',
+      json_schema: { name: 'satellite_analysis', schema: OPENAI_RESPONSE_SCHEMA, strict: true },
+    },
+    stream: false,
+  }
+}
+
+/**
+ * Message affiché à l'utilisateur (via le toast client) sur un échec de l'appel au
+ * fournisseur IA — distingue les cas fréquents (quota/surcharge, tous deux constatés
+ * en test réel le 2026-07-17 sur Flash ET Pro côté Google) d'un code d'erreur
+ * générique, pour ne pas faire confondre un vrai bug de code avec une limite d'API
+ * externe.
+ */
+function describeProviderError(aiProvider: 'google' | 'tokenrouter', status: number): string {
+  const providerLabel = aiProvider === 'tokenrouter' ? 'TokenRouter' : 'Gemini'
+  if (status === 429) return `Quota ${providerLabel} dépassé (limite de requêtes atteinte) — réessayez plus tard.`
+  if (status === 503) return `Service ${providerLabel} temporairement surchargé — réessayez dans quelques instants.`
+  return `${providerLabel} API error: ${status}`
+}
 
 function jsonResponse(body: unknown, status: number): Response {
   return new Response(JSON.stringify(body), {

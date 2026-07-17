@@ -4,8 +4,10 @@
  * `geocoding.service.ts` qui type sans revalider une réponse externe déjà structurée).
  */
 export type SatelliteZoneDetection = {
-  /** [ymin, xmin, ymax, xmax], normalisé 0-1000 par rapport à l'image capturée. */
-  bounding_box: [number, number, number, number]
+  /** Points ordonnés [y, x] du contour, un par coin, normalisés 0-1000 par rapport à l'image capturée. */
+  contour: [number, number][]
+  /** Niveau de confiance de Gemini dans ce contour — plus bas si une partie a dû être estimée sous occlusion (véhicule/arbre/ombre). */
+  confiance: 'haute' | 'moyenne' | 'faible'
 }
 
 export type SatelliteAnalysisResult = {
