@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, Menu } from 'lucide-react'
 import { Link, useMatches } from 'react-router'
+import { useDesktopImmersiveValue } from './useDesktopChrome'
 
 type RouteHandle = {
   breadcrumb?: string
@@ -10,6 +11,7 @@ type BreadcrumbProps = {
 }
 
 export function Breadcrumb({ onOpenMenu }: BreadcrumbProps) {
+  const immersive = useDesktopImmersiveValue()
   const matches = useMatches()
   const crumbs = matches
     .filter((match) => Boolean((match.handle as RouteHandle | undefined)?.breadcrumb))
@@ -21,6 +23,11 @@ export function Breadcrumb({ onOpenMenu }: BreadcrumbProps) {
   const allCrumbs = [{ label: 'Centre des opérations', pathname: '/dashboard' }, ...crumbs]
   const current = allCrumbs[allCrumbs.length - 1]
   const parent = allCrumbs.length > 1 ? allCrumbs[allCrumbs.length - 2] : null
+
+  // Tâche 7 : une étape de page peut demander un mode plein écran temporaire (carte
+  // immersive du Wizard Contrats) — le fil d'Ariane disparaît complètement le temps
+  // que ce mode est actif, voir `useDesktopImmersive`.
+  if (immersive) return null
 
   return (
     <div className="flex h-14 shrink-0 items-center gap-2 border-b border-reca-gray-light bg-white px-4 text-label text-reca-gray-medium lg:h-[72px] lg:px-6">

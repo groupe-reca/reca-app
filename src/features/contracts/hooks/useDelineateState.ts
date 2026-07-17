@@ -73,14 +73,15 @@ export function useDelineateState({
   const polygonEditorRef = useRef<PolygonEditorHandle>(null)
   const { data: wizardDefaults } = useContractWizardDefaults()
 
-  useEffect(() => {
-    onNavChange({ onNext: onContinue, nextDisabled: zones.length === 0, action: null })
-    // onContinue/onNavChange sont recréés à chaque rendu du parent — seul le nombre de
-    // zones doit réellement redéclencher un nouveau rapport de nav.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zones.length])
-
   const mapReady = isMapboxConfigured && !mapUnavailable
+
+  useEffect(() => {
+    onNavChange({ onNext: onContinue, nextDisabled: zones.length === 0, action: null, immersive: mapReady })
+    // onContinue/onNavChange sont recréés à chaque rendu du parent — seuls le nombre de
+    // zones et la disponibilité de la carte doivent réellement redéclencher un nouveau
+    // rapport de nav.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zones.length, mapReady])
 
   function handleAddZoneClick() {
     polygonEditorRef.current?.startDrawing()

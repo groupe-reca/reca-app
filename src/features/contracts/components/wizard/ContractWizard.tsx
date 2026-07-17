@@ -2,6 +2,7 @@ import { Loader2 } from 'lucide-react'
 import { WizardLayout } from '@/components/layout/WizardLayout'
 import { WizardFooter } from '@/components/layout/WizardFooter'
 import { Button } from '@/components/ui/Button'
+import { useDesktopImmersive } from '@/layouts/useDesktopChrome'
 import { useContractWizardState } from './useContractWizardState'
 import { WizardStepClient } from './WizardStepClient'
 import { WizardStepProperty } from './WizardStepProperty'
@@ -25,6 +26,7 @@ export function ContractWizard() {
     goBack,
     goToStep,
     openPropertyAnalysis,
+    propertyNav,
     setPropertyNav,
     setPropertyStepComplete,
     footerOnNext,
@@ -40,6 +42,12 @@ export function ContractWizard() {
     handleSaveDraft,
     draftDisabled,
   } = useContractWizardState()
+
+  // Tâche 7 : mode plein écran temporaire (masque le fil d'Ariane global + le padding
+  // de `<main>`, voir `DesktopAppShell`) tant que la sous-étape "Analyse & Zones"
+  // courante rapporte une carte réellement immersive (carte disponible, pas Valider).
+  const immersive = activeStepId === 'property' && Boolean(propertyNav?.immersive)
+  useDesktopImmersive(immersive)
 
   if (isLoadingDraft) {
     return (
@@ -68,21 +76,24 @@ export function ContractWizard() {
         activeStepId === 'property' ? undefined : <ContractSummaryPanel client={selectedClient} control={control} />
       }
       fullBleedContent={activeStepId === 'property'}
+      hideProgress={immersive}
       headerActions={
-        <>
-          <Button type="button" variant="ghost" onClick={() => navigate('/contracts')}>
-            Annuler
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={draftDisabled}
-            isLoading={isSubmitting}
-            onClick={handleSaveDraft}
-          >
-            Enregistrer le brouillon
-          </Button>
-        </>
+        immersive ? undefined : (
+          <>
+            <Button type="button" variant="ghost" onClick={() => navigate('/contracts')}>
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={draftDisabled}
+              isLoading={isSubmitting}
+              onClick={handleSaveDraft}
+            >
+              Enregistrer le brouillon
+            </Button>
+          </>
+        )
       }
       footer={
         <WizardFooter

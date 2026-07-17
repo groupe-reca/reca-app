@@ -101,6 +101,7 @@ export function PropertySubStepLocate({
             isLoading: isCapturing,
           }
         : null,
+      immersive: showMap,
     })
     // capture/onCaptured/onContinue/onNavChange sont recréés à chaque rendu du parent —
     // seules les valeurs qui doivent réellement redéclencher un nouveau rapport de nav
