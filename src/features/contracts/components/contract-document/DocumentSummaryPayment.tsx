@@ -1,16 +1,21 @@
 import { CalendarClock, CreditCard, DollarSign, Home, Ruler } from 'lucide-react'
 import { formatCurrency } from '@/lib/format'
 import { MODE_PAIEMENT_OPTIONS } from '../../constants/wizardOptions'
-import { getNextPaymentEntry } from '../../utils/paymentPresets'
+import { computeInstallmentAmount, getNextPaymentEntry } from '../../utils/paymentPresets'
 import { DocumentSectionHeader } from './DocumentSectionHeader'
 import type { ContractDocumentData } from './types'
 
-type DocumentSummaryPaymentProps = Pick<ContractDocumentData, 'contract'>
+type DocumentSummaryPaymentProps = Pick<ContractDocumentData, 'contract' | 'settings'>
 
 /** Carte Récapitulatif + carte Paiement + citation de clôture — colonne droite du document. */
-export function DocumentSummaryPayment({ contract }: DocumentSummaryPaymentProps) {
+export function DocumentSummaryPayment({ contract, settings }: DocumentSummaryPaymentProps) {
   const nextPayment = getNextPaymentEntry(contract.modalitesPaiement)
   const modeLabel = MODE_PAIEMENT_OPTIONS.find((mode) => mode.value === contract.modePaiement)?.label ?? '—'
+
+  const sousTotal = contract.prix ?? 0
+  const tps = sousTotal * (settings.taxes.tps / 100)
+  const tvq = sousTotal * (settings.taxes.tvq / 100)
+  const total = sousTotal + tps + tvq
 
   const recap = [
     { icon: Home, label: 'Type', value: contract.type ?? '—' },
@@ -47,10 +52,28 @@ export function DocumentSummaryPayment({ contract }: DocumentSummaryPaymentProps
             </div>
           </div>
         </div>
-        <p className="text-label text-reca-gray-medium">Prix total</p>
-        <p className="mb-3 text-h1 font-bold text-reca-red">
-          {contract.prix != null ? formatCurrency(contract.prix) : '—'}
-        </p>
+        {contract.prix != null ? (
+          <div className="mb-3 flex flex-col gap-1">
+            <div className="flex items-center justify-between text-body text-reca-gray-medium">
+              <span>Sous-total</span>
+              <span>{formatCurrency(sousTotal)}</span>
+            </div>
+            <div className="flex items-center justify-between text-body text-reca-gray-medium">
+              <span>TPS ({settings.taxes.tps}%)</span>
+              <span>{formatCurrency(tps)}</span>
+            </div>
+            <div className="flex items-center justify-between text-body text-reca-gray-medium">
+              <span>TVQ ({settings.taxes.tvq}%)</span>
+              <span>{formatCurrency(tvq)}</span>
+            </div>
+            <div className="flex items-center justify-between border-t border-reca-gray-light pt-2">
+              <span className="text-label font-semibold text-reca-black">Total</span>
+              <span className="text-h1 font-bold text-reca-red">{formatCurrency(total)}</span>
+            </div>
+          </div>
+        ) : (
+          <p className="mb-3 text-h1 font-bold text-reca-red">—</p>
+        )}
         <div className="flex flex-col gap-2">
           {contract.modalitesPaiement.map((entry, index) => (
             <div key={index} className="flex items-center gap-3 rounded-control bg-reca-snow p-3">
@@ -60,7 +83,7 @@ export function DocumentSummaryPayment({ contract }: DocumentSummaryPaymentProps
               <div className="flex-1">
                 <p className="text-label font-semibold uppercase text-reca-black">{entry.description}</p>
                 <p className="text-body font-semibold text-reca-red">
-                  {entry.type === 'pourcentage' ? `${entry.valeur}%` : formatCurrency(entry.valeur)}
+                  {formatCurrency(computeInstallmentAmount(entry, contract.prix))}
                 </p>
               </div>
               <span className="text-label text-reca-gray-medium">{entry.dateEcheance || 'date à définir'}</span>

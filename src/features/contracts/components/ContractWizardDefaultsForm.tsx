@@ -33,7 +33,7 @@ export function ContractWizardDefaultsForm({ defaults, isSubmitting, onSubmit }:
 
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
         <Input label="Saison" error={errors.saison?.message} {...register('saison')} icon={Snowflake} />
         <Input
           label="Date de début"
@@ -48,6 +48,13 @@ export function ContractWizardDefaultsForm({ defaults, isSubmitting, onSubmit }:
           icon={Calendar}
           error={errors.dateFin?.message}
           {...register('dateFin')}
+        />
+        <Input
+          label="Date du 2e versement (Bi-paiement)"
+          type="date"
+          icon={Calendar}
+          error={errors.dateDeuxiemeVersement?.message}
+          {...register('dateDeuxiemeVersement')}
         />
       </div>
 

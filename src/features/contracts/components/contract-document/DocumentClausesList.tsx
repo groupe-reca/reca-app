@@ -1,4 +1,4 @@
-import { AlertOctagon, Brush, FileText, Ban, DollarSign, Settings2, ShieldCheck, Users } from 'lucide-react'
+import { AlertOctagon, Brush, Ban, DollarSign, Settings2, ShieldCheck, Users } from 'lucide-react'
 import { DocumentSectionHeader } from './DocumentSectionHeader'
 import type { ContractDocumentData } from './types'
 
@@ -16,7 +16,6 @@ export function DocumentClausesList({ contract }: DocumentClausesListProps) {
     { icon: Ban, title: 'Exclusions', value: contract.exclusions },
     { icon: Brush, title: 'Nettoyage final', value: contract.nettoyageFinal },
     { icon: ShieldCheck, title: 'Responsabilités', value: contract.responsabilites },
-    { icon: FileText, title: 'Annulation / résolution', value: contract.clauseAnnulation },
     { icon: DollarSign, title: 'Prix', value: contract.clausePrix },
     { icon: Settings2, title: 'Exécution', value: contract.clauseExecution },
     { icon: AlertOctagon, title: 'Assurance et responsabilité', value: contract.clauseAssurance },

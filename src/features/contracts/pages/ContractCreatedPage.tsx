@@ -9,7 +9,6 @@ import { useSettings } from '@/features/settings/hooks/useSettings'
 import { toast } from '@/stores/toastStore'
 import { ContractDocumentPreview } from '../components/contract-document/ContractDocumentPreview'
 import type { ContractDocumentData } from '../components/contract-document/types'
-import { ContractSummaryStats } from '../components/ContractSummaryStats'
 import { useContract } from '../hooks/useContract'
 import type { ContractZoneFormValues } from '../schemas/contractCreation.schema'
 import type { Contract } from '../types/contract.types'
@@ -92,10 +91,7 @@ export function ContractCreatedPage() {
               </p>
             </motion.div>
 
-            <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_380px]">
-              <ContractDocumentPreview {...data} />
-              <ContractSummaryStats contract={data.contract} client={data.client} />
-            </div>
+            <ContractDocumentPreview {...data} />
 
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <Button variant="secondary" onClick={() => navigate('/contracts')}>

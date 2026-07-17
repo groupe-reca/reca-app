@@ -35,7 +35,7 @@ export function ContractDocumentPreview({ contract, client, zones, settings }: C
               <DocumentSignatures client={client} />
             </div>
           </div>
-          <DocumentSummaryPayment contract={contract} />
+          <DocumentSummaryPayment contract={contract} settings={settings} />
         </div>
       </div>
 

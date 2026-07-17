@@ -9,6 +9,7 @@ import { SurfaceSummary } from './SurfaceSummary'
 import { useContractWizardDefaults } from '../../hooks/useContractWizardDefaults'
 import { DEPOT_NEIGE_OPTIONS, MODE_PAIEMENT_OPTIONS, SERVICE_OPTIONS } from '../../constants/wizardOptions'
 import { generateClauses } from '../../utils/generateClauses'
+import { computeInstallmentAmount } from '../../utils/paymentPresets'
 import type { ContractCreationFormValues } from '../../schemas/contractCreation.schema'
 import type { ObligationsAnswers } from '../../types/contract.types'
 
@@ -142,8 +143,11 @@ export function WizardStepValidation({ client, control }: WizardStepValidationPr
         <ul className="flex flex-col gap-1">
           {modalitesPaiement.map((entry, index) => (
             <li key={index} className="text-body text-reca-black">
-              {entry.description} — {entry.type === 'pourcentage' ? `${entry.valeur}%` : formatCurrency(Number(entry.valeur))} (
-              {entry.dateEcheance || 'date à définir'})
+              {entry.description} —{' '}
+              {formatCurrency(
+                computeInstallmentAmount({ type: entry.type, valeur: Number(entry.valeur) }, prix ? Number(prix) : null),
+              )}{' '}
+              ({entry.dateEcheance || 'date à définir'})
             </li>
           ))}
         </ul>

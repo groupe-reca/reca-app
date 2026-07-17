@@ -117,6 +117,10 @@ export function MobileContractWizard() {
               client={selectedClient}
               onClientChange={setManuallySelectedClient}
               onOpenMeasurementTool={openPropertyAnalysis}
+              control={control}
+              register={register}
+              errors={errors}
+              setValue={setValue}
             />
           )}
           {activeStepId === 'terms' && (

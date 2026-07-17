@@ -20,7 +20,7 @@ export const STEP_ORDER: WizardStepId[] = ['client', 'property', 'terms', 'revie
 export const STEP_LABELS: Record<WizardStepId, string> = {
   client: 'Client & Propriété',
   property: 'Analyse & Zones',
-  terms: 'Modalités de paiement',
+  terms: 'Paiement',
   review: 'Révision',
 }
 
@@ -122,9 +122,11 @@ export function useContractWizardState() {
   const prix = useWatch({ control, name: 'prix' })
 
   const STEP_COMPLETION: Record<WizardStepId, boolean> = {
-    client: Boolean(selectedClient),
+    // Tâche 11 : prix et échéancier ont migré vers l'étape "Client & Propriété" —
+    // les trois doivent être renseignés pour avancer.
+    client: Boolean(selectedClient) && Boolean(prix) && (modalitesPaiement?.length ?? 0) > 0,
     property: propertyStepComplete,
-    terms: (modalitesPaiement?.length ?? 0) > 0 && Boolean(modePaiement),
+    terms: Boolean(modePaiement),
     review: false,
   }
 

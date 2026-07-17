@@ -1,5 +1,6 @@
 import { supabase } from '@/lib/supabaseClient'
 import { generateClauses } from '../utils/generateClauses'
+import { computeInstallmentAmount } from '../utils/paymentPresets'
 import { SERVICE_OPTIONS } from '../constants/wizardOptions'
 import { DEFAULT_CONTRACT_WIZARD_DEFAULTS } from '../types/contractWizardDefaults.types'
 import type { ContractWizardDefaults } from '../types/contractWizardDefaults.types'
@@ -18,7 +19,6 @@ import type {
   ContractStatus,
   ContractZoneRow,
   ObligationsAnswers,
-  PaymentScheduleEntry,
   ServiceEntry,
 } from '../types/contract.types'
 
@@ -285,11 +285,6 @@ async function syncContractPhotos(contractId: string, photos: ContractPhotoFormV
   }))
   const { error } = await supabase.from('contract_photos').upsert(photoRows as never, { onConflict: 'id' })
   if (error) throw error
-}
-
-function computeInstallmentAmount(entry: PaymentScheduleEntry, prix: number | null): number {
-  if (entry.type === 'pourcentage') return Math.round((((prix ?? 0) * entry.valeur) / 100) * 100) / 100
-  return entry.valeur
 }
 
 async function generateInvoicesFromSchedule(contract: Contract): Promise<{ generated: number }> {
