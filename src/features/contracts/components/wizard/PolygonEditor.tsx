@@ -5,6 +5,7 @@ import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 import area from '@turf/area'
 import type { Feature, Polygon } from 'geojson'
 import { ZONE_DRAW_STYLES } from '../../constants/zoneDrawStyles'
+import { createDrawPolygonModeWithAllVertices } from '../../utils/drawPolygonAllVertices'
 import type { ZoneType } from '../../types/contract.types'
 
 export type PolygonEditorHandle = {
@@ -111,6 +112,10 @@ export const PolygonEditor = forwardRef<PolygonEditorHandle, PolygonEditorProps>
       // désélectionnée. Confirmé en test réel (2e/3e zone bleues au lieu de leur
       // couleur de type une fois désélectionnées) avant ce correctif.
       userProperties: true,
+      // `draw_polygon` custom (tâche 12) : affiche un point à chaque sommet déjà posé
+      // pendant le tracé, le mode standard n'en affiche que 2 (voir le commentaire du
+      // fichier importé pour le détail du comportement d'origine).
+      modes: { ...MapboxDraw.modes, draw_polygon: createDrawPolygonModeWithAllVertices() },
     })
     map.addControl(draw)
     drawRef.current = draw

@@ -21,6 +21,9 @@ zoneTypeColorMatch.push(blue) // fallback : zone tout juste tracée, pas encore 
  * `active === 'true'` (propriété réservée de Draw) reste prioritaire pour le feedback
  * visuel de sélection, comme dans le thème d'origine.
  */
+/** Doit rester identique à la constante du même nom dans `utils/drawPolygonAllVertices.ts`. */
+const HISTORICAL_VERTEX_META = 'reca-historical-vertex'
+
 export const ZONE_DRAW_STYLES = [
   {
     id: 'gl-draw-polygon-fill',
@@ -75,6 +78,28 @@ export const ZONE_DRAW_STYLES = [
     filter: ['all', ['==', '$type', 'Point'], ['==', 'meta', 'vertex'], ['!=', 'mode', 'simple_select']],
     paint: {
       'circle-radius': ['case', ['==', ['get', 'active'], 'true'], 5, 3],
+      'circle-color': orange,
+    },
+  },
+  {
+    // Points décoratifs (tâche 12) : un sommet visible à CHAQUE point déjà posé pendant
+    // le tracé actif d'un polygone (`createDrawPolygonModeWithAllVertices`), au lieu des
+    // 2 seuls sommets que le mode `draw_polygon` standard affiche par défaut. Meta custom
+    // (jamais `'vertex'`), donc jamais cliquable pour terminer le tracé — purement visuel.
+    id: 'gl-draw-historical-vertex-outer',
+    type: 'circle',
+    filter: ['all', ['==', '$type', 'Point'], ['==', 'meta', HISTORICAL_VERTEX_META]],
+    paint: {
+      'circle-radius': 5,
+      'circle-color': white,
+    },
+  },
+  {
+    id: 'gl-draw-historical-vertex-inner',
+    type: 'circle',
+    filter: ['all', ['==', '$type', 'Point'], ['==', 'meta', HISTORICAL_VERTEX_META]],
+    paint: {
+      'circle-radius': 3,
       'circle-color': orange,
     },
   },
