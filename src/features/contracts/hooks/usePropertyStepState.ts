@@ -4,6 +4,7 @@ import type { Control, UseFormSetValue } from 'react-hook-form'
 import { isMapboxConfigured } from '@/lib/mapboxClient'
 import type { ContractCreationFormValues, ContractPhotoFormValues, ContractZoneFormValues } from '../schemas/contractCreation.schema'
 import type { GeocodeResult } from '../services/geocoding.service'
+import type { MapViewport } from './usePropertyCapture'
 import { buildDemoBoundary } from '../utils/propertyBoundary'
 import type { PropertyNav } from '../components/wizard/WizardStepProperty'
 
@@ -39,6 +40,7 @@ export function usePropertyStepState({
   const [subStep, setSubStep] = useState<PropertySubStep>('locate')
   const [geocode, setGeocode] = useState<GeocodeResult | null>(null)
   const [capturePath, setCapturePath] = useState<string | null>(null)
+  const [viewport, setViewport] = useState<MapViewport | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const zones = useWatch({ control, name: 'zones' }) ?? []
   const photos = useWatch({ control, name: 'photos' }) ?? []
@@ -60,6 +62,11 @@ export function usePropertyStepState({
     setValue('adresseGeocodee', result?.placeName ?? '')
     setValue('latitude', result?.lat ?? null)
     setValue('longitude', result?.lng ?? null)
+  }
+
+  function handleCaptured(path: string, capturedViewport: MapViewport) {
+    setCapturePath(path)
+    setViewport(capturedViewport)
   }
 
   function addZone(zone: ContractZoneFormValues) {
@@ -107,6 +114,7 @@ export function usePropertyStepState({
     geocode,
     capturePath,
     setCapturePath,
+    viewport,
     mapError,
     setMapError,
     zones,
@@ -116,6 +124,7 @@ export function usePropertyStepState({
     boundary,
     currentIndex,
     handleGeocoded,
+    handleCaptured,
     addZone,
     updateZone,
     removeZone,

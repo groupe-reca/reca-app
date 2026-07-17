@@ -38,7 +38,7 @@ export function MobileWizardStepProperty({
     subStep,
     setSubStep,
     capturePath,
-    setCapturePath,
+    viewport,
     mapUnavailable,
     setMapError,
     zones,
@@ -46,6 +46,7 @@ export function MobileWizardStepProperty({
     center,
     boundary,
     handleGeocoded,
+    handleCaptured,
     addZone,
     updateZone,
     removeZone,
@@ -61,9 +62,10 @@ export function MobileWizardStepProperty({
           contractId={contractId}
           boundary={boundary}
           capturePath={capturePath}
+          initialViewport={viewport}
           mapUnavailable={mapUnavailable}
           onMapError={setMapError}
-          onCaptured={setCapturePath}
+          onCaptured={handleCaptured}
           onGeocoded={handleGeocoded}
           onContinue={() => setSubStep('delineate')}
           onNavChange={onNavChange}
@@ -74,6 +76,7 @@ export function MobileWizardStepProperty({
           center={center}
           boundary={boundary}
           capturePath={capturePath}
+          initialViewport={viewport}
           mapUnavailable={mapUnavailable}
           onMapError={setMapError}
           zones={zones}

@@ -5,6 +5,7 @@ import { PropertyMap } from './PropertyMap'
 import { PropertyBoundaryLayer } from './PropertyBoundaryLayer'
 import { PropertyMaskLayer } from './PropertyMaskLayer'
 import { MapViewportController } from './MapViewportController'
+import type { MapViewport } from '../../hooks/usePropertyCapture'
 
 type PropertyMapStageProps = {
   /** Bascule entre le placeholder et la vraie carte — chaque appelant calcule sa propre condition. */
@@ -12,6 +13,13 @@ type PropertyMapStageProps = {
   unavailableMessage: string
   center: [number, number]
   boundary: Polygon | null
+  /**
+   * Cadrage déjà choisi par l'utilisateur (capturé à l'étape Localiser) — s'il existe, la
+   * carte est créée directement dessus et le `fitBounds` automatique est désactivé, pour
+   * ne pas écraser un zoom/pan volontaire à chaque nouveau montage (Délimiter, retour à
+   * Localiser...). `null`/absent = comportement d'origine (cadrage automatique).
+   */
+  initialViewport?: MapViewport | null
   onMapError: (message: string) => void
   onMapReady?: (map: MapboxMap) => void
   onRevealChange?: (revealed: boolean) => void
@@ -29,6 +37,7 @@ export function PropertyMapStage({
   unavailableMessage,
   center,
   boundary,
+  initialViewport,
   onMapError,
   onMapReady,
   onRevealChange,
@@ -36,6 +45,7 @@ export function PropertyMapStage({
 }: PropertyMapStageProps) {
   const [map, setMap] = useState<MapboxMap | null>(null)
   const [revealed, setRevealed] = useState(false)
+  const autoFit = initialViewport == null
 
   function handleMapReady(instance: MapboxMap) {
     setMap(instance)
@@ -57,12 +67,18 @@ export function PropertyMapStage({
 
   return (
     <div className="h-full min-h-0">
-      <PropertyMap center={center} onMapReady={handleMapReady} onError={onMapError} />
+      <PropertyMap
+        center={initialViewport?.center ?? center}
+        zoom={initialViewport?.zoom}
+        onMapReady={handleMapReady}
+        onError={onMapError}
+      />
       <PropertyMaskLayer map={map} boundary={boundary} reveal={revealed} />
       <PropertyBoundaryLayer map={map} boundary={boundary} reveal={revealed} />
       <MapViewportController
         map={map}
         boundary={boundary}
+        autoFit={autoFit}
         onSettled={handleSettled}
         onReady={(fn) => onRecenterReady?.(fn)}
       />

@@ -5,6 +5,7 @@ import { PropertyMapStage } from '../wizard/PropertyMapStage'
 import { PolygonEditor } from '../wizard/PolygonEditor'
 import { ZoneNamingModal } from '../wizard/ZoneNamingModal'
 import { useDelineateState } from '../../hooks/useDelineateState'
+import type { MapViewport } from '../../hooks/usePropertyCapture'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
 import type { PropertyNav } from '../wizard/WizardStepProperty'
 import { PropertyZonesSheet } from './PropertyZonesSheet'
@@ -15,6 +16,8 @@ type MobilePropertySubStepDelineateProps = {
   center: [number, number]
   boundary: Polygon
   capturePath: string | null
+  /** Cadrage déjà capturé à Localiser (persiste ici) — voir `PropertyMapStage`. */
+  initialViewport: MapViewport | null
   mapUnavailable: boolean
   onMapError: (message: string) => void
   zones: ContractZoneFormValues[]
@@ -36,6 +39,7 @@ export function MobilePropertySubStepDelineate({
   center,
   boundary,
   capturePath,
+  initialViewport,
   mapUnavailable,
   onMapError,
   zones,
@@ -88,6 +92,7 @@ export function MobilePropertySubStepDelineate({
         unavailableMessage="La carte est indisponible pour le moment — ajoutez les zones manuellement dans la feuille du bas."
         center={center}
         boundary={boundary}
+        initialViewport={initialViewport}
         onMapError={onMapError}
         onMapReady={handleMapReady}
         onRecenterReady={(fn) => setRecenter(() => fn)}

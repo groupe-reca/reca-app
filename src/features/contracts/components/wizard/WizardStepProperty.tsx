@@ -47,7 +47,7 @@ export function WizardStepProperty({
     subStep,
     setSubStep,
     capturePath,
-    setCapturePath,
+    viewport,
     mapUnavailable,
     setMapError,
     zones,
@@ -56,6 +56,7 @@ export function WizardStepProperty({
     boundary,
     currentIndex,
     handleGeocoded,
+    handleCaptured,
     addZone,
     updateZone,
     removeZone,
@@ -81,9 +82,10 @@ export function WizardStepProperty({
             contractId={contractId}
             boundary={boundary}
             capturePath={capturePath}
+            initialViewport={viewport}
             mapUnavailable={mapUnavailable}
             onMapError={setMapError}
-            onCaptured={setCapturePath}
+            onCaptured={handleCaptured}
             onGeocoded={handleGeocoded}
             onContinue={() => setSubStep('delineate')}
             onNavChange={onNavChange}
@@ -94,6 +96,7 @@ export function WizardStepProperty({
             center={center}
             boundary={boundary}
             capturePath={capturePath}
+            initialViewport={viewport}
             mapUnavailable={mapUnavailable}
             onMapError={setMapError}
             zones={zones}
