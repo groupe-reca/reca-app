@@ -1,11 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Map as MapboxMap } from 'mapbox-gl'
 import type { Polygon } from 'geojson'
+import area from '@turf/area'
 import { isMapboxConfigured } from '@/lib/mapboxClient'
+import { toast } from '@/stores/toastStore'
 import type { PolygonEditorHandle } from '../components/wizard/PolygonEditor'
 import { boundsFromPolygon } from '../utils/propertyBoundary'
+import { boundingBoxToPolygon } from '../utils/satelliteZoneProjection'
+import { analyzeSatelliteImage } from '../services/satelliteAnalysis.service'
 import type { ContractZoneFormValues } from '../schemas/contractCreation.schema'
 import type { ZoneType } from '../types/contract.types'
+import type { MapViewport } from './usePropertyCapture'
 import type { PropertyNav } from '../components/wizard/WizardStepProperty'
 
 const EMPTY_POLYGON: Polygon = {
@@ -26,8 +31,12 @@ export type DelineateMode = 'idle' | 'drawing' | 'editing'
 type UseDelineateStateArgs = {
   mapUnavailable: boolean
   capturePath: string | null
+  /** Cadrage capturé à Localiser (tâche 12) — nécessaire pour réaligner la caméra avant de déprojeter les suggestions Gemini. */
+  viewport: MapViewport | null
   zones: ContractZoneFormValues[]
   onAddZone: (zone: ContractZoneFormValues) => void
+  /** Ajout groupé (détection automatique) — une seule mise à jour d'état pour tout le lot, voir `usePropertyStepState.addZones`. */
+  onAddZones: (zones: ContractZoneFormValues[]) => void
   onUpdateZone: (id: string, patch: Partial<ContractZoneFormValues>) => void
   onRemoveZone: (id: string) => void
   onContinue: () => void
@@ -46,8 +55,10 @@ type UseDelineateStateArgs = {
 export function useDelineateState({
   mapUnavailable,
   capturePath,
+  viewport,
   zones,
   onAddZone,
+  onAddZones,
   onUpdateZone,
   onRemoveZone,
   onContinue,
@@ -57,6 +68,7 @@ export function useDelineateState({
   const [mode, setMode] = useState<DelineateMode>('idle')
   const [selectedZoneId, setSelectedZoneId] = useState<string | null>(null)
   const [pendingZone, setPendingZone] = useState<{ geojson: Polygon; surfaceM2: number } | null>(null)
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
   const polygonEditorRef = useRef<PolygonEditorHandle>(null)
 
   useEffect(() => {
@@ -138,6 +150,65 @@ export function useDelineateState({
     if (drawMode !== 'draw_polygon' && mode === 'drawing') setMode('idle')
   }
 
+  async function handleAutoDetect() {
+    if (!capturePath || !map) return
+    setIsAnalyzing(true)
+    try {
+      const result = await analyzeSatelliteImage(capturePath)
+
+      if (result.qualite_image === 'insuffisante') {
+        toast.error(
+          result.raison_qualite
+            ? `Image insuffisante pour la détection automatique — ${result.raison_qualite}`
+            : 'Image insuffisante pour la détection automatique — continuez en mode manuel.',
+        )
+        return
+      }
+
+      if (result.zones.length === 0) {
+        toast.error('Aucun stationnement détecté automatiquement — continuez en mode manuel.')
+        return
+      }
+
+      // Réaligne la caméra sur le cadrage exact utilisé au moment de la capture, sans
+      // quoi la déprojection pixel→lng/lat des bounding boxes Gemini serait décalée.
+      if (viewport) map.jumpTo({ center: viewport.center, zoom: viewport.zoom })
+
+      // Construites en une seule fois puis ajoutées via `onAddZones` (mise à jour
+      // groupée) — plusieurs appels synchrones à `onAddZone` dans cette boucle
+      // écraseraient les précédents (fermeture `zones` figée entre les appels, seul le
+      // dernier survivrait). `addSuggestedZone` (Draw) reste appelé par zone : son état
+      // interne est impératif, pas concerné par ce problème.
+      const newZones: ContractZoneFormValues[] = result.zones.map((suggestion, index) => {
+        const geojson = boundingBoxToPolygon(suggestion.bounding_box, map)
+        const surfaceM2 = Math.round(area({ type: 'Feature', properties: {}, geometry: geojson }) * 100) / 100
+        const id = crypto.randomUUID()
+        polygonEditorRef.current?.addSuggestedZone(geojson, id, 'stationnement')
+        return {
+          id,
+          type: 'stationnement',
+          label: 'Stationnement',
+          geojson,
+          surfaceM2,
+          imageStoragePath: capturePath,
+          ordre: zones.length + index,
+          capturedAt: new Date().toISOString(),
+        }
+      })
+      onAddZones(newZones)
+
+      toast.success(
+        result.zones.length === 1
+          ? '1 zone de stationnement suggérée — ajustez le contour si nécessaire.'
+          : `${result.zones.length} zones de stationnement suggérées — ajustez les contours si nécessaire.`,
+      )
+    } catch {
+      toast.error("Impossible d'analyser l'image satellite.")
+    } finally {
+      setIsAnalyzing(false)
+    }
+  }
+
   function addManualZone(type: ZoneType, label: string, surfaceM2: number) {
     onAddZone({
       id: crypto.randomUUID(),
@@ -171,5 +242,7 @@ export function useDelineateState({
     handleZoomZone,
     handleModeChange,
     addManualZone,
+    isAnalyzing,
+    handleAutoDetect,
   }
 }

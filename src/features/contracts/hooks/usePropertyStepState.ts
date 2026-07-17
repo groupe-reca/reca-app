@@ -73,6 +73,17 @@ export function usePropertyStepState({
     setValue('zones', [...zones, zone], { shouldValidate: true })
   }
 
+  /**
+   * Ajout groupé (détection automatique, tâche 1) — plusieurs appels synchrones à
+   * `addZone` dans une boucle liraient tous la même valeur `zones` figée (fermeture
+   * React state non encore réconciliée entre les appels), et seul le dernier
+   * survivrait : bug réel observé en test (3 zones tracées sur la carte, 1 seule dans
+   * le formulaire). Une unique mise à jour d'état avec tout le lot évite ce problème.
+   */
+  function addZones(newZones: ContractZoneFormValues[]) {
+    setValue('zones', [...zones, ...newZones], { shouldValidate: true })
+  }
+
   function updateZone(id: string, patch: Partial<ContractZoneFormValues>) {
     setValue(
       'zones',
@@ -126,6 +137,7 @@ export function usePropertyStepState({
     handleGeocoded,
     handleCaptured,
     addZone,
+    addZones,
     updateZone,
     removeZone,
     addPhoto,

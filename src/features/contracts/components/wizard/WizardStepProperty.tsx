@@ -58,6 +58,7 @@ export function WizardStepProperty({
     handleGeocoded,
     handleCaptured,
     addZone,
+    addZones,
     updateZone,
     removeZone,
     addPhoto,
@@ -101,6 +102,7 @@ export function WizardStepProperty({
             onMapError={setMapError}
             zones={zones}
             onAddZone={addZone}
+            onAddZones={addZones}
             onUpdateZone={updateZone}
             onRemoveZone={removeZone}
             onContinue={() => setSubStep('validate')}

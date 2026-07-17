@@ -22,6 +22,8 @@ type MobilePropertySubStepDelineateProps = {
   onMapError: (message: string) => void
   zones: ContractZoneFormValues[]
   onAddZone: (zone: ContractZoneFormValues) => void
+  /** Ajout groupé (détection automatique) — une seule mise à jour d'état pour tout le lot, voir `usePropertyStepState.addZones`. */
+  onAddZones: (zones: ContractZoneFormValues[]) => void
   onUpdateZone: (id: string, patch: Partial<ContractZoneFormValues>) => void
   onRemoveZone: (id: string) => void
   onContinue: () => void
@@ -44,6 +46,7 @@ export function MobilePropertySubStepDelineate({
   onMapError,
   zones,
   onAddZone,
+  onAddZones,
   onUpdateZone,
   onRemoveZone,
   onContinue,
@@ -72,7 +75,20 @@ export function MobilePropertySubStepDelineate({
     handleZoomZone,
     handleModeChange,
     addManualZone,
-  } = useDelineateState({ mapUnavailable, capturePath, zones, onAddZone, onUpdateZone, onRemoveZone, onContinue, onNavChange })
+    isAnalyzing,
+    handleAutoDetect,
+  } = useDelineateState({
+    mapUnavailable,
+    capturePath,
+    viewport: initialViewport,
+    zones,
+    onAddZone,
+    onAddZones,
+    onUpdateZone,
+    onRemoveZone,
+    onContinue,
+    onNavChange,
+  })
 
   function handleSelectZone(id: string) {
     setSelectedZoneId(id)
@@ -117,6 +133,9 @@ export function MobilePropertySubStepDelineate({
           onDelete={() => selectedZoneId && handleDeleteZone(selectedZoneId)}
           onRecenter={() => recenter?.()}
           recenterDisabled={!recenter}
+          onAutoDetect={handleAutoDetect}
+          autoDetectDisabled={!capturePath || mode !== 'idle' || pendingZone !== null}
+          isAnalyzing={isAnalyzing}
         />
       )}
 

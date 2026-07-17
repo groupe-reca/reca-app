@@ -1,4 +1,4 @@
-import { LocateFixed, Pencil, Plus, Trash2 } from 'lucide-react'
+import { Loader2, LocateFixed, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 type ZoneToolbarFloatingProps = {
@@ -10,6 +10,9 @@ type ZoneToolbarFloatingProps = {
   onDelete: () => void
   onRecenter: () => void
   recenterDisabled: boolean
+  onAutoDetect: () => void
+  autoDetectDisabled: boolean
+  isAnalyzing: boolean
 }
 
 /**
@@ -27,6 +30,9 @@ export function ZoneToolbarFloating({
   onDelete,
   onRecenter,
   recenterDisabled,
+  onAutoDetect,
+  autoDetectDisabled,
+  isAnalyzing,
 }: ZoneToolbarFloatingProps) {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-[calc(15dvh+16px)] z-30 flex justify-center px-4">
@@ -41,6 +47,13 @@ export function ZoneToolbarFloating({
         />
         <FloatingIconButton icon={Trash2} label="Supprimer la zone" onClick={onDelete} disabled={!selectedZoneId} />
         <FloatingIconButton icon={LocateFixed} label="Recentrer" onClick={onRecenter} disabled={recenterDisabled} />
+        <FloatingIconButton
+          icon={isAnalyzing ? Loader2 : Sparkles}
+          label="Détection automatique"
+          onClick={onAutoDetect}
+          disabled={autoDetectDisabled || isAnalyzing}
+          spinning={isAnalyzing}
+        />
       </div>
     </div>
   )
@@ -52,12 +65,14 @@ function FloatingIconButton({
   onClick,
   disabled,
   active,
+  spinning,
 }: {
   icon: LucideIcon
   label: string
   onClick: () => void
   disabled?: boolean
   active?: boolean
+  spinning?: boolean
 }) {
   return (
     <button
@@ -69,7 +84,7 @@ function FloatingIconButton({
         active ? 'bg-reca-red text-white' : 'text-reca-black hover:bg-reca-snow'
       }`}
     >
-      <Icon className="size-5" aria-hidden="true" />
+      <Icon className={`size-5 ${spinning ? 'animate-spin' : ''}`} aria-hidden="true" />
     </button>
   )
 }

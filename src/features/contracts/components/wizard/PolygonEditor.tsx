@@ -21,6 +21,8 @@ export type PolygonEditorHandle = {
   stopEditing: () => void
   /** Supprime une zone déjà confirmée de l'état interne de Draw (corrige la désynchronisation carte/liste). */
   deleteZone: (zoneId: string) => void
+  /** Ajoute directement une zone déjà confirmée (détection automatique) — contrairement au tracé manuel, ne passe pas par la fenêtre de nommage : type/label déjà connus. */
+  addSuggestedZone: (geojson: Polygon, zoneId: string, type: ZoneType) => void
 }
 
 type PolygonEditorProps = {
@@ -92,6 +94,11 @@ export const PolygonEditor = forwardRef<PolygonEditorHandle, PolygonEditorProps>
         const feature = draw.getAll().features.find((f) => f.properties?.zoneId === zoneId)
         if (feature?.id == null) return
         draw.delete(String(feature.id))
+      },
+      addSuggestedZone(geojson, zoneId, type) {
+        const draw = drawRef.current
+        if (!draw) return
+        draw.add({ type: 'Feature', properties: { zoneId, zoneType: type }, geometry: geojson })
       },
     }),
     [],
