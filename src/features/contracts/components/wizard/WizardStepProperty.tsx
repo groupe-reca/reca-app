@@ -67,7 +67,7 @@ export function WizardStepProperty({
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <div className="flex shrink-0 items-center gap-2 text-label text-reca-gray-medium">
+      <div className="flex shrink-0 items-center gap-2 px-4 pt-3 text-label text-reca-gray-medium sm:px-6 lg:px-8">
         {SUB_STEP_ORDER.map((step, index) => (
           <div key={step} className="flex items-center gap-2">
             <span className={index <= currentIndex ? 'font-medium text-reca-red' : ''}>{SUB_STEP_LABELS[step]}</span>
@@ -76,7 +76,7 @@ export function WizardStepProperty({
         ))}
       </div>
 
-      <div className="min-h-0 flex-1">
+      <div className={subStep === 'validate' ? 'min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6 lg:px-8' : 'min-h-0 flex-1'}>
         {subStep === 'locate' && (
           <PropertySubStepLocate
             client={client}

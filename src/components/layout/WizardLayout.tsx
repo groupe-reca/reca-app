@@ -20,6 +20,13 @@ type WizardLayoutProps = {
    * une seule colonne en dessous. Absent = comportement inchangé (pleine largeur).
    */
   sidePanel?: ReactNode
+  /**
+   * Retire le padding/scroll par défaut du conteneur de contenu (ex. étape "Analyse &
+   * Zones" du Wizard Contrats, dont la carte doit toucher les bords) — le contenu devient
+   * alors responsable de son propre padding/scroll interne. `false` par défaut : aucun
+   * changement pour les Wizards/étapes existants.
+   */
+  fullBleedContent?: boolean
   footer: ReactNode
   children: ReactNode
 }
@@ -29,14 +36,22 @@ type WizardLayoutProps = {
  * page — redondant avec le Breadcrumb, l'utilisateur est déjà dans le Wizard), suivie du
  * contenu (scrollable localement si une étape en a besoin) puis le footer, fixes.
  */
-export function WizardLayout({ steps, onStepClick, headerActions, sidePanel, footer, children }: WizardLayoutProps) {
+export function WizardLayout({
+  steps,
+  onStepClick,
+  headerActions,
+  sidePanel,
+  fullBleedContent = false,
+  footer,
+  children,
+}: WizardLayoutProps) {
   return (
     <ModuleContainer>
       {headerActions && (
         <div className="flex items-center justify-end gap-2 px-4 pt-3 sm:px-6 lg:px-8">{headerActions}</div>
       )}
       <WizardProgress steps={steps} onStepClick={onStepClick} />
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
+      <div className={fullBleedContent ? 'min-h-0 flex-1 overflow-hidden' : 'min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8'}>
         {sidePanel ? (
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_340px]">
             <div className="min-w-0">{children}</div>

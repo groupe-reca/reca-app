@@ -122,11 +122,12 @@ export function useContractWizardState() {
   const prix = useWatch({ control, name: 'prix' })
 
   const STEP_COMPLETION: Record<WizardStepId, boolean> = {
-    // Tâche 11 : prix et échéancier ont migré vers l'étape "Client & Propriété" —
-    // les trois doivent être renseignés pour avancer.
-    client: Boolean(selectedClient) && Boolean(prix) && (modalitesPaiement?.length ?? 0) > 0,
+    client: Boolean(selectedClient),
     property: propertyStepComplete,
-    terms: Boolean(modePaiement),
+    // Tâche 5 (2026-07-17, nom de fichier réutilisé) : prix et échéancier reviennent
+    // ici depuis l'étape "Client & Propriété" (déplacement inverse de la tâche 11) —
+    // les trois doivent être renseignés pour avancer.
+    terms: Boolean(modePaiement) && Boolean(prix) && (modalitesPaiement?.length ?? 0) > 0,
     review: false,
   }
 

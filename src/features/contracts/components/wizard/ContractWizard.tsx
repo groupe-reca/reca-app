@@ -67,6 +67,7 @@ export function ContractWizard() {
       sidePanel={
         activeStepId === 'property' ? undefined : <ContractSummaryPanel client={selectedClient} control={control} />
       }
+      fullBleedContent={activeStepId === 'property'}
       headerActions={
         <>
           <Button type="button" variant="ghost" onClick={() => navigate('/contracts')}>
@@ -102,10 +103,6 @@ export function ContractWizard() {
           client={selectedClient}
           onClientChange={setManuallySelectedClient}
           onOpenMeasurementTool={openPropertyAnalysis}
-          control={control}
-          register={register}
-          errors={errors}
-          setValue={setValue}
         />
       )}
       {activeStepId === 'property' && selectedClient && (
