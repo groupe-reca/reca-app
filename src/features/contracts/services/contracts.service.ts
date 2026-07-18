@@ -22,14 +22,41 @@ import type {
   ServiceEntry,
 } from '../types/contract.types'
 
-const SELECT_WITH_CLIENT = '*, client:clients(id, numero, prenom, nom, telephone)'
+const SELECT_WITH_CLIENT =
+  '*, client:clients(id, numero, prenom, nom, telephone, courriel, adresse, ville, code_postal)'
 const SELECT_LIST_WITH_INVOICES = `${SELECT_WITH_CLIENT}, invoices(statut)`
 const TPS_RATE = 0.05
 const TVQ_RATE = 0.09975
 
-type ContractRowWithClient = ContractRow & { client: ContractClientRef | null }
+type ContractClientJoinRow = {
+  id: string
+  numero: string
+  prenom: string
+  nom: string
+  telephone: string | null
+  courriel: string | null
+  adresse: string | null
+  ville: string | null
+  code_postal: string | null
+}
+type ContractRowWithClient = ContractRow & { client: ContractClientJoinRow | null }
 type ContractRowWithClientAndInvoices = ContractRowWithClient & { invoices: { statut: string }[] }
 type WizardValues = ContractCreationFormValues | ContractDraftFormValues
+
+function mapContractClient(client: ContractClientJoinRow | null): ContractClientRef | null {
+  if (!client) return null
+  return {
+    id: client.id,
+    numero: client.numero,
+    prenom: client.prenom,
+    nom: client.nom,
+    telephone: client.telephone,
+    courriel: client.courriel,
+    adresse: client.adresse,
+    ville: client.ville,
+    codePostal: client.code_postal,
+  }
+}
 
 function mapContract(row: ContractRowWithClient): Contract {
   return {
@@ -71,8 +98,11 @@ function mapContract(row: ContractRowWithClient): Contract {
     clauseExecution: row.clause_execution,
     clauseAssurance: row.clause_assurance,
     prixTaxes: row.prix_taxes,
+    obstaclesConnus: row.obstacles_connus,
+    messageOperateur: row.message_operateur,
+    consignesSpeciales: row.consignes_speciales,
     createdAt: row.created_at,
-    client: row.client,
+    client: mapContractClient(row.client),
     hasOverdueInvoice: false,
   }
 }
@@ -224,6 +254,20 @@ export async function listContractZones(contractId: string): Promise<ContractZon
 
   if (error) throw error
   return (data ?? []) as unknown as ContractZoneRow[]
+}
+
+/** Pont entre `listContractZones` (DB, snake_case) et `PolygonCard`/`ZoneAreaSummary` (camelCase, forme du Wizard). */
+export function mapZoneRowToFormValues(row: ContractZoneRow): ContractZoneFormValues {
+  return {
+    id: row.id,
+    type: row.type,
+    label: row.label,
+    geojson: row.geojson,
+    surfaceM2: row.surface_m2,
+    imageStoragePath: row.image_storage_path,
+    ordre: row.ordre,
+    capturedAt: row.captured_at,
+  }
 }
 
 export async function listContractPhotos(contractId: string): Promise<ContractPhotoRow[]> {
@@ -409,6 +453,22 @@ export async function updateContract(id: string, values: ContractFormValues): Pr
   const { data, error } = await supabase
     .from('contracts')
     .update(toRowInput(values) as never)
+    .eq('id', id)
+    .select(SELECT_WITH_CLIENT)
+    .single()
+
+  if (error) throw error
+  return mapContract(data as unknown as ContractRowWithClient)
+}
+
+/** "Notes spécifiques à la résidence" — édition ciblée d'un des 4 champs (3 nouveaux + `notes` existant). */
+export async function updateContractOperatorInfo(
+  id: string,
+  patch: Partial<Pick<ContractRow, 'obstacles_connus' | 'message_operateur' | 'consignes_speciales' | 'notes'>>,
+): Promise<Contract> {
+  const { data, error } = await supabase
+    .from('contracts')
+    .update(patch as never)
     .eq('id', id)
     .select(SELECT_WITH_CLIENT)
     .single()

@@ -80,6 +80,29 @@ export async function listPayments(): Promise<Payment[]> {
   return ((data ?? []) as unknown as PaymentRowWithInvoice[]).map(mapPayment)
 }
 
+/** Paiements ne sont liés qu'à une facture (`facture_id`), pas directement à un contrat — passe par `invoices.contrat_id`. */
+export async function listPaymentsByContract(contratId: string): Promise<Payment[]> {
+  const { data: invoiceRows, error: invoiceError } = await supabase
+    .from('invoices')
+    .select('id')
+    .eq('contrat_id', contratId)
+    .is('deleted_at', null)
+  if (invoiceError) throw invoiceError
+
+  const invoiceIds = ((invoiceRows ?? []) as { id: string }[]).map((row) => row.id)
+  if (invoiceIds.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('payments')
+    .select(SELECT_WITH_INVOICE)
+    .in('facture_id', invoiceIds)
+    .is('deleted_at', null)
+    .order('date', { ascending: false })
+
+  if (error) throw error
+  return ((data ?? []) as unknown as PaymentRowWithInvoice[]).map(mapPayment)
+}
+
 export async function listPaymentsByInvoice(factureId: string): Promise<Payment[]> {
   const { data, error } = await supabase
     .from('payments')

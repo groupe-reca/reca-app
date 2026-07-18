@@ -4,13 +4,14 @@ import type { ReactNode } from 'react'
 type DropdownProps = {
   trigger: ReactNode
   children: ReactNode
+  className?: string
 }
 
 type Placement = { horizontal: 'left' | 'right'; vertical: 'top' | 'bottom' }
 
 const DEFAULT_PLACEMENT: Placement = { horizontal: 'right', vertical: 'bottom' }
 
-export function Dropdown({ trigger, children }: DropdownProps) {
+export function Dropdown({ trigger, children, className = '' }: DropdownProps) {
   const [open, setOpen] = useState(false)
   const [placement, setPlacement] = useState<Placement>(DEFAULT_PLACEMENT)
   const ref = useRef<HTMLDivElement>(null)
@@ -37,7 +38,7 @@ export function Dropdown({ trigger, children }: DropdownProps) {
   }, [open])
 
   return (
-    <div ref={ref} className="relative inline-block">
+    <div ref={ref} className={`relative inline-block ${className}`}>
       <span
         onClick={() => {
           setPlacement(DEFAULT_PLACEMENT)

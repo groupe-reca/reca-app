@@ -1,35 +1,45 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
-import { MoreVertical } from 'lucide-react'
-import { Card } from '@/components/ui/Card'
-import { Dropdown, DropdownItem } from '@/components/ui/Dropdown'
-import { InvoiceStatusBadge } from '@/features/invoices/components/InvoiceStatusBadge'
+import { useNavigate, useParams } from 'react-router'
+import { QueryState } from '@/components/ui/QueryState'
 import { useContractInvoices } from '@/features/invoices/hooks/useContractInvoices'
-import { formatCurrency } from '@/lib/format'
+import { usePaymentsByContract } from '@/features/payments/hooks/usePaymentsByContract'
+import { toast } from '@/stores/toastStore'
 import { MobileContractLayout } from '../../components/mobile/MobileContractLayout'
+import { ContractFormModal } from '../../components/ContractFormModal'
+import { ContractDetailHeader } from '../../components/detail/ContractDetailHeader'
+import { ContractInfoStrip } from '../../components/detail/ContractInfoStrip'
+import { ContractMapCard } from '../../components/detail/ContractMapCard'
+import { ContractZonesStatRow } from '../../components/detail/ContractZonesStatRow'
+import { ContractOperatorInfoCard } from '../../components/detail/ContractOperatorInfoCard'
+import { ContractClausesCard } from '../../components/detail/ContractClausesCard'
+import { ContractClientCard } from '../../components/detail/ContractClientCard'
+import { ContractPaymentsCard } from '../../components/detail/ContractPaymentsCard'
+import { ContractNotesCard } from '../../components/detail/ContractNotesCard'
 import { useContract } from '../../hooks/useContract'
+import { useContractZones } from '../../hooks/useContractZones'
 import { useDeleteContract } from '../../hooks/useDeleteContract'
 import { useUpdateContractStatus } from '../../hooks/useUpdateContractStatus'
-import { ContractFormModal } from '../../components/ContractFormModal'
-import { ContractStatusBadge } from '../../components/ContractStatusBadge'
-import { CONTRACT_STATUSES, CONTRACT_STATUS_LABELS } from '../../types/contract.types'
-import { DEPOT_NEIGE_OPTIONS, MODE_CONCLUSION_LABELS } from '../../constants/wizardOptions'
+import { mapZoneRowToFormValues } from '../../services/contracts.service'
 
+/**
+ * Mêmes composants `detail/` que la version Desktop, empilés en 1 colonne — la carte
+ * satellite reste juste après l'en-tête ("la carte satellite reste prioritaire" côté mobile).
+ * Contrairement à l'ancienne page, les actions vivent désormais dans `ContractDetailHeader`
+ * (boutons pleine largeur en dessous de `sm`), plus dans le slot `headerActions` de la barre du haut.
+ */
 export function MobileContractDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
-  const { data: contract, isLoading } = useContract(id)
+  const { data: contract, isLoading, isError } = useContract(id)
+  const { data: zoneRows } = useContractZones(id)
+  const { data: invoices } = useContractInvoices(id)
+  const { data: payments } = usePaymentsByContract(id)
   const updateStatus = useUpdateContractStatus(id)
   const deleteContract = useDeleteContract()
-  const { data: invoices } = useContractInvoices(id)
   const [editOpen, setEditOpen] = useState(false)
 
-  if (isLoading || !contract) {
-    return (
-      <MobileContractLayout>
-        <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
-      </MobileContractLayout>
-    )
+  function handlePlaceholder() {
+    toast.success('Cette fonctionnalité arrive au prochain sprint.')
   }
 
   function handleDelete() {
@@ -38,144 +48,48 @@ export function MobileContractDetailPage() {
     deleteContract.mutate(contract.id, { onSuccess: () => navigate('/contracts') })
   }
 
+  function handleCancelContract() {
+    if (!contract) return
+    if (!window.confirm(`Annuler le contrat ${contract.numero} ?`)) return
+    updateStatus.mutate('annule')
+  }
+
   return (
-    <MobileContractLayout
-      headerActions={
-        <Dropdown
-          trigger={
-            <button
-              type="button"
-              aria-label="Actions"
-              className="flex size-12 items-center justify-center rounded-control text-reca-black hover:bg-reca-snow"
-            >
-              <MoreVertical className="size-5" aria-hidden="true" />
-            </button>
-          }
-        >
-          <DropdownItem onClick={() => setEditOpen(true)}>Modifier</DropdownItem>
-          {contract.statut === 'en_attente' && (
-            <DropdownItem onClick={() => navigate(`/contracts/new?draftId=${contract.id}`)}>
-              Reprendre le brouillon
-            </DropdownItem>
-          )}
-          {CONTRACT_STATUSES.map((status) => (
-            <DropdownItem key={status} onClick={() => updateStatus.mutate(status)}>
-              Statut : {CONTRACT_STATUS_LABELS[status]}
-            </DropdownItem>
-          ))}
-          <DropdownItem onClick={handleDelete}>Supprimer</DropdownItem>
-        </Dropdown>
-      }
-    >
-      <div>
-        <p className="text-label text-reca-gray-medium">{contract.numero}</p>
-        <h2 className="text-subtitle font-semibold text-reca-black">
-          {contract.type ?? 'Contrat'} {contract.saison ? `— ${contract.saison}` : ''}
-        </h2>
-        <div className="mt-2">
-          <ContractStatusBadge status={contract.statut} />
-        </div>
-      </div>
-
-      <Card>
-        <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Détails</h2>
-        <div className="flex flex-col gap-2 text-body text-reca-gray-medium">
-          <p>Prix : {contract.prix != null ? formatCurrency(contract.prix) : '—'}</p>
-          <p>Mode de conclusion : {MODE_CONCLUSION_LABELS[contract.modeConclusion]}</p>
-          <p>Signature : {contract.dateSignature ?? '—'}</p>
-          <p>Début : {contract.dateDebut ?? '—'}</p>
-          <p>Fin : {contract.dateFin ?? '—'}</p>
-          <p>Renouvellement automatique : {contract.renouvellement ? 'Oui' : 'Non'}</p>
-          <p>Notes : {contract.notes ?? '—'}</p>
-        </div>
-      </Card>
-
-      <Card>
-        <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Client</h2>
-        {contract.client ? (
-          <p className="text-body text-reca-gray-medium">
-            <Link to={`/clients/${contract.client.id}`} className="text-reca-red hover:underline">
-              {contract.client.prenom} {contract.client.nom} ({contract.client.numero})
-            </Link>
-          </p>
-        ) : (
-          <p className="text-body text-reca-gray-medium">Aucun client associé.</p>
-        )}
-      </Card>
-
-      <Card>
-        <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Clauses du contrat</h2>
-        <div className="flex flex-col gap-2 text-body text-reca-gray-medium">
-          <p>Zone desservie : {contract.zoneDesservie}</p>
-          <p>Superficie : {contract.superficie != null ? `${contract.superficie} m²` : '—'}</p>
-          <p>Exclusions : {contract.exclusions}</p>
-          <p>Seuil de déclenchement : {contract.seuilDeclenchementCm} cm</p>
-          <p>Heure limite de dégagement : {contract.heurePremierPassage}</p>
-          <p>
-            Accumulation max. par précipitation :{' '}
-            {contract.accumulationMaximaleCm != null ? `${contract.accumulationMaximaleCm} cm` : '—'}
-          </p>
-          <p>
-            Dépôt de la neige :{' '}
-            {DEPOT_NEIGE_OPTIONS.find((option) => option.value === contract.depotNeige)?.label ?? '—'}
-            {contract.depotNeige !== 'sur_terrain' &&
-              ` (permis municipal ${contract.permisMunicipalObtenu ? 'obtenu' : 'non obtenu'})`}
-          </p>
-          <p>Nettoyage final : {contract.nettoyageFinal}</p>
-          <p>Distance de sécurité : {contract.distanceSecuriteCm} cm</p>
-          <p>Balises requises : {contract.balisesRequises ? 'Oui' : 'Non'}</p>
-          <p>Obligations du client : {contract.obligationsClient}</p>
-          <p>Responsabilités : {contract.responsabilites}</p>
-          {contract.clauseAnnulation && <p>Annulation / résolution : {contract.clauseAnnulation}</p>}
-          {contract.clausePrix && <p>Prix : {contract.clausePrix}</p>}
-          {contract.clauseExecution && <p>Exécution : {contract.clauseExecution}</p>}
-          {contract.clauseAssurance && <p>Assurance et responsabilité : {contract.clauseAssurance}</p>}
-        </div>
-      </Card>
-
-      <Card>
-        <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Échéancier de paiement</h2>
-        {contract.modalitesPaiement.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {contract.modalitesPaiement.map((entry, index) => (
-              <div key={index} className="flex items-center justify-between text-body text-reca-gray-medium">
-                <span>{entry.description || 'Échéance'}</span>
-                <span>
-                  {entry.type === 'pourcentage' ? `${entry.valeur}%` : formatCurrency(entry.valeur)}
-                  {entry.dateEcheance && ` — ${entry.dateEcheance}`}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-body text-reca-gray-medium">Aucune échéance.</p>
-        )}
-      </Card>
-
-      <Card>
-        <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Factures liées</h2>
-        {invoices && invoices.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {invoices.map((invoice) => (
-              <Link
-                key={invoice.id}
-                to={`/invoices/${invoice.id}`}
-                className="flex items-center justify-between rounded-control border border-reca-gray-light px-4 py-3 hover:bg-reca-snow"
-              >
-                <div className="text-body text-reca-black">
-                  <span className="font-medium">{invoice.numero}</span>
-                  <span className="text-reca-gray-medium"> — {formatCurrency(invoice.total)}</span>
-                </div>
-                <InvoiceStatusBadge status={invoice.statut} />
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <p className="text-body text-reca-gray-medium">Aucune facture liée à ce contrat.</p>
-        )}
-      </Card>
-
-      <ContractFormModal open={editOpen} onClose={() => setEditOpen(false)} contract={contract} />
+    <MobileContractLayout>
+      <QueryState
+        isLoading={isLoading}
+        isError={isError}
+        data={contract}
+        errorLabel="Impossible de charger ce contrat."
+      >
+        {(contractData) => {
+          const zones = (zoneRows ?? []).map(mapZoneRowToFormValues)
+          return (
+            <div className="flex flex-col gap-4">
+              <ContractDetailHeader
+                contract={contractData}
+                onEdit={() => setEditOpen(true)}
+                onEmail={handlePlaceholder}
+                onDownloadPdf={handlePlaceholder}
+                onCancelContract={handleCancelContract}
+                onChangeStatus={(status) => updateStatus.mutate(status)}
+                onDelete={handleDelete}
+                onResumeDraft={() => navigate(`/contracts/new?draftId=${contractData.id}`)}
+                isCancelling={updateStatus.isPending}
+              />
+              <ContractMapCard zones={zones} />
+              <ContractZonesStatRow zones={zones} onEditZones={handlePlaceholder} />
+              <ContractInfoStrip contract={contractData} />
+              <ContractClientCard client={contractData.client} />
+              <ContractOperatorInfoCard contract={contractData} />
+              <ContractPaymentsCard contract={contractData} invoices={invoices ?? []} payments={payments ?? []} />
+              <ContractClausesCard contract={contractData} />
+              <ContractNotesCard contractId={contractData.id} />
+              <ContractFormModal open={editOpen} onClose={() => setEditOpen(false)} contract={contractData} />
+            </div>
+          )
+        }}
+      </QueryState>
     </MobileContractLayout>
   )
 }

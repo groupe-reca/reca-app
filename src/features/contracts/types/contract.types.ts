@@ -24,6 +24,10 @@ export type ContractClientRef = {
   prenom: string
   nom: string
   telephone: string | null
+  courriel: string | null
+  adresse: string | null
+  ville: string | null
+  codePostal: string | null
 }
 
 export type PaymentScheduleEntryType = 'pourcentage' | 'montant'
@@ -162,6 +166,9 @@ export type ContractRow = {
   clause_execution: string | null
   clause_assurance: string | null
   prix_taxes: PrixTaxesMode
+  obstacles_connus: string | null
+  message_operateur: string | null
+  consignes_speciales: string | null
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -206,6 +213,9 @@ export type Contract = {
   clauseExecution: string | null
   clauseAssurance: string | null
   prixTaxes: PrixTaxesMode
+  obstaclesConnus: string | null
+  messageOperateur: string | null
+  consignesSpeciales: string | null
   createdAt: string
   client: ContractClientRef | null
   /** Calculé (pas une colonne) — présence d'au moins une facture liée `en_retard`, voir `listContracts`. */
