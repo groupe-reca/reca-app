@@ -9,6 +9,7 @@ import { boundsFromPolygon } from '../utils/propertyBoundary'
 import { contourToPolygon } from '../utils/satelliteZoneProjection'
 import { analyzeSatelliteImage } from '../services/satelliteAnalysis.service'
 import { useContractWizardDefaults } from './useContractWizardDefaults'
+import { usePropertyCapture } from './usePropertyCapture'
 import type { ContractZoneFormValues } from '../schemas/contractCreation.schema'
 import type { ZoneType } from '../types/contract.types'
 import type { MapViewport } from './usePropertyCapture'
@@ -30,6 +31,9 @@ const EMPTY_POLYGON: Polygon = {
 export type DelineateMode = 'idle' | 'drawing' | 'editing'
 
 type UseDelineateStateArgs = {
+  contractId: string
+  /** Contour de démonstration — transmis à `usePropertyCapture` (même signature que Locate). */
+  boundary: Polygon | null
   mapUnavailable: boolean
   capturePath: string | null
   /** Cadrage capturé à Localiser (tâche 12) — nécessaire pour réaligner la caméra avant de déprojeter les suggestions Gemini. */
@@ -40,6 +44,8 @@ type UseDelineateStateArgs = {
   onAddZones: (zones: ContractZoneFormValues[]) => void
   onUpdateZone: (id: string, patch: Partial<ContractZoneFormValues>) => void
   onRemoveZone: (id: string) => void
+  /** Reporte la nouvelle capture (tâche 8) — même callback que Locate (`usePropertyStepState.handleCaptured`). */
+  onCaptured: (path: string, viewport: MapViewport) => void
   onContinue: () => void
   onNavChange: (nav: PropertyNav) => void
 }
@@ -54,6 +60,8 @@ type UseDelineateStateArgs = {
  * classes de bugs dans une seconde copie.
  */
 export function useDelineateState({
+  contractId,
+  boundary,
   mapUnavailable,
   capturePath,
   viewport,
@@ -62,6 +70,7 @@ export function useDelineateState({
   onAddZones,
   onUpdateZone,
   onRemoveZone,
+  onCaptured,
   onContinue,
   onNavChange,
 }: UseDelineateStateArgs) {
@@ -72,16 +81,40 @@ export function useDelineateState({
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const polygonEditorRef = useRef<PolygonEditorHandle>(null)
   const { data: wizardDefaults } = useContractWizardDefaults()
+  const { capture: captureWithZones, isCapturing: isCapturingFinal } = usePropertyCapture(map, contractId, boundary)
 
   const mapReady = isMapboxConfigured && !mapUnavailable
 
+  /**
+   * Tâche 8 : recapture la carte (zones colorées déjà visibles dessus) en quittant
+   * Délimiter, pour que le document du contrat ait une vraie photo satellite AVEC les
+   * zones tracées — la capture de Localiser précède le tracé, elle ne les montre jamais.
+   * Toutes les zones existantes sont réassignées à cette nouvelle capture (elles
+   * pointaient jusqu'ici vers l'image de Localiser, prise avant leur tracé).
+   */
+  async function handleContinueWithCapture() {
+    if (map) {
+      const result = await captureWithZones()
+      if (result) {
+        onCaptured(result.storagePath, result.viewport)
+        zones.forEach((zone) => onUpdateZone(zone.id, { imageStoragePath: result.storagePath }))
+      }
+    }
+    onContinue()
+  }
+
   useEffect(() => {
-    onNavChange({ onNext: onContinue, nextDisabled: zones.length === 0, action: null, immersive: mapReady })
-    // onContinue/onNavChange sont recréés à chaque rendu du parent — seuls le nombre de
-    // zones et la disponibilité de la carte doivent réellement redéclencher un nouveau
-    // rapport de nav.
+    onNavChange({
+      onNext: handleContinueWithCapture,
+      nextDisabled: zones.length === 0 || isCapturingFinal,
+      action: null,
+      immersive: mapReady,
+    })
+    // onContinue/onNavChange/handleContinueWithCapture sont recréés à chaque rendu du
+    // parent — seuls le nombre de zones, la disponibilité de la carte et l'état de la
+    // recapture finale doivent réellement redéclencher un nouveau rapport de nav.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [zones.length, mapReady])
+  }, [zones.length, mapReady, isCapturingFinal])
 
   function handleAddZoneClick() {
     polygonEditorRef.current?.startDrawing()
@@ -204,16 +237,11 @@ export function useDelineateState({
       })
       onAddZones(newZones)
 
-      const lowConfidenceCount = result.zones.filter((zone) => zone.confiance !== 'haute').length
       const zonesLabel =
         result.zones.length === 1
           ? '1 zone de stationnement suggérée'
           : `${result.zones.length} zones de stationnement suggérées`
-      toast.success(
-        lowConfidenceCount > 0
-          ? `${zonesLabel}, dont ${lowConfidenceCount} à confirmer manuellement (confiance faible/moyenne, possible occlusion) — ajustez les contours si nécessaire.`
-          : `${zonesLabel} — ajustez les contours si nécessaire.`,
-      )
+      toast.success(`${zonesLabel} — ajustez les contours si nécessaire.`)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Impossible d'analyser l'image satellite.")
     } finally {

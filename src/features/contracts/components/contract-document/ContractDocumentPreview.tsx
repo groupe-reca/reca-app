@@ -1,7 +1,7 @@
-import { DocumentClausesList } from './DocumentClausesList'
 import { DocumentClientZones } from './DocumentClientZones'
 import { DocumentFooterBar } from './DocumentFooterBar'
 import { DocumentHeader } from './DocumentHeader'
+import { DocumentSatelliteZones } from './DocumentSatelliteZones'
 import { DocumentServicesModalites } from './DocumentServicesModalites'
 import { DocumentSignatures } from './DocumentSignatures'
 import { DocumentSummaryPayment } from './DocumentSummaryPayment'
@@ -17,7 +17,7 @@ import type { ContractDocumentData } from './types'
  * `min-w-0` sur le conteneur évite qu'une grille CSS parente ne le laisse déborder de sa
  * colonne (comportement par défaut de `grid`/`flex`).
  */
-export function ContractDocumentPreview({ contract, client, zones, settings }: ContractDocumentData) {
+export function ContractDocumentPreview({ contract, client, zones, settings, imageUrl }: ContractDocumentData) {
   return (
     <div className="min-w-0 overflow-hidden rounded-card bg-white shadow-card">
       <DocumentHeader contract={contract} />
@@ -30,7 +30,7 @@ export function ContractDocumentPreview({ contract, client, zones, settings }: C
 
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-[2fr_1fr]">
           <div className="flex flex-col gap-6">
-            <DocumentClausesList contract={contract} />
+            <DocumentSatelliteZones zones={zones} imageUrl={imageUrl} />
             <div className="rounded-card bg-white p-5 shadow-card">
               <DocumentSignatures client={client} />
             </div>

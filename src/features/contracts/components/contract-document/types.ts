@@ -14,4 +14,6 @@ export type ContractDocumentData = {
   client: Client
   zones: ContractZoneFormValues[]
   settings: Settings
+  /** Tâche 8 : URL signée de la capture satellite (zones tracées visibles dessus), calculée par `ContractCreatedPage.tsx`. */
+  imageUrl: string | null
 }

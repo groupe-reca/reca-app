@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { CheckCircle2 } from 'lucide-react'
 import { motion } from 'motion/react'
 import { useLocation, useNavigate, useParams } from 'react-router'
@@ -6,6 +7,7 @@ import { QueryState } from '@/components/ui/QueryState'
 import type { Client } from '@/features/clients/types/client.types'
 import { useClient } from '@/features/clients/hooks/useClient'
 import { useSettings } from '@/features/settings/hooks/useSettings'
+import { supabase } from '@/lib/supabaseClient'
 import { toast } from '@/stores/toastStore'
 import { ContractDocumentPreview } from '../components/contract-document/ContractDocumentPreview'
 import type { ContractDocumentData } from '../components/contract-document/types'
@@ -56,10 +58,30 @@ export function ContractCreatedPage() {
   const client = locationState?.client ?? fetchedClient
   const zones = locationState?.zones ?? []
 
+  // Tâche 8 : URL signée de la capture satellite (zones tracées déjà visibles dessus,
+  // voir `useDelineateState.handleContinueWithCapture`) — toutes les zones partagent le
+  // même `imageStoragePath` en pratique (une seule capture par session), la première
+  // suffit. `undefined`/`'manuel'` (repli sans carte) : pas d'image à afficher.
+  const [imageUrl, setImageUrl] = useState<string | null>(null)
+  const capturePath = zones[0]?.imageStoragePath
+  useEffect(() => {
+    if (!capturePath || capturePath === 'manuel') return
+    let cancelled = false
+    supabase.storage
+      .from('contract-captures')
+      .createSignedUrl(capturePath, 3600)
+      .then(({ data }) => {
+        if (!cancelled) setImageUrl(data?.signedUrl ?? null)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [capturePath])
+
   const isLoading = isSettingsLoading || (shouldRefetch && (isContractLoading || isClientLoading))
   const isError = isSettingsError || (shouldRefetch && (isContractError || isClientError))
   const readyData: ContractDocumentData | undefined =
-    settings && contract && client ? { settings, contract, client, zones } : undefined
+    settings && contract && client ? { settings, contract, client, zones, imageUrl } : undefined
 
   function handlePlaceholder() {
     toast.success('Cette fonctionnalité arrive au prochain sprint.')

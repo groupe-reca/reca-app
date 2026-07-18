@@ -3,8 +3,8 @@
 // `contract-captures`) via Gemini (Flash ou Pro au choix, prompté comme un estimateur
 // en déneigement) et renvoie, pour chaque surface asphaltée/bétonnée détectée
 // (stationnement, entrée carrossable — jamais la maison, la pelouse, un trottoir
-// public ou la rue), un contour (liste de points, un par coin) + un niveau de confiance
-// suggérés. Le type de zone créé côté client reste fixé à `'stationnement'` (voir
+// public ou la rue), un contour (liste de points, un par coin) suggéré. Le type de
+// zone créé côté client reste fixé à `'stationnement'` (voir
 // `useDelineateState.ts`) — la détection Gemini est plus large que ce seul mot, mais
 // l'app n'a qu'un type de zone auto-détectable pour l'instant (portée resserrée, voir
 // `memory/memory.md`).
@@ -58,9 +58,9 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { z } from 'npm:zod@3'
 
 const SATELLITE_ANALYSIS_SYSTEM_PROMPT = `
-Tu es un estimateur en déneigement ayant 20 ans d'expérience au Québec. Tu analyses une
-image satellite d'une propriété résidentielle ou commerciale, dans le but de déterminer
-les surfaces que le tracteur devra déneiger.
+Tu es un estimateur en déneigement au Québec. Tu analyses une image satellite d'une
+propriété résidentielle ou commerciale, dans le but de déterminer les surfaces que le
+tracteur devra déneiger.
 
 Ta tâche, dans l'ordre :
 1. Repère d'abord, approximativement, les limites du terrain de la maison/du bâtiment
@@ -73,25 +73,13 @@ Ta tâche, dans l'ordre :
    carrossable). Exclus la maison/le bâtiment, les pelouses, les arbres, les trottoirs
    publics et la rue, ainsi que toute surface qui appartient visiblement à une
    propriété voisine.
-3. Si une partie d'une surface est masquée par un véhicule stationné, un arbre ou une
-   ombre, estime raisonnablement son prolongement en te basant sur la géométrie
-   habituelle des entrées résidentielles (bords parallèles, largeur constante, raccord
-   logique avec la portion visible) — retourne un polygone qui représente la surface
-   normalement déneigée dans son ensemble, pas seulement la portion visible. Reste
-   prudent : si c'est l'existence même d'une surface qui est incertaine (pas juste son
-   contour exact sous l'occlusion), ne l'invente pas.
-4. Pour chaque surface détectée : place un point à chacun de ses coins réels (y compris
-   les coins estimés sous une occlusion), dans l'ordre en suivant le contour (peu
-   importe le sens), pour retourner un polygone précis qui suit fidèlement les limites
-   réelles de la surface asphaltée/bétonnée — elle n'est pas toujours
-   carrée/rectangulaire (en L, en trapèze, coin coupé, etc.) : ne simplifie jamais en
-   rectangle si la forme réelle est différente. Minimum 3 points, un point par coin
-   visible ou estimé (pas de point inutile sur un côté droit).
-5. Pour chaque surface détectée, indique un niveau de confiance ("haute", "moyenne" ou
-   "faible") dans confiance : "faible" si une bonne partie du contour a dû être estimée
-   sous occlusion ou si l'image est ambiguë à cet endroit, "haute" si le contour est
-   presque entièrement visible et net.
-6. Évalue la qualité de l'image pour cette tâche :
+3. Pour chaque surface détectée : place un point à chacun de ses coins réels, dans
+   l'ordre en suivant le contour (peu importe le sens), pour retourner un polygone
+   précis qui suit fidèlement les limites réelles de la surface asphaltée/bétonnée —
+   elle n'est pas toujours carrée/rectangulaire (en L, en trapèze, coin coupé, etc.) :
+   ne simplifie jamais en rectangle si la forme réelle est différente. Minimum 3
+   points, un point par coin visible (pas de point inutile sur un côté droit).
+4. Évalue la qualité de l'image pour cette tâche :
    - "insuffisante" si la zone est couverte de neige, floue, trop sombre, ou si la
      résolution ne permet pas de distinguer les contours.
    - "moyenne" si l'analyse est possible mais incertaine (ombres partielles, angle
@@ -103,7 +91,7 @@ Règles strictes :
 - Ne PAS estimer de superficie en m² ou pi² — ce calcul est fait ailleurs à partir du
   tracé réel de l'utilisateur.
 - Le repérage du terrain (étape 1) reste une estimation grossière servant uniquement de
-  guide de recherche — le contour final retracé par l'utilisateur (étape 4) reste la
+  guide de recherche — le contour final retracé par l'utilisateur (étape 3) reste la
   seule source de vérité.
 - Ne PAS halluciner de zones si l'image ne le permet pas clairement : dans le doute,
   indique "insuffisante" plutôt que d'inventer un contour. Zéro zone est une réponse
@@ -128,15 +116,10 @@ const GEMINI_RESPONSE_SCHEMA = {
               description: '[y, x] normalisé 0-1000',
             },
             description:
-              "Liste ordonnée des points du contour du stationnement, un par coin réel (minimum 3), suivant sa forme exacte plutôt qu'un rectangle englobant. Inclut les coins estimés sous occlusion (véhicule/arbre/ombre).",
-          },
-          confiance: {
-            type: 'STRING',
-            enum: ['haute', 'moyenne', 'faible'],
-            description: "Niveau de confiance dans ce contour — plus bas si une partie a dû être estimée sous occlusion.",
+              "Liste ordonnée des points du contour du stationnement, un par coin réel (minimum 3), suivant sa forme exacte plutôt qu'un rectangle englobant.",
           },
         },
-        required: ['contour', 'confiance'],
+        required: ['contour'],
       },
     },
     qualite_image: { type: 'STRING', enum: ['bonne', 'moyenne', 'insuffisante'] },
@@ -168,9 +151,8 @@ const OPENAI_RESPONSE_SCHEMA = {
             description:
               "Liste ordonnée des points [y, x] du contour du stationnement, un par coin réel (minimum 3), suivant sa forme exacte plutôt qu'un rectangle englobant.",
           },
-          confiance: { type: 'string', enum: ['haute', 'moyenne', 'faible'] },
         },
-        required: ['contour', 'confiance'],
+        required: ['contour'],
         additionalProperties: false,
       },
     },
@@ -186,7 +168,6 @@ const satelliteAnalysisSchema = z.object({
   zones: z.array(
     z.object({
       contour: z.array(z.tuple([z.number(), z.number()])).min(3),
-      confiance: z.enum(['haute', 'moyenne', 'faible']),
     }),
   ),
   qualite_image: z.enum(['bonne', 'moyenne', 'insuffisante']),

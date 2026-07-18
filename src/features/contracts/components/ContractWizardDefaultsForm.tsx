@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { Bot, Calendar, Clock, Handshake, Snowflake, Thermometer, Truck } from 'lucide-react'
+import { Bot, Calendar, Clock, DollarSign, Handshake, Snowflake, Thermometer, Truck } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { Select } from '@/components/ui/Select'
@@ -13,6 +13,7 @@ import {
   AI_PROVIDER_OPTIONS,
   DEPOT_NEIGE_OPTIONS,
   MODE_CONCLUSION_OPTIONS,
+  PRIX_TAXES_OPTIONS,
   SEUIL_DECLENCHEMENT_OPTIONS,
   SERVICE_OPTIONS,
 } from '../constants/wizardOptions'
@@ -77,6 +78,21 @@ export function ContractWizardDefaultsForm({ defaults, isSubmitting, onSubmit }:
           error={errors.dateDeuxiemeVersement?.message}
           {...register('dateDeuxiemeVersement')}
         />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Select
+          label="Le prix du contrat est"
+          icon={DollarSign}
+          error={errors.prixTaxes?.message}
+          {...register('prixTaxes')}
+        >
+          {PRIX_TAXES_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <div className="flex flex-col gap-1.5">

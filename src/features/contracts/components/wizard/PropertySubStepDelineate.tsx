@@ -12,6 +12,7 @@ import type { ContractZoneFormValues } from '../../schemas/contractCreation.sche
 import type { PropertyNav } from './WizardStepProperty'
 
 type PropertySubStepDelineateProps = {
+  contractId: string
   center: [number, number]
   boundary: Polygon
   capturePath: string | null
@@ -25,6 +26,8 @@ type PropertySubStepDelineateProps = {
   onAddZones: (zones: ContractZoneFormValues[]) => void
   onUpdateZone: (id: string, patch: Partial<ContractZoneFormValues>) => void
   onRemoveZone: (id: string) => void
+  /** Reporte la nouvelle capture prise en quittant Délimiter (tâche 8) — voir `useDelineateState`. */
+  onCaptured: (path: string, viewport: MapViewport) => void
   onContinue: () => void
   onNavChange: (nav: PropertyNav) => void
 }
@@ -35,6 +38,7 @@ type PropertySubStepDelineateProps = {
  * réutilisation par `MobilePropertySubStepDelineate.tsx`) — JSX/comportement inchangés.
  */
 export function PropertySubStepDelineate({
+  contractId,
   center,
   boundary,
   capturePath,
@@ -46,6 +50,7 @@ export function PropertySubStepDelineate({
   onAddZones,
   onUpdateZone,
   onRemoveZone,
+  onCaptured,
   onContinue,
   onNavChange,
 }: PropertySubStepDelineateProps) {
@@ -72,6 +77,8 @@ export function PropertySubStepDelineate({
     isAnalyzing,
     handleAutoDetect,
   } = useDelineateState({
+    contractId,
+    boundary,
     mapUnavailable,
     capturePath,
     viewport: initialViewport,
@@ -80,6 +87,7 @@ export function PropertySubStepDelineate({
     onAddZones,
     onUpdateZone,
     onRemoveZone,
+    onCaptured,
     onContinue,
     onNavChange,
   })

@@ -12,10 +12,16 @@ export function DocumentSummaryPayment({ contract, settings }: DocumentSummaryPa
   const nextPayment = getNextPaymentEntry(contract.modalitesPaiement)
   const modeLabel = MODE_PAIEMENT_OPTIONS.find((mode) => mode.value === contract.modePaiement)?.label ?? '—'
 
-  const sousTotal = contract.prix ?? 0
-  const tps = sousTotal * (settings.taxes.tps / 100)
-  const tvq = sousTotal * (settings.taxes.tvq / 100)
-  const total = sousTotal + tps + tvq
+  // Tâche 6 : `contract.prix` est soit le sous-total (avant taxes, comportement
+  // d'origine) soit le total taxes incluses — `prixTaxes` (gravé sur le contrat à
+  // sa création, jamais relu en live depuis les paramètres) indique lequel.
+  const tpsRate = settings.taxes.tps / 100
+  const tvqRate = settings.taxes.tvq / 100
+  const prix = contract.prix ?? 0
+  const sousTotal = contract.prixTaxes === 'apres_taxes' ? prix / (1 + tpsRate + tvqRate) : prix
+  const tps = sousTotal * tpsRate
+  const tvq = sousTotal * tvqRate
+  const total = contract.prixTaxes === 'apres_taxes' ? prix : sousTotal + tps + tvq
 
   const recap = [
     { icon: Home, label: 'Type', value: contract.type ?? '—' },

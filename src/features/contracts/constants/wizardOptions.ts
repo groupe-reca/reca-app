@@ -1,4 +1,4 @@
-import type { DepotNeige, ModeConclusion, ServiceCode, ZoneType } from '../types/contract.types'
+import type { DepotNeige, ModeConclusion, PrixTaxesMode, ServiceCode, ZoneType } from '../types/contract.types'
 import type { AiModel, AiProvider } from '../types/contractWizardDefaults.types'
 
 export const SERVICE_OPTIONS: { code: ServiceCode; label: string }[] = [
@@ -33,6 +33,12 @@ export const MODE_CONCLUSION_OPTIONS: { value: ModeConclusion; label: string }[]
 export const MODE_CONCLUSION_LABELS: Record<ModeConclusion, string> = Object.fromEntries(
   MODE_CONCLUSION_OPTIONS.map((option) => [option.value, option.label]),
 ) as Record<ModeConclusion, string>
+
+/** Tâche 6 — le prix saisi par contrat inclut-il déjà les taxes ? Pilote la facturation et la prévisualisation. */
+export const PRIX_TAXES_OPTIONS: { value: PrixTaxesMode; label: string }[] = [
+  { value: 'avant_taxes', label: 'Avant taxes' },
+  { value: 'apres_taxes', label: 'Après taxes' },
+]
 
 /** Tâche 2 — fournisseur IA pour la détection automatique du stationnement (étape Délimiter). */
 export const AI_PROVIDER_OPTIONS: { value: AiProvider; label: string }[] = [

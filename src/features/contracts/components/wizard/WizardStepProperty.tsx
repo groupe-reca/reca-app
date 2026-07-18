@@ -108,6 +108,7 @@ export function WizardStepProperty({
         )}
         {subStep === 'delineate' && (
           <PropertySubStepDelineate
+            contractId={contractId}
             center={center}
             boundary={boundary}
             capturePath={capturePath}
@@ -119,6 +120,7 @@ export function WizardStepProperty({
             onAddZones={addZones}
             onUpdateZone={updateZone}
             onRemoveZone={removeZone}
+            onCaptured={handleCaptured}
             onContinue={() => setSubStep('validate')}
             onNavChange={onNavChange}
           />

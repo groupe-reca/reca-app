@@ -13,6 +13,7 @@ import { ZoneToolbarFloating } from './ZoneToolbarFloating'
 import { ZoneDetailSheet } from './ZoneDetailSheet'
 
 type MobilePropertySubStepDelineateProps = {
+  contractId: string
   center: [number, number]
   boundary: Polygon
   capturePath: string | null
@@ -26,6 +27,8 @@ type MobilePropertySubStepDelineateProps = {
   onAddZones: (zones: ContractZoneFormValues[]) => void
   onUpdateZone: (id: string, patch: Partial<ContractZoneFormValues>) => void
   onRemoveZone: (id: string) => void
+  /** Reporte la nouvelle capture prise en quittant Délimiter (tâche 8) — voir `useDelineateState`. */
+  onCaptured: (path: string, viewport: MapViewport) => void
   onContinue: () => void
   onNavChange: (nav: PropertyNav) => void
 }
@@ -38,6 +41,7 @@ type MobilePropertySubStepDelineateProps = {
  * `ZoneDetailSheet` (nom/surface réels + placeholder services/notes/photos/priorité).
  */
 export function MobilePropertySubStepDelineate({
+  contractId,
   center,
   boundary,
   capturePath,
@@ -49,6 +53,7 @@ export function MobilePropertySubStepDelineate({
   onAddZones,
   onUpdateZone,
   onRemoveZone,
+  onCaptured,
   onContinue,
   onNavChange,
 }: MobilePropertySubStepDelineateProps) {
@@ -78,6 +83,8 @@ export function MobilePropertySubStepDelineate({
     isAnalyzing,
     handleAutoDetect,
   } = useDelineateState({
+    contractId,
+    boundary,
     mapUnavailable,
     capturePath,
     viewport: initialViewport,
@@ -86,6 +93,7 @@ export function MobilePropertySubStepDelineate({
     onAddZones,
     onUpdateZone,
     onRemoveZone,
+    onCaptured,
     onContinue,
     onNavChange,
   })

@@ -1,4 +1,4 @@
-import type { DepotNeige, ModeConclusion, SeuilDeclenchementCm, ServiceCode } from './contract.types'
+import type { DepotNeige, ModeConclusion, PrixTaxesMode, SeuilDeclenchementCm, ServiceCode } from './contract.types'
 
 /**
  * Fournisseur IA utilisé par la détection automatique du stationnement (Wizard
@@ -43,6 +43,8 @@ export type ContractWizardDefaults = {
   aiProvider: AiProvider
   /** Tâche 14 : modèle pour la détection automatique du stationnement. */
   aiModel: AiModel
+  /** Tâche 6 : le prix saisi par contrat est-il avant ou après taxes ? */
+  prixTaxes: PrixTaxesMode
 }
 
 export const DEFAULT_CONTRACT_WIZARD_DEFAULTS: ContractWizardDefaults = {
@@ -57,4 +59,5 @@ export const DEFAULT_CONTRACT_WIZARD_DEFAULTS: ContractWizardDefaults = {
   modeConclusion: 'en_personne',
   aiProvider: 'google',
   aiModel: 'flash',
+  prixTaxes: 'avant_taxes',
 }

@@ -68,6 +68,7 @@ function mapContract(row: ContractRowWithClient): Contract {
     clausePrix: row.clause_prix,
     clauseExecution: row.clause_execution,
     clauseAssurance: row.clause_assurance,
+    prixTaxes: row.prix_taxes,
     createdAt: row.created_at,
     client: row.client,
   }
@@ -174,6 +175,7 @@ function toWizardRowInput(
     clause_prix: generated.clausePrix,
     clause_execution: generated.clauseExecution,
     clause_assurance: generated.clauseAssurance,
+    prix_taxes: defaults.prixTaxes,
   }
 }
 
@@ -287,13 +289,33 @@ async function syncContractPhotos(contractId: string, photos: ContractPhotoFormV
   if (error) throw error
 }
 
+/**
+ * Tâche 6 : `entry`/`computeInstallmentAmount` donnent toujours un montant en
+ * dollars pour cette échéance — sa nature dépend de `prixTaxes` : une portion
+ * du sous-total (avant taxes, comportement d'origine) ou une portion du total
+ * taxes incluses (après taxes, auquel cas le sous-total est retrouvé par
+ * division plutôt que multiplication, pour que sous-total+TPS+TVQ = ce montant).
+ */
+function computeInstallmentTaxes(
+  amount: number,
+  prixTaxes: Contract['prixTaxes'],
+): { sousTotal: number; tps: number; tvq: number; total: number } {
+  if (prixTaxes === 'apres_taxes') {
+    const sousTotal = Math.round((amount / (1 + TPS_RATE + TVQ_RATE)) * 100) / 100
+    const tps = Math.round(sousTotal * TPS_RATE * 100) / 100
+    const tvq = Math.round(sousTotal * TVQ_RATE * 100) / 100
+    return { sousTotal, tps, tvq, total: amount }
+  }
+  const tps = Math.round(amount * TPS_RATE * 100) / 100
+  const tvq = Math.round(amount * TVQ_RATE * 100) / 100
+  return { sousTotal: amount, tps, tvq, total: amount + tps + tvq }
+}
+
 async function generateInvoicesFromSchedule(contract: Contract): Promise<{ generated: number }> {
   let generated = 0
   for (const entry of contract.modalitesPaiement) {
-    const sousTotal = computeInstallmentAmount(entry, contract.prix)
-    const tps = Math.round(sousTotal * TPS_RATE * 100) / 100
-    const tvq = Math.round(sousTotal * TVQ_RATE * 100) / 100
-    const total = sousTotal + tps + tvq
+    const amount = computeInstallmentAmount(entry, contract.prix)
+    const { sousTotal, tps, tvq, total } = computeInstallmentTaxes(amount, contract.prixTaxes)
     const { error } = await supabase.from('invoices').insert({
       client_id: contract.clientId,
       contrat_id: contract.id,

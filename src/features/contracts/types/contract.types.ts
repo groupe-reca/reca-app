@@ -54,6 +54,14 @@ export type ModeConclusion = (typeof MODE_CONCLUSION)[number]
 export const DEPOT_NEIGE = ['sur_terrain', 'bordure_rue', 'transport_hors_site'] as const
 export type DepotNeige = (typeof DEPOT_NEIGE)[number]
 
+/**
+ * Le prix saisi à l'étape "Client & Propriété" du Wizard inclut-il déjà les
+ * taxes ou non — pilote le calcul Sous-total/TPS/TVQ/Total des factures
+ * générées et de la prévisualisation du contrat (tâche 6, 2026-07-17).
+ */
+export const PRIX_TAXES_MODES = ['avant_taxes', 'apres_taxes'] as const
+export type PrixTaxesMode = (typeof PRIX_TAXES_MODES)[number]
+
 export const ZONE_TYPES = [
   'entree',
   'stationnement',
@@ -143,6 +151,7 @@ export type ContractRow = {
   clause_prix: string | null
   clause_execution: string | null
   clause_assurance: string | null
+  prix_taxes: PrixTaxesMode
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -186,6 +195,7 @@ export type Contract = {
   clausePrix: string | null
   clauseExecution: string | null
   clauseAssurance: string | null
+  prixTaxes: PrixTaxesMode
   createdAt: string
   client: ContractClientRef | null
 }

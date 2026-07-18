@@ -74,6 +74,7 @@ export function MobileWizardStepProperty({
       )}
       {subStep === 'delineate' && (
         <MobilePropertySubStepDelineate
+          contractId={contractId}
           center={center}
           boundary={boundary}
           capturePath={capturePath}
@@ -85,6 +86,7 @@ export function MobileWizardStepProperty({
           onAddZones={addZones}
           onUpdateZone={updateZone}
           onRemoveZone={removeZone}
+          onCaptured={handleCaptured}
           onContinue={() => setSubStep('validate')}
           onNavChange={onNavChange}
         />
