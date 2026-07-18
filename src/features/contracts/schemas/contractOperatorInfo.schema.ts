@@ -6,4 +6,4 @@ export const contractOperatorInfoFieldSchema = z.object({
 
 export type ContractOperatorInfoFieldValues = z.infer<typeof contractOperatorInfoFieldSchema>
 
-export type ContractOperatorInfoField = 'obstaclesConnus' | 'messageOperateur' | 'consignesSpeciales' | 'notes'
+export type ContractOperatorInfoField = 'obstaclesConnus' | 'messageOperateur' | 'consignesSpeciales'

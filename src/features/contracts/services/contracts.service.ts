@@ -1,6 +1,7 @@
 import { supabase } from '@/lib/supabaseClient'
 import { generateClauses } from '../utils/generateClauses'
 import { computeInstallmentAmount } from '../utils/paymentPresets'
+import { createContractEvent } from './contractEvents.service'
 import { SERVICE_OPTIONS } from '../constants/wizardOptions'
 import { DEFAULT_CONTRACT_WIZARD_DEFAULTS } from '../types/contractWizardDefaults.types'
 import type { ContractWizardDefaults } from '../types/contractWizardDefaults.types'
@@ -403,6 +404,12 @@ async function upsertContractWithZones(
     statut,
   }
 
+  // Distingue insertion vs mise à jour de brouillon avant l'upsert (Supabase ne le
+  // renvoie pas) — nécessaire pour journaler le bon type d'événement réel :
+  // 'contrat_cree' à la 1ère écriture, 'statut_modifie' si un brouillon existant
+  // passe à 'actif' (finalisation), rien si un brouillon reste un brouillon.
+  const { data: existing } = await supabase.from('contracts').select('id').eq('id', contractId).maybeSingle()
+
   const { data, error } = await supabase
     .from('contracts')
     .upsert(input as never, { onConflict: 'id' })
@@ -410,6 +417,12 @@ async function upsertContractWithZones(
     .single()
   if (error) throw error
   const contract = mapContract(data as unknown as ContractRowWithClient)
+
+  if (!existing) {
+    await createContractEvent(contractId, 'contrat_cree')
+  } else if (statut === 'actif') {
+    await createContractEvent(contractId, 'statut_modifie', { statut: 'actif' })
+  }
 
   await syncContractZones(contractId, values.zones)
   await syncContractPhotos(contractId, values.photos)
@@ -486,6 +499,7 @@ export async function updateContractStatus(id: string, statut: ContractStatus): 
     .single()
 
   if (error) throw error
+  await createContractEvent(id, 'statut_modifie', { statut })
   return mapContract(data as unknown as ContractRowWithClient)
 }
 

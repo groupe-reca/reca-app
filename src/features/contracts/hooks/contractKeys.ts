@@ -6,5 +6,6 @@ export const contractKeys = {
   zones: (contractId: string) => [...contractKeys.all, 'zones', contractId] as const,
   photos: (contractId: string) => [...contractKeys.all, 'photos', contractId] as const,
   notes: (contractId: string) => [...contractKeys.all, 'notes', contractId] as const,
+  events: (contractId: string) => [...contractKeys.all, 'events', contractId] as const,
   wizardDefaults: () => [...contractKeys.all, 'wizardDefaults'] as const,
 }

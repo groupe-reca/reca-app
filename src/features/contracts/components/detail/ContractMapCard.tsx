@@ -3,13 +3,14 @@ import { Maximize2, MapPin } from 'lucide-react'
 import { Modal } from '@/components/ui/Modal'
 import { useSignedCaptureUrl } from '../../hooks/useSignedCaptureUrl'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
+import { ContractZonesStatRow } from './ContractZonesStatRow'
 
 /**
  * Grande carte satellite (image signée, zones déjà tracées visibles dessus — voir
- * `useDelineateState.handleContinueWithCapture`), pastilles superposées façon maquette.
- * Reprend le même hook de capture que `DocumentSatelliteZones.tsx` sans dupliquer la logique
- * de fetch — layout différent (cette page veut des pastilles superposées, pas une légende
- * empilée sous l'image façon document PDF).
+ * `useDelineateState.handleContinueWithCapture`), pastilles superposées façon maquette,
+ * plus la rangée de statistiques de zones (`ContractZonesStatRow`) directement à
+ * l'intérieur de la carte (fusion visuelle demandée par la maquette v2 — le composant
+ * reste distinct et réutilisable, juste rendu ici plutôt qu'à côté).
  */
 export function ContractMapCard({ zones }: { zones: ContractZoneFormValues[] }) {
   const [fullscreen, setFullscreen] = useState(false)
@@ -17,9 +18,19 @@ export function ContractMapCard({ zones }: { zones: ContractZoneFormValues[] }) 
 
   return (
     <>
-      <div className="overflow-hidden rounded-card bg-reca-white shadow-card">
-        <div className="border-b border-reca-gray-light p-6 pb-4">
-          <h2 className="text-subtitle font-semibold text-reca-black">Carte du site & tracé à déneiger</h2>
+      <div className="flex h-full flex-col overflow-hidden rounded-card bg-reca-white shadow-card">
+        <div className="flex items-center justify-between gap-3 border-b border-reca-gray-light p-6 pb-4">
+          <h2 className="text-subtitle font-semibold text-reca-black">Site & tracé à déneiger</h2>
+          {imageUrl && (
+            <button
+              type="button"
+              onClick={() => setFullscreen(true)}
+              aria-label="Voir en plein écran"
+              className="shrink-0 text-reca-gray-medium hover:text-reca-black"
+            >
+              <Maximize2 className="size-4" aria-hidden="true" />
+            </button>
+          )}
         </div>
         <div className="relative">
           {imageUrl ? (
@@ -47,6 +58,7 @@ export function ContractMapCard({ zones }: { zones: ContractZoneFormValues[] }) 
             </>
           )}
         </div>
+        <ContractZonesStatRow zones={zones} onViewTrace={() => setFullscreen(true)} />
       </div>
 
       <Modal open={fullscreen} onClose={() => setFullscreen(false)} title="Carte du site">

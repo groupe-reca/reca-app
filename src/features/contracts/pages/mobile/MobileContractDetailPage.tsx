@@ -9,15 +9,16 @@ import { ContractFormModal } from '../../components/ContractFormModal'
 import { ContractDetailHeader } from '../../components/detail/ContractDetailHeader'
 import { ContractInfoStrip } from '../../components/detail/ContractInfoStrip'
 import { ContractMapCard } from '../../components/detail/ContractMapCard'
-import { ContractZonesStatRow } from '../../components/detail/ContractZonesStatRow'
 import { ContractOperatorInfoCard } from '../../components/detail/ContractOperatorInfoCard'
 import { ContractClausesCard } from '../../components/detail/ContractClausesCard'
 import { ContractClientCard } from '../../components/detail/ContractClientCard'
 import { ContractPaymentsCard } from '../../components/detail/ContractPaymentsCard'
 import { ContractNotesCard } from '../../components/detail/ContractNotesCard'
+import { ContractHistoryCard } from '../../components/detail/ContractHistoryCard'
 import { useContract } from '../../hooks/useContract'
 import { useContractZones } from '../../hooks/useContractZones'
 import { useDeleteContract } from '../../hooks/useDeleteContract'
+import { useLogContractEvent } from '../../hooks/useLogContractEvent'
 import { useUpdateContractStatus } from '../../hooks/useUpdateContractStatus'
 import { mapZoneRowToFormValues } from '../../services/contracts.service'
 
@@ -36,9 +37,16 @@ export function MobileContractDetailPage() {
   const { data: payments } = usePaymentsByContract(id)
   const updateStatus = useUpdateContractStatus(id)
   const deleteContract = useDeleteContract()
+  const logEvent = useLogContractEvent(id)
   const [editOpen, setEditOpen] = useState(false)
 
-  function handlePlaceholder() {
+  function handleEmailPlaceholder() {
+    logEvent.mutate({ type: 'courriel_envoye' })
+    toast.success('Cette fonctionnalité arrive au prochain sprint.')
+  }
+
+  function handleDownloadPdfPlaceholder() {
+    logEvent.mutate({ type: 'pdf_genere' })
     toast.success('Cette fonctionnalité arrive au prochain sprint.')
   }
 
@@ -69,8 +77,8 @@ export function MobileContractDetailPage() {
               <ContractDetailHeader
                 contract={contractData}
                 onEdit={() => setEditOpen(true)}
-                onEmail={handlePlaceholder}
-                onDownloadPdf={handlePlaceholder}
+                onEmail={handleEmailPlaceholder}
+                onDownloadPdf={handleDownloadPdfPlaceholder}
                 onCancelContract={handleCancelContract}
                 onChangeStatus={(status) => updateStatus.mutate(status)}
                 onDelete={handleDelete}
@@ -78,13 +86,13 @@ export function MobileContractDetailPage() {
                 isCancelling={updateStatus.isPending}
               />
               <ContractMapCard zones={zones} />
-              <ContractZonesStatRow zones={zones} onEditZones={handlePlaceholder} />
               <ContractInfoStrip contract={contractData} />
               <ContractClientCard client={contractData.client} />
-              <ContractOperatorInfoCard contract={contractData} />
               <ContractPaymentsCard contract={contractData} invoices={invoices ?? []} payments={payments ?? []} />
-              <ContractClausesCard contract={contractData} />
               <ContractNotesCard contractId={contractData.id} />
+              <ContractOperatorInfoCard contract={contractData} />
+              <ContractClausesCard contract={contractData} />
+              <ContractHistoryCard contractId={contractData.id} />
               <ContractFormModal open={editOpen} onClose={() => setEditOpen(false)} contract={contractData} />
             </div>
           )

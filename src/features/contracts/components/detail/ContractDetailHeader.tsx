@@ -55,7 +55,7 @@ export function ContractDetailHeader({
           <Pencil className="size-4" aria-hidden="true" />
           Modifier
         </Button>
-        <Button variant="secondary" fullWidth onClick={onEmail} className="sm:w-auto">
+        <Button variant="info" fullWidth onClick={onEmail} className="sm:w-auto">
           <Mail className="size-4" aria-hidden="true" />
           Envoyer par courriel
         </Button>

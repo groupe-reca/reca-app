@@ -1,7 +1,7 @@
-import { Mail, Phone } from 'lucide-react'
+import { ChevronRight, Mail, Phone } from 'lucide-react'
 import { Link } from 'react-router'
+import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { ListRow } from '@/components/ui/ListRow'
 import { formatAddress } from '@/lib/format'
 import type { ContractClientRef } from '../../types/contract.types'
 
@@ -29,7 +29,7 @@ export function ContractClientCard({ client }: { client: ContractClientRef | nul
         <div className="flex items-center gap-2">
           <Phone className="size-4 shrink-0 text-reca-gray-medium" aria-hidden="true" />
           {client.telephone ? (
-            <a href={`tel:${client.telephone}`} className="text-reca-red hover:underline">
+            <a href={`tel:${client.telephone}`} className="text-reca-info hover:underline">
               {client.telephone}
             </a>
           ) : (
@@ -39,7 +39,7 @@ export function ContractClientCard({ client }: { client: ContractClientRef | nul
         <div className="flex items-center gap-2">
           <Mail className="size-4 shrink-0 text-reca-gray-medium" aria-hidden="true" />
           {client.courriel ? (
-            <a href={`mailto:${client.courriel}`} className="text-reca-red hover:underline">
+            <a href={`mailto:${client.courriel}`} className="text-reca-info hover:underline">
               {client.courriel}
             </a>
           ) : (
@@ -50,7 +50,12 @@ export function ContractClientCard({ client }: { client: ContractClientRef | nul
           {formatAddress(client.adresse, client.ville, client.codePostal) || 'Adresse non renseignée'}
         </p>
       </div>
-      <ListRow href={`/clients/${client.id}`} title="Voir la fiche client" chevron />
+      <Link to={`/clients/${client.id}`}>
+        <Button variant="secondary" fullWidth>
+          Ouvrir la fiche client
+          <ChevronRight className="size-4" aria-hidden="true" />
+        </Button>
+      </Link>
     </Card>
   )
 }

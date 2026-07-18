@@ -1,60 +1,41 @@
 import { useState } from 'react'
-import { ChevronDown, ChevronUp } from 'lucide-react'
+import { CheckCircle2 } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { DEPOT_NEIGE_OPTIONS } from '../../constants/wizardOptions'
+import { ContractClausesModal } from './ContractClausesModal'
 import type { Contract } from '../../types/contract.types'
 
-/** "Clauses du contrat" — une clause visible par défaut (maquette), le reste en expansion. */
+/**
+ * "Clauses du contrat" — checklist des points clés (services réellement actifs sur
+ * CE contrat + la clause de responsabilité, toujours présente). Le texte légal complet
+ * (zone desservie, exclusions, seuils, clauses OPC générées...) vit désormais dans
+ * `ContractClausesModal`, ouverte via "Voir toutes les clauses" (remplace l'ancien
+ * expand/collapse inline).
+ */
 export function ContractClausesCard({ contract }: { contract: Contract }) {
-  const [expanded, setExpanded] = useState(false)
+  const [modalOpen, setModalOpen] = useState(false)
+
+  const items = [
+    ...contract.services.filter((service) => service.active).map((service) => `${service.label} inclus`),
+    'Responsabilité limitée au contrat',
+  ]
 
   return (
-    <Card className="flex flex-col gap-3">
-      <button
-        type="button"
-        onClick={() => setExpanded((value) => !value)}
-        className="flex w-full items-center justify-between gap-4 text-left"
-      >
-        <h2 className="text-subtitle font-semibold text-reca-black">Clauses du contrat</h2>
-        {expanded ? (
-          <ChevronUp className="size-4 shrink-0 text-reca-gray-medium" aria-hidden="true" />
-        ) : (
-          <ChevronDown className="size-4 shrink-0 text-reca-gray-medium" aria-hidden="true" />
-        )}
-      </button>
+    <Card className="flex flex-col gap-4">
+      <h2 className="text-subtitle font-semibold text-reca-black">Clauses du contrat</h2>
+      <ul className="flex flex-col gap-2">
+        {items.map((item) => (
+          <li key={item} className="flex items-center gap-2 text-body text-reca-black">
+            <CheckCircle2 className="size-4 shrink-0 text-reca-success" aria-hidden="true" />
+            {item}
+          </li>
+        ))}
+      </ul>
+      <Button variant="secondary" onClick={() => setModalOpen(true)}>
+        Voir toutes les clauses
+      </Button>
 
-      <p className="text-body text-reca-gray-medium">
-        <span className="font-medium text-reca-black">Zone desservie : </span>
-        {contract.zoneDesservie}
-      </p>
-
-      {expanded && (
-        <div className="flex flex-col gap-2 border-t border-reca-gray-light pt-3 text-body text-reca-gray-medium">
-          <p>Superficie : {contract.superficie != null ? `${contract.superficie} m²` : '—'}</p>
-          <p>Exclusions : {contract.exclusions}</p>
-          <p>Seuil de déclenchement : {contract.seuilDeclenchementCm} cm</p>
-          <p>Heure limite de dégagement : {contract.heurePremierPassage}</p>
-          <p>
-            Accumulation max. par précipitation :{' '}
-            {contract.accumulationMaximaleCm != null ? `${contract.accumulationMaximaleCm} cm` : '—'}
-          </p>
-          <p>
-            Dépôt de la neige :{' '}
-            {DEPOT_NEIGE_OPTIONS.find((option) => option.value === contract.depotNeige)?.label ?? '—'}
-            {contract.depotNeige !== 'sur_terrain' &&
-              ` (permis municipal ${contract.permisMunicipalObtenu ? 'obtenu' : 'non obtenu'})`}
-          </p>
-          <p>Nettoyage final : {contract.nettoyageFinal}</p>
-          <p>Distance de sécurité : {contract.distanceSecuriteCm} cm</p>
-          <p>Balises requises : {contract.balisesRequises ? 'Oui' : 'Non'}</p>
-          <p>Obligations du client : {contract.obligationsClient}</p>
-          <p>Responsabilités : {contract.responsabilites}</p>
-          {contract.clauseAnnulation && <p>Annulation / résolution : {contract.clauseAnnulation}</p>}
-          {contract.clausePrix && <p>Prix : {contract.clausePrix}</p>}
-          {contract.clauseExecution && <p>Exécution : {contract.clauseExecution}</p>}
-          {contract.clauseAssurance && <p>Assurance et responsabilité : {contract.clauseAssurance}</p>}
-        </div>
-      )}
+      <ContractClausesModal open={modalOpen} onClose={() => setModalOpen(false)} contract={contract} />
     </Card>
   )
 }

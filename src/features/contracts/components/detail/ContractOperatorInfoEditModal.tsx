@@ -12,7 +12,6 @@ const FIELD_TO_COLUMN: Record<ContractOperatorInfoField, keyof ContractRow> = {
   obstaclesConnus: 'obstacles_connus',
   messageOperateur: 'message_operateur',
   consignesSpeciales: 'consignes_speciales',
-  notes: 'notes',
 }
 
 type ContractOperatorInfoEditModalProps = {

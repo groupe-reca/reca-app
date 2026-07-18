@@ -1,52 +1,45 @@
-import { Calendar, Clock, DollarSign, Pencil, RefreshCw, User } from 'lucide-react'
+import { Calendar, CreditCard, DollarSign, FileText, PenLine, RefreshCw } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { Card } from '@/components/ui/Card'
 import { formatCurrency, formatDateLong } from '@/lib/format'
-import { MODE_CONCLUSION_LABELS } from '../../constants/wizardOptions'
+import { ContractStatusBadge } from '../ContractStatusBadge'
 import type { Contract } from '../../types/contract.types'
 
 type InfoItem = { icon: LucideIcon; label: string; value: ReactNode }
 
-function InfoItemView({ icon: Icon, label, value }: InfoItem) {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-control bg-reca-gray-light">
-        <Icon className="size-5 text-reca-gray-medium" aria-hidden="true" />
-      </span>
-      <div className="min-w-0">
-        <p className="text-label text-reca-gray-medium">{label}</p>
-        <p className="truncate text-body font-medium text-reca-black">{value}</p>
-      </div>
-    </div>
-  )
-}
-
-/** Bandeau d'infos, 2 rangées : Prix/Mode de conclusion/Signature/Renouvellement // Début/Fin/Créé le. */
+/** "Informations générales" — liste verticale compacte (1 colonne de la 1ère rangée). */
 export function ContractInfoStrip({ contract }: { contract: Contract }) {
-  const row1: InfoItem[] = [
-    { icon: DollarSign, label: 'Prix', value: contract.prix != null ? formatCurrency(contract.prix) : '—' },
-    { icon: User, label: 'Mode de conclusion', value: MODE_CONCLUSION_LABELS[contract.modeConclusion] },
-    { icon: Pencil, label: 'Signature', value: contract.dateSignature ? formatDateLong(contract.dateSignature) : '—' },
-    { icon: RefreshCw, label: 'Renouvellement automatique', value: contract.renouvellement ? 'Oui' : 'Non' },
-  ]
-  const row2: InfoItem[] = [
+  const rows: InfoItem[] = [
+    { icon: DollarSign, label: 'Prix du contrat', value: contract.prix != null ? formatCurrency(contract.prix) : '—' },
+    { icon: PenLine, label: 'Date de signature', value: contract.dateSignature ? formatDateLong(contract.dateSignature) : '—' },
     { icon: Calendar, label: 'Début', value: contract.dateDebut ? formatDateLong(contract.dateDebut) : '—' },
     { icon: Calendar, label: 'Fin', value: contract.dateFin ? formatDateLong(contract.dateFin) : '—' },
-    { icon: Clock, label: 'Créé le', value: formatDateLong(contract.createdAt) },
+    { icon: RefreshCw, label: 'Renouvellement', value: contract.renouvellement ? 'Automatique' : 'Manuel' },
+    { icon: CreditCard, label: 'Mode de paiement', value: contract.modePaiement || '—' },
+    { icon: FileText, label: 'Type de contrat', value: contract.type ?? '—' },
   ]
 
   return (
-    <Card className="flex flex-col gap-5">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {row1.map((item) => (
-          <InfoItemView key={item.label} {...item} />
+    <Card className="flex flex-col gap-4">
+      <h2 className="text-subtitle font-semibold text-reca-black">Informations générales</h2>
+      <div className="flex flex-col divide-y divide-reca-gray-light">
+        {rows.map((item) => (
+          <div key={item.label} className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+            <span className="flex items-center gap-2 text-body text-reca-gray-medium">
+              <item.icon className="size-4 shrink-0" aria-hidden="true" />
+              {item.label}
+            </span>
+            <span className="shrink-0 text-body font-medium text-reca-black">{item.value}</span>
+          </div>
         ))}
-      </div>
-      <div className="grid grid-cols-1 gap-4 border-t border-reca-gray-light pt-5 sm:grid-cols-3">
-        {row2.map((item) => (
-          <InfoItemView key={item.label} {...item} />
-        ))}
+        <div className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
+          <span className="flex items-center gap-2 text-body text-reca-gray-medium">
+            <FileText className="size-4 shrink-0" aria-hidden="true" />
+            Statut
+          </span>
+          <ContractStatusBadge status={contract.statut} />
+        </div>
       </div>
     </Card>
   )
