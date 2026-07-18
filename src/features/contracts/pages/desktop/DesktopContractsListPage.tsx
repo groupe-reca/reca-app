@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router'
 import { Plus, Settings } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { useSession } from '@/features/auth/hooks/useSession'
-import { ContractTable } from '../../components/ContractTable'
+import { ContractsListContent } from '../../components/ContractsListContent'
 import { useContracts } from '../../hooks/useContracts'
 
 /** Contenu Desktop/Tablette — inchangé, seulement déplacé/renommé depuis `ContractsListPage.tsx` (sprint012). */
@@ -35,7 +35,7 @@ export function DesktopContractsListPage() {
         </div>
       </div>
 
-      <ContractTable contracts={contracts} isLoading={isLoading} isError={isError} />
+      <ContractsListContent contracts={contracts} isLoading={isLoading} isError={isError} />
     </div>
   )
 }

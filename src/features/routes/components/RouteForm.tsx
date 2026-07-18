@@ -68,7 +68,7 @@ export function RouteForm({ route, isSubmitting, onSubmit, onCancel }: RouteForm
             <input
               id="couleur"
               type="color"
-              className="h-11 w-full rounded-control border border-reca-gray-light bg-white pl-9 pr-3"
+              className="h-11 w-full rounded-control border border-reca-gray-light bg-reca-white pl-9 pr-3"
               {...register('couleur')}
             />
           </div>
@@ -82,7 +82,7 @@ export function RouteForm({ route, isSubmitting, onSubmit, onCancel }: RouteForm
         <textarea
           id="description"
           rows={3}
-          className="rounded-control border border-reca-gray-light bg-white px-3 py-2 text-body text-reca-black focus:outline-none focus:ring-2 focus:ring-reca-red/30"
+          className="rounded-control border border-reca-gray-light bg-reca-white px-3 py-2 text-body text-reca-black focus:outline-none focus:ring-2 focus:ring-reca-red/30"
           {...register('description')}
         />
       </div>

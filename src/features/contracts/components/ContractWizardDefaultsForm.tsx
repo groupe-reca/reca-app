@@ -195,7 +195,7 @@ export function ContractWizardDefaultsForm({ defaults, isSubmitting, onSubmit }:
         <textarea
           id="aiPromptDetection"
           rows={16}
-          className={`rounded-control border bg-white px-3 py-2 font-mono text-label text-reca-black focus:outline-none focus:ring-2 ${
+          className={`rounded-control border bg-reca-white px-3 py-2 font-mono text-label text-reca-black focus:outline-none focus:ring-2 ${
             errors.aiPromptDetection ? 'border-red-400 focus:ring-red-200' : 'border-reca-gray-light focus:ring-reca-red/30'
           }`}
           {...register('aiPromptDetection')}

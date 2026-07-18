@@ -22,11 +22,13 @@ import type {
   ServiceEntry,
 } from '../types/contract.types'
 
-const SELECT_WITH_CLIENT = '*, client:clients(id, numero, prenom, nom)'
+const SELECT_WITH_CLIENT = '*, client:clients(id, numero, prenom, nom, telephone)'
+const SELECT_LIST_WITH_INVOICES = `${SELECT_WITH_CLIENT}, invoices(statut)`
 const TPS_RATE = 0.05
 const TVQ_RATE = 0.09975
 
 type ContractRowWithClient = ContractRow & { client: ContractClientRef | null }
+type ContractRowWithClientAndInvoices = ContractRowWithClient & { invoices: { statut: string }[] }
 type WizardValues = ContractCreationFormValues | ContractDraftFormValues
 
 function mapContract(row: ContractRowWithClient): Contract {
@@ -71,6 +73,7 @@ function mapContract(row: ContractRowWithClient): Contract {
     prixTaxes: row.prix_taxes,
     createdAt: row.created_at,
     client: row.client,
+    hasOverdueInvoice: false,
   }
 }
 
@@ -182,12 +185,15 @@ function toWizardRowInput(
 export async function listContracts(): Promise<Contract[]> {
   const { data, error } = await supabase
     .from('contracts')
-    .select(SELECT_WITH_CLIENT)
+    .select(SELECT_LIST_WITH_INVOICES)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
 
   if (error) throw error
-  return ((data ?? []) as unknown as ContractRowWithClient[]).map(mapContract)
+  return ((data ?? []) as unknown as ContractRowWithClientAndInvoices[]).map((row) => ({
+    ...mapContract(row),
+    hasOverdueInvoice: row.invoices?.some((invoice) => invoice.statut === 'en_retard') ?? false,
+  }))
 }
 
 export async function listContractsByClient(clientId: string): Promise<Contract[]> {
@@ -383,7 +389,7 @@ export async function createContractWithZones(
 
 /**
  * Brouillon ("Enregistrer le brouillon", disponible dès l'étape 1) — statut
- * `en_attente`, jamais de facture générée. Utilise le schéma allégé
+ * `brouillon`, jamais de facture générée. Utilise le schéma allégé
  * (`contractDraftSchema`, validé en amont via `safeParse`, pas `handleSubmit`) —
  * fonctionne avec zéro zone/échéancier, contrairement à la finalisation.
  */
@@ -393,7 +399,7 @@ export async function saveContractDraft(
   clientId: string,
   clientTypeLabel: string | null,
 ): Promise<{ contract: Contract }> {
-  const { contract } = await upsertContractWithZones(contractId, values, clientId, clientTypeLabel, 'en_attente', {
+  const { contract } = await upsertContractWithZones(contractId, values, clientId, clientTypeLabel, 'brouillon', {
     generateInvoices: false,
   })
   return { contract }

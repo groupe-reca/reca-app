@@ -30,7 +30,7 @@ export function Breadcrumb({ onOpenMenu }: BreadcrumbProps) {
   if (immersive) return null
 
   return (
-    <div className="flex h-14 shrink-0 items-center gap-2 border-b border-reca-gray-light bg-white px-4 text-label text-reca-gray-medium lg:h-[72px] lg:px-6">
+    <div className="flex h-14 shrink-0 items-center gap-2 border-b border-reca-gray-light bg-reca-white px-4 text-label text-reca-gray-medium lg:h-[72px] lg:px-6">
       <button
         type="button"
         onClick={onOpenMenu}

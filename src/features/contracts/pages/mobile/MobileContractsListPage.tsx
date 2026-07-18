@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router'
 import { Plus, Settings } from 'lucide-react'
 import { useSession } from '@/features/auth/hooks/useSession'
 import { MobileContractLayout } from '../../components/mobile/MobileContractLayout'
-import { ContractTable } from '../../components/ContractTable'
+import { ContractsListContent } from '../../components/ContractsListContent'
 import { useContracts } from '../../hooks/useContracts'
 
 export function MobileContractsListPage() {
@@ -35,7 +35,7 @@ export function MobileContractsListPage() {
         </div>
       }
     >
-      <ContractTable contracts={contracts} isLoading={isLoading} isError={isError} />
+      <ContractsListContent contracts={contracts} isLoading={isLoading} isError={isError} />
     </MobileContractLayout>
   )
 }

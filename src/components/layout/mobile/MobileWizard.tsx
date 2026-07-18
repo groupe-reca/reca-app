@@ -41,7 +41,7 @@ export function MobileWizard({ activeKey, direction, footer, children }: MobileW
   }, [])
 
   return (
-    <div className="flex h-full flex-col overflow-hidden bg-white">
+    <div className="flex h-full flex-col overflow-hidden bg-reca-white">
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <MobileFooterInsetContext.Provider value={footerHeight}>
           <AnimatePresence mode="wait" custom={direction} initial={false}>

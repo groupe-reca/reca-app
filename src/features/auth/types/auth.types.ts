@@ -1,5 +1,7 @@
 export type Role = 'administrateur' | 'employe'
 
+export type Theme = 'clair' | 'sombre'
+
 export type User = {
   id: string
   email: string
@@ -7,6 +9,7 @@ export type User = {
   role: Role
   actif: boolean
   derniereConnexion: string | null
+  theme: Theme
 }
 
 export type Session = {

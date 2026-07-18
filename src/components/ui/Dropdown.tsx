@@ -51,7 +51,7 @@ export function Dropdown({ trigger, children }: DropdownProps) {
           ref={menuRef}
           role="menu"
           onClick={() => setOpen(false)}
-          className={`absolute z-10 min-w-[180px] rounded-control border border-reca-gray-light bg-white p-1 shadow-lg ${
+          className={`absolute z-10 min-w-[180px] rounded-control border border-reca-gray-light bg-reca-white p-1 shadow-lg ${
             placement.horizontal === 'right' ? 'right-0' : 'left-0'
           } ${placement.vertical === 'bottom' ? 'top-full mt-2' : 'bottom-full mb-2'}`}
         >

@@ -29,7 +29,7 @@ export function ListRow({
   className = '',
 }: ListRowProps) {
   const interactive = Boolean(onClick || href)
-  const rowClassName = `flex w-full items-center gap-3 rounded-card bg-white p-4 text-left shadow-card transition-shadow duration-150 ${
+  const rowClassName = `flex w-full items-center gap-3 rounded-card bg-reca-white p-4 text-left shadow-card transition-shadow duration-150 ${
     interactive ? 'cursor-pointer hover:shadow-floating active:shadow-card' : ''
   } ${className}`
 

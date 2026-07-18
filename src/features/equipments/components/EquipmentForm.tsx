@@ -81,7 +81,7 @@ export function EquipmentForm({ equipment, isSubmitting, onSubmit, onCancel }: E
         <textarea
           id="notes"
           rows={3}
-          className="rounded-control border border-reca-gray-light bg-white px-3 py-2 text-body text-reca-black focus:outline-none focus:ring-2 focus:ring-reca-red/30"
+          className="rounded-control border border-reca-gray-light bg-reca-white px-3 py-2 text-body text-reca-black focus:outline-none focus:ring-2 focus:ring-reca-red/30"
           {...register('notes')}
         />
       </div>

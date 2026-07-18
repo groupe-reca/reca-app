@@ -107,12 +107,12 @@ export function AddressAutocomplete({ label, value, onChange, onSelect, error }:
           onChange={(event) => onChange(event.target.value)}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
           placeholder={isMapboxConfigured ? 'Commencez à taper une adresse…' : undefined}
-          className={`h-11 w-full rounded-control border bg-white pl-9 pr-3 text-body text-reca-black placeholder:text-reca-gray-medium/70 focus:outline-none focus:ring-2 ${
+          className={`h-11 w-full rounded-control border bg-reca-white pl-9 pr-3 text-body text-reca-black placeholder:text-reca-gray-medium/70 focus:outline-none focus:ring-2 ${
             error ? 'border-red-400 focus:ring-red-200' : 'border-reca-gray-light focus:ring-reca-red/30'
           }`}
         />
         {open && (suggestions.length > 0 || isLoading) && (
-          <div className="absolute z-10 mt-1 flex w-full flex-col gap-0.5 rounded-control border border-reca-gray-light bg-white p-1 shadow-lg">
+          <div className="absolute z-10 mt-1 flex w-full flex-col gap-0.5 rounded-control border border-reca-gray-light bg-reca-white p-1 shadow-lg">
             {isLoading && <p className="px-3 py-2 text-label text-reca-gray-medium">Recherche…</p>}
             {!isLoading &&
               suggestions.map((feature) => (

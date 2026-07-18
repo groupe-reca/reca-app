@@ -1,10 +1,19 @@
-export type ContractStatus = 'actif' | 'en_attente' | 'expire' | 'annule'
+export type ContractStatus = 'brouillon' | 'a_signer' | 'en_attente' | 'actif' | 'expire' | 'annule'
 
-export const CONTRACT_STATUSES: ContractStatus[] = ['actif', 'en_attente', 'expire', 'annule']
+export const CONTRACT_STATUSES: ContractStatus[] = [
+  'brouillon',
+  'a_signer',
+  'en_attente',
+  'actif',
+  'expire',
+  'annule',
+]
 
 export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
+  brouillon: 'Brouillon',
+  a_signer: 'À signer',
+  en_attente: 'Signature en attente',
   actif: 'Actif',
-  en_attente: 'En attente',
   expire: 'Expiré',
   annule: 'Annulé',
 }
@@ -14,6 +23,7 @@ export type ContractClientRef = {
   numero: string
   prenom: string
   nom: string
+  telephone: string | null
 }
 
 export type PaymentScheduleEntryType = 'pourcentage' | 'montant'
@@ -198,4 +208,6 @@ export type Contract = {
   prixTaxes: PrixTaxesMode
   createdAt: string
   client: ContractClientRef | null
+  /** Calculé (pas une colonne) — présence d'au moins une facture liée `en_retard`, voir `listContracts`. */
+  hasOverdueInvoice: boolean
 }

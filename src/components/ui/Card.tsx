@@ -21,7 +21,7 @@ export function Card({
     <div
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
-      className={`rounded-card bg-white p-6 shadow-card transition-shadow duration-150 ${
+      className={`rounded-card bg-reca-white p-6 shadow-card transition-shadow duration-150 ${
         isClickable ? 'cursor-pointer hover:shadow-floating active:shadow-card' : ''
       } ${chevron ? 'flex items-center justify-between gap-4' : ''} ${className}`}
       {...props}

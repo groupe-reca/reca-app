@@ -13,7 +13,7 @@ export function Toaster() {
         <div
           key={item.id}
           role="status"
-          className="flex w-full items-center gap-2 rounded-control border border-reca-gray-light bg-white px-4 py-3 text-body text-reca-black shadow-lg sm:w-auto"
+          className="flex w-full items-center gap-2 rounded-control border border-reca-gray-light bg-reca-white px-4 py-3 text-body text-reca-black shadow-lg sm:w-auto"
         >
           {item.variant === 'success' ? (
             <CheckCircle2 className="size-4 shrink-0 text-reca-success" aria-hidden="true" />

@@ -34,7 +34,7 @@ export function Table<T>({ columns, rows, rowKey, onRowClick, sort, onSortChange
             aria-label="Trier par"
             value={sort?.key ?? ''}
             onChange={(event) => event.target.value && onSortChange?.(event.target.value)}
-            className="h-11 flex-1 rounded-control border border-reca-gray-light bg-white px-3 text-body text-reca-black"
+            className="h-11 flex-1 rounded-control border border-reca-gray-light bg-reca-white px-3 text-body text-reca-black"
           >
             <option value="">Trier par…</option>
             {sortableColumns.map((column) => (
@@ -48,7 +48,7 @@ export function Table<T>({ columns, rows, rowKey, onRowClick, sort, onSortChange
               type="button"
               onClick={() => onSortChange?.(sort.key)}
               aria-label={sort.direction === 'asc' ? 'Tri croissant' : 'Tri décroissant'}
-              className="flex size-11 shrink-0 items-center justify-center rounded-control border border-reca-gray-light bg-white text-reca-black"
+              className="flex size-11 shrink-0 items-center justify-center rounded-control border border-reca-gray-light bg-reca-white text-reca-black"
             >
               {sort.direction === 'asc' ? '↑' : '↓'}
             </button>
@@ -56,7 +56,7 @@ export function Table<T>({ columns, rows, rowKey, onRowClick, sort, onSortChange
         </div>
       )}
 
-      <div className="hidden overflow-x-auto rounded-card bg-white shadow-card md:block">
+      <div className="hidden overflow-x-auto rounded-card bg-reca-white shadow-card md:block">
         <table className="w-full text-left text-body">
           <thead>
             <tr className="border-b border-reca-gray-light text-label text-reca-gray-medium">
@@ -124,7 +124,7 @@ function TableCardRow<T>({
       onClick={() => onClick?.(row)}
       role={onClick ? 'button' : undefined}
       tabIndex={onClick ? 0 : undefined}
-      className={`rounded-card bg-white p-4 shadow-card ${
+      className={`rounded-card bg-reca-white p-4 shadow-card ${
         onClick ? 'cursor-pointer active:bg-reca-snow' : ''
       }`}
     >

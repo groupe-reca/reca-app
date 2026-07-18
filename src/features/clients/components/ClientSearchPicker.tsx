@@ -152,7 +152,7 @@ function SearchInput({ query, setQuery, onFocus, autoFocus }: SearchInputProps) 
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         onFocus={onFocus}
-        className="h-11 w-full rounded-control border border-reca-gray-light bg-white pl-9 pr-3 text-body text-reca-black placeholder:text-reca-gray-medium/70 focus:outline-none focus:ring-2 focus:ring-reca-red/30"
+        className="h-11 w-full rounded-control border border-reca-gray-light bg-reca-white pl-9 pr-3 text-body text-reca-black placeholder:text-reca-gray-medium/70 focus:outline-none focus:ring-2 focus:ring-reca-red/30"
       />
     </div>
   )
@@ -166,7 +166,7 @@ type ResultsListProps = {
 
 function ResultsList({ results, onSelect, onAddNew }: ResultsListProps) {
   return (
-    <div className="relative z-10 mt-1 flex flex-col gap-1 rounded-control border border-reca-gray-light bg-white p-1 shadow-lg">
+    <div className="relative z-10 mt-1 flex flex-col gap-1 rounded-control border border-reca-gray-light bg-reca-white p-1 shadow-lg">
       {results.length === 0 && (
         <p className="px-3 py-2 text-label text-reca-gray-medium">Aucun client trouvé.</p>
       )}

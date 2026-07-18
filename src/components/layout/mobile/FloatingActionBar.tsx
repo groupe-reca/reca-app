@@ -21,7 +21,7 @@ type FloatingActionBarProps = {
 // mobile-only, sans toucher `Button.tsx` (Desktop/Tablette inchangés).
 const PRIMARY = 'h-12 flex-1 rounded-control bg-reca-red px-4 text-body font-medium text-white disabled:bg-reca-red/60'
 const SECONDARY =
-  'h-12 rounded-control border border-reca-gray-light bg-white px-4 text-body font-medium text-reca-black disabled:opacity-50'
+  'h-12 rounded-control border border-reca-gray-light bg-reca-white px-4 text-body font-medium text-reca-black disabled:opacity-50'
 
 /**
  * Barre d'action flottante mobile — analogue de `WizardFooter.tsx` (desktop, inchangé),
@@ -48,7 +48,7 @@ export function FloatingActionBar({
   isSubmitting,
 }: FloatingActionBarProps) {
   return (
-    <div className="flex shrink-0 items-center gap-2 border-t border-reca-gray-light bg-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
+    <div className="flex shrink-0 items-center gap-2 border-t border-reca-gray-light bg-reca-white px-4 py-3 pb-[calc(env(safe-area-inset-bottom)+12px)] shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
       {onBack && (
         <button type="button" className={SECONDARY} onClick={onBack}>
           Retour

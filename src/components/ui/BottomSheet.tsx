@@ -146,7 +146,7 @@ export function BottomSheet({
           dragMomentum={false}
           onDragEnd={handleDragEnd}
           style={{ y, height: sheetHeight }}
-          className="pointer-events-auto absolute inset-x-0 top-0 flex flex-col rounded-t-modal bg-white shadow-[0_-2px_24px_rgba(0,0,0,0.12)]"
+          className="pointer-events-auto absolute inset-x-0 top-0 flex flex-col rounded-t-modal bg-reca-white shadow-[0_-2px_24px_rgba(0,0,0,0.12)]"
         >
           <div className="flex shrink-0 touch-none cursor-grab flex-col items-center gap-2 pb-1 pt-2.5 active:cursor-grabbing">
             <span className="h-1.5 w-10 rounded-full bg-reca-gray-light" aria-hidden="true" />

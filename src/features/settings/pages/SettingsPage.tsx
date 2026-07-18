@@ -3,6 +3,7 @@ import { QueryState } from '@/components/ui/QueryState'
 import { AccountsTable } from '../components/AccountsTable'
 import { CompanySettingsForm } from '../components/CompanySettingsForm'
 import { ModulesTable } from '../components/ModulesTable'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { useSettings } from '../hooks/useSettings'
 import { useUpdateSettings } from '../hooks/useUpdateSettings'
 
@@ -53,6 +54,12 @@ export function SettingsPage() {
         >
           {(data) => <ModulesTable settings={data} />}
         </QueryState>
+      </Card>
+
+      <Card>
+        <h2 className="mb-4 text-label font-semibold text-reca-black">Préférences</h2>
+        <p className="mb-4 text-body text-reca-gray-medium">Thème de l'interface, propre à votre compte.</p>
+        <ThemeToggle />
       </Card>
     </div>
   )

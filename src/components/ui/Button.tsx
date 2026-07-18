@@ -14,7 +14,7 @@ const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
     'bg-reca-red text-white hover:bg-reca-red-dark focus-visible:ring-reca-red/40 disabled:bg-reca-red/60',
   secondary:
-    'bg-white text-reca-black border border-reca-gray-light hover:bg-reca-gray-light focus-visible:ring-reca-black/20',
+    'bg-reca-white text-reca-black border border-reca-gray-light hover:bg-reca-gray-light focus-visible:ring-reca-black/20',
   ghost:
     'bg-transparent text-reca-gray-medium hover:bg-reca-gray-light focus-visible:ring-reca-black/10',
 }

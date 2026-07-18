@@ -83,7 +83,7 @@ export function CompanySettingsForm({ settings, isSubmitting, onSubmit }: Compan
             <input
               id="couleurPrimaire"
               type="color"
-              className="h-11 w-full rounded-control border border-reca-gray-light bg-white pl-9 pr-3"
+              className="h-11 w-full rounded-control border border-reca-gray-light bg-reca-white pl-9 pr-3"
               {...register('couleurPrimaire')}
             />
           </div>
@@ -100,7 +100,7 @@ export function CompanySettingsForm({ settings, isSubmitting, onSubmit }: Compan
             <input
               id="couleurSecondaire"
               type="color"
-              className="h-11 w-full rounded-control border border-reca-gray-light bg-white pl-9 pr-3"
+              className="h-11 w-full rounded-control border border-reca-gray-light bg-reca-white pl-9 pr-3"
               {...register('couleurSecondaire')}
             />
           </div>

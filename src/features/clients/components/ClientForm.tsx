@@ -56,7 +56,7 @@ export function ClientForm({ client, initialValues, isSubmitting, onSubmit, onCa
     <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
       <div className="flex flex-col gap-1.5">
         <span className="text-label font-medium text-reca-gray-medium">Type de client</span>
-        <div className="inline-flex w-fit rounded-control border border-reca-gray-light bg-white p-1">
+        <div className="inline-flex w-fit rounded-control border border-reca-gray-light bg-reca-white p-1">
           {CLIENT_TYPES.map((type) => (
             <button
               key={type}
