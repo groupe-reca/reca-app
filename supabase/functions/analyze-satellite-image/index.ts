@@ -36,7 +36,7 @@
 //     cette requête avec `400`. Restent proposés dans le sélecteur (demandés tels
 //     quels par l'utilisateur), mais ne fonctionneront pas pour cette fonctionnalité
 //     — voir `memory/memory.md`.
-//   - `openai/...` (ex. `openai/gpt-5.4-mini`, tâche 3) : endpoint OpenAI-compatible
+//   - Tout le reste (`openai/...`, `anthropic/...`) : endpoint OpenAI-compatible
 //     `/v1/chat/completions` (`messages`/`response_format.json_schema`), forme de
 //     requête ET de réponse différentes de Gemini — `buildOpenAiChatCompletionsBody`/
 //     `OPENAI_RESPONSE_SCHEMA` dédiés, réponse dans `choices[0].message.content` (pas
@@ -44,7 +44,20 @@
 //     2026-07-17)** avec le vrai prompt système + le schéma complet, sur une image
 //     satellite réelle : JSON strictement conforme retourné, `gpt-5.4-mini` est
 //     pleinement viable pour cette fonctionnalité (contrairement aux 2 modèles image
-//     Gemini ci-dessus).
+//     Gemini ci-dessus). **Tâche 17 (2026-07-18)** : `openai/gpt-5.2` (même style,
+//     JSON propre) et `anthropic/claude-sonnet-5` (répond aussi via ce même endpoint
+//     OpenAI-compatible, confirmé par test curl réel) ajoutés — Claude encadre
+//     parfois sa réponse de balises markdown (```json ... ```) malgré `strict: true`,
+//     d'où `stripMarkdownFence()` en filet de sécurité avant `JSON.parse`.
+//     `google/gemini-3-flash-preview` (demandé mais testé et rejeté) renvoie une
+//     structure incohérente d'un appel à l'autre (tantôt un objet, tantôt un tableau,
+//     tantôt encadré de markdown) malgré une requête identique — trop peu fiable pour
+//     être proposé, voir `memory/memory.md`.
+//
+// Tâche 17 : le texte du prompt système (`systemPrompt` dans le corps de la requête)
+// est désormais éditable par un administrateur (`ContractWizardDefaults.aiPromptDetection`,
+// `ContractWizardDefaultsForm.tsx`) — `SATELLITE_ANALYSIS_SYSTEM_PROMPT` ci-dessous ne
+// sert plus que de valeur de repli si absent (réglages enregistrés avant cette tâche).
 //
 // Gemini ne calcule jamais de superficie ni de limites de propriété — il ne fait que
 // suggérer un point de départ visuel, le tracé final ajusté par l'utilisateur (côté
@@ -186,6 +199,10 @@ const requestSchema = z.object({
   storagePath: z.string().min(1),
   aiProvider: z.enum(['google', 'tokenrouter']).optional(),
   aiModel: z.string().min(1).optional(),
+  // Tâche 17 : texte de prompt configurable depuis les paramètres du Wizard
+  // (`ContractWizardDefaults.aiPromptDetection`) — retombe sur le texte intégré
+  // ci-dessus si absent (réglages enregistrés avant cette tâche).
+  systemPrompt: z.string().min(1).optional(),
 })
 
 // Requis pour tout appel depuis le navigateur (supabase-js envoie un préflight OPTIONS avec
@@ -210,17 +227,24 @@ Deno.serve(async (req) => {
   let storagePath: string
   let aiProvider: 'google' | 'tokenrouter'
   let aiModel: string
+  let systemPrompt: string
   try {
     const body = await req.json()
     const parsed = requestSchema.parse(body)
     storagePath = parsed.storagePath
     aiProvider = parsed.aiProvider ?? 'google'
     aiModel = parsed.aiModel ?? 'flash'
+    systemPrompt = parsed.systemPrompt ?? SATELLITE_ANALYSIS_SYSTEM_PROMPT
   } catch {
     return jsonResponse({ error: 'Corps de requête invalide (storagePath requis).' }, 400)
   }
 
-  const isOpenAiCompatible = aiProvider === 'tokenrouter' && aiModel.startsWith('openai/')
+  // Tâche 17 : `google/...` passe par le mirroir natif Gemini (seul style supporté par
+  // ces modèles chez TokenRouter, confirmé par leur catalogue `/v1/models` —
+  // `supported_endpoint_types: ['gemini']`) ; tout le reste (`openai/...`,
+  // `anthropic/...`, confirmé fonctionner via `/chat/completions` par test réel) passe
+  // par l'endpoint OpenAI-compatible.
+  const isOpenAiCompatible = aiProvider === 'tokenrouter' && !aiModel.startsWith('google/')
 
   let requestUrl: string
   let authHeaders: Record<string, string>
@@ -261,8 +285,8 @@ Deno.serve(async (req) => {
       headers: { 'Content-Type': 'application/json', ...authHeaders },
       body: JSON.stringify(
         isOpenAiCompatible
-          ? buildOpenAiChatCompletionsBody(aiModel, imageBase64)
-          : buildGenerateContentRequestBody(imageBase64),
+          ? buildOpenAiChatCompletionsBody(aiModel, imageBase64, systemPrompt)
+          : buildGenerateContentRequestBody(imageBase64, systemPrompt),
       ),
     })
     if (!response.ok) {
@@ -278,7 +302,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const parsed = satelliteAnalysisSchema.parse(JSON.parse(rawText))
+    const parsed = satelliteAnalysisSchema.parse(JSON.parse(stripMarkdownFence(rawText)))
     return jsonResponse(parsed, 200)
   } catch {
     return jsonResponse({ error: 'Réponse du fournisseur IA hors-schéma.' }, 502)
@@ -290,9 +314,9 @@ Deno.serve(async (req) => {
  * documentée par TokenRouter comme un miroir de celle de Gemini), seuls l'URL et les
  * headers d'authentification diffèrent entre les deux fournisseurs (voir l'appelant).
  */
-function buildGenerateContentRequestBody(imageBase64: string) {
+function buildGenerateContentRequestBody(imageBase64: string, systemPrompt: string) {
   return {
-    system_instruction: { parts: [{ text: SATELLITE_ANALYSIS_SYSTEM_PROMPT }] },
+    system_instruction: { parts: [{ text: systemPrompt }] },
     contents: [
       {
         role: 'user',
@@ -316,11 +340,11 @@ function buildGenerateContentRequestBody(imageBase64: string) {
  * `image_url` en data URI plutôt que `inline_data`, JSON structuré via
  * `response_format.json_schema` (mode `strict`) plutôt que `generationConfig`.
  */
-function buildOpenAiChatCompletionsBody(model: string, imageBase64: string) {
+function buildOpenAiChatCompletionsBody(model: string, imageBase64: string, systemPrompt: string) {
   return {
     model,
     messages: [
-      { role: 'system', content: SATELLITE_ANALYSIS_SYSTEM_PROMPT },
+      { role: 'system', content: systemPrompt },
       {
         role: 'user',
         content: [
@@ -349,6 +373,18 @@ function describeProviderError(aiProvider: 'google' | 'tokenrouter', status: num
   if (status === 429) return `Quota ${providerLabel} dépassé (limite de requêtes atteinte) — réessayez plus tard.`
   if (status === 503) return `Service ${providerLabel} temporairement surchargé — réessayez dans quelques instants.`
   return `${providerLabel} API error: ${status}`
+}
+
+/**
+ * Certains modèles TokenRouter non-Gemini (confirmé sur `anthropic/claude-sonnet-5`,
+ * de façon inconstante — parfois respecté, parfois non, malgré `response_format:
+ * {type: 'json_schema', strict: true}`) encadrent leur JSON de balises markdown
+ * (```json ... ```) au lieu de renvoyer le JSON brut. Filet de sécurité générique
+ * pour tout le chemin OpenAI-compatible plutôt qu'un correctif propre à un modèle.
+ */
+function stripMarkdownFence(text: string): string {
+  const match = text.trim().match(/^```(?:json)?\s*([\s\S]*?)\s*```$/)
+  return match ? match[1] : text
 }
 
 function jsonResponse(body: unknown, status: number): Response {

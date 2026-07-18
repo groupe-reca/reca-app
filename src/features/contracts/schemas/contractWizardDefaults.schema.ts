@@ -15,6 +15,7 @@ export const contractWizardDefaultsSchema = z
     modeConclusion: z.enum(MODE_CONCLUSION),
     aiProvider: z.enum(['google', 'tokenrouter']),
     aiModel: z.string().min(1, 'Le modèle est requis'),
+    aiPromptDetection: z.string().min(1, 'Le texte du prompt est requis'),
     prixTaxes: z.enum(['avant_taxes', 'apres_taxes']),
   })
   .refine(

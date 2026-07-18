@@ -9,6 +9,7 @@ import { boundsFromPolygon } from '../utils/propertyBoundary'
 import { contourToPolygon } from '../utils/satelliteZoneProjection'
 import { analyzeSatelliteImage } from '../services/satelliteAnalysis.service'
 import { useContractWizardDefaults } from './useContractWizardDefaults'
+import { DEFAULT_AI_PROMPT_DETECTION } from '../types/contractWizardDefaults.types'
 import { usePropertyCapture } from './usePropertyCapture'
 import type { ContractZoneFormValues } from '../schemas/contractCreation.schema'
 import type { ZoneType } from '../types/contract.types'
@@ -194,6 +195,7 @@ export function useDelineateState({
         capturePath,
         wizardDefaults?.aiProvider ?? 'google',
         wizardDefaults?.aiModel ?? 'flash',
+        wizardDefaults?.aiPromptDetection ?? DEFAULT_AI_PROMPT_DETECTION,
       )
 
       if (result.qualite_image === 'insuffisante') {

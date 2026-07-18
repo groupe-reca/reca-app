@@ -63,6 +63,7 @@ export const AI_MODEL_OPTIONS_BY_PROVIDER: Record<AiProvider, { value: AiModel; 
     { value: 'google/gemini-2.5-flash-image', label: 'Gemini 2.5 Flash (Image)' },
     { value: 'google/gemini-3.5-flash', label: 'Gemini 3.5 Flash' },
     { value: 'openai/gpt-5.4-mini', label: 'GPT-5.4 Mini' },
+    { value: 'openai/gpt-5.2', label: 'GPT-5.2' },
   ],
 }
 

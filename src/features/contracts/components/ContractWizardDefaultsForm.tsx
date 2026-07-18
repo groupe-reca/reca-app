@@ -188,6 +188,25 @@ export function ContractWizardDefaultsForm({ defaults, isSubmitting, onSubmit }:
         </Select>
       </div>
 
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor="aiPromptDetection" className="text-label font-medium text-reca-gray-medium">
+          Texte du prompt pour la détection automatique
+        </label>
+        <textarea
+          id="aiPromptDetection"
+          rows={16}
+          className={`rounded-control border bg-white px-3 py-2 font-mono text-label text-reca-black focus:outline-none focus:ring-2 ${
+            errors.aiPromptDetection ? 'border-red-400 focus:ring-red-200' : 'border-reca-gray-light focus:ring-reca-red/30'
+          }`}
+          {...register('aiPromptDetection')}
+        />
+        {errors.aiPromptDetection && (
+          <p role="alert" className="text-label text-red-600">
+            {errors.aiPromptDetection.message}
+          </p>
+        )}
+      </div>
+
       <div className="mt-2 flex justify-end">
         <Button type="submit" isLoading={isSubmitting}>
           Enregistrer

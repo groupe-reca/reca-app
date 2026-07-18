@@ -23,9 +23,10 @@ export async function analyzeSatelliteImage(
   storagePath: string,
   aiProvider: AiProvider,
   aiModel: AiModel,
+  systemPrompt: string,
 ): Promise<SatelliteAnalysisResult> {
   const { data, error } = await supabase.functions.invoke<SatelliteAnalysisResult>('analyze-satellite-image', {
-    body: { storagePath, aiProvider, aiModel },
+    body: { storagePath, aiProvider, aiModel, systemPrompt },
   })
   if (error) {
     if (error instanceof FunctionsHttpError) {
