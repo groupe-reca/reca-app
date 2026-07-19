@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { CLIENT_LANGUES, CLIENT_STATUSES } from '../types/client.types'
 
 const optionalCoordinate = z
   .string()
@@ -22,6 +23,8 @@ export const clientSchema = z
     latitude: optionalCoordinate,
     longitude: optionalCoordinate,
     notes: z.string().optional(),
+    statut: z.enum(CLIENT_STATUSES),
+    langue: z.enum(CLIENT_LANGUES),
   })
   .refine((values) => values.typeClient !== 'commercial' || Boolean(values.entreprise?.trim()), {
     message: "Le nom de l'entreprise est requis pour un client commercial",

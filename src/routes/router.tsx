@@ -72,7 +72,7 @@ export const router = createBrowserRouter([
             children: [
               { path: 'clients', element: <ClientsListPage />, handle: { breadcrumb: 'Clients' } },
               { path: 'clients/new', element: <ClientCreatePage />, handle: { breadcrumb: 'Nouveau client' } },
-              { path: 'clients/:id', element: <ClientDetailPage />, handle: { breadcrumb: 'Détail' } },
+              { path: 'clients/:id', element: <ClientDetailPage />, handle: { breadcrumb: 'Détail client' } },
             ],
           },
           {

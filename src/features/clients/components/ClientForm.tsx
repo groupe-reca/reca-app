@@ -1,17 +1,22 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm, useWatch } from 'react-hook-form'
-import { Building2, Mail, MapPin, Phone, User } from 'lucide-react'
+import { Building2, Globe, Mail, MapPin, Phone, User } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
 import { AddressAutocomplete } from '@/components/ui/AddressAutocomplete'
 import { CLIENT_TYPES, clientSchema } from '../schemas/client.schema'
 import type { ClientFormValues, ClientType } from '../schemas/client.schema'
+import { CLIENT_LANGUES, CLIENT_STATUSES } from '../types/client.types'
 import type { Client } from '../types/client.types'
 
 const CLIENT_TYPE_LABELS: Record<ClientType, string> = {
   residentiel: 'Résidentiel',
   commercial: 'Commercial',
 }
+
+const CLIENT_STATUS_LABELS = { actif: 'Actif', inactif: 'Inactif' } as const
+const CLIENT_LANGUE_LABELS = { francais: 'Français', anglais: 'Anglais' } as const
 
 type ClientFormProps = {
   client?: Client
@@ -45,8 +50,10 @@ export function ClientForm({ client, initialValues, isSubmitting, onSubmit, onCa
           latitude: client.latitude?.toString() ?? '',
           longitude: client.longitude?.toString() ?? '',
           notes: client.notes ?? '',
+          statut: client.statut,
+          langue: client.langue,
         }
-      : { typeClient: 'residentiel', ...initialValues },
+      : { typeClient: 'residentiel', statut: 'actif', langue: 'francais', ...initialValues },
   })
 
   const typeClient = useWatch({ control, name: 'typeClient' })
@@ -113,6 +120,23 @@ export function ClientForm({ client, initialValues, isSubmitting, onSubmit, onCa
       <div className="grid grid-cols-2 gap-4">
         <Input label="Téléphone" icon={Phone} error={errors.telephone?.message} {...register('telephone')} />
         <Input label="Courriel" icon={Mail} error={errors.courriel?.message} {...register('courriel')} />
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <Select label="Statut" icon={User} error={errors.statut?.message} {...register('statut')}>
+          {CLIENT_STATUSES.map((status) => (
+            <option key={status} value={status}>
+              {CLIENT_STATUS_LABELS[status]}
+            </option>
+          ))}
+        </Select>
+        <Select label="Langue" icon={Globe} error={errors.langue?.message} {...register('langue')}>
+          {CLIENT_LANGUES.map((langue) => (
+            <option key={langue} value={langue}>
+              {CLIENT_LANGUE_LABELS[langue]}
+            </option>
+          ))}
+        </Select>
       </div>
 
       <div className="mt-2 flex justify-end gap-3">

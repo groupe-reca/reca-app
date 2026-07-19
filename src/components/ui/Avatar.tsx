@@ -1,9 +1,13 @@
+import { STATUS_BG_CLASSES, STATUS_TEXT_CLASSES } from './statusColors'
+import type { StatusColor } from './statusColors'
+
 type AvatarSize = 'sm' | 'md' | 'lg'
 
 type AvatarProps = {
   name?: string
   src?: string
   size?: AvatarSize
+  color?: StatusColor
   className?: string
 }
 
@@ -19,10 +23,11 @@ function getInitials(name: string): string {
   return initials.join('') || '?'
 }
 
-export function Avatar({ name, src, size = 'md', className = '' }: AvatarProps) {
+export function Avatar({ name, src, size = 'md', color, className = '' }: AvatarProps) {
+  const colorClasses = color ? `${STATUS_BG_CLASSES[color]} ${STATUS_TEXT_CLASSES[color]}` : 'bg-reca-gray-light text-reca-black'
   return (
     <span
-      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-reca-gray-light font-semibold text-reca-black ${SIZE_CLASSES[size]} ${className}`}
+      className={`inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full font-semibold ${colorClasses} ${SIZE_CLASSES[size]} ${className}`}
     >
       {src ? (
         <img src={src} alt={name ?? ''} className="size-full object-cover" />
