@@ -174,6 +174,7 @@ function ResultsList({ results, onSelect, onAddNew }: ResultsListProps) {
         <button
           key={client.id}
           type="button"
+          onMouseDown={(event) => event.preventDefault()}
           onClick={() => onSelect(client)}
           className="flex flex-col rounded-control px-3 py-2 text-left hover:bg-reca-snow"
         >
@@ -188,6 +189,7 @@ function ResultsList({ results, onSelect, onAddNew }: ResultsListProps) {
       ))}
       <button
         type="button"
+        onMouseDown={(event) => event.preventDefault()}
         onClick={onAddNew}
         className="flex items-center gap-2 rounded-control border-t border-reca-gray-light px-3 py-2 text-left text-body font-medium text-reca-red hover:bg-reca-snow"
       >

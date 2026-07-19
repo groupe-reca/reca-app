@@ -119,6 +119,7 @@ export function AddressAutocomplete({ label, value, onChange, onSelect, error }:
                 <button
                   key={feature.place_name}
                   type="button"
+                  onMouseDown={(event) => event.preventDefault()}
                   onClick={() => handleSelect(feature)}
                   className="rounded-control px-3 py-2 text-left text-body text-reca-black hover:bg-reca-snow"
                 >
