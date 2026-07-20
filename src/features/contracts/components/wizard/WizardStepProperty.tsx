@@ -15,6 +15,13 @@ export type PropertyNav = {
   onNext: () => void
   nextDisabled: boolean
   action?: WizardFooterAction | null
+  /**
+   * Tâche 7 : la sous-étape courante demande le mode plein écran immersif (carte
+   * visible, tout le chrome — fil d'Ariane global, en-tête/progression du Wizard,
+   * bandeau de sous-étapes — disparaît). `false`/absent tant que la carte n'est pas
+   * réellement disponible (repli manuel) ou sur Valider (pas de carte à maximiser).
+   */
+  immersive?: boolean
 }
 
 type WizardStepPropertyProps = {
@@ -47,40 +54,53 @@ export function WizardStepProperty({
     subStep,
     setSubStep,
     capturePath,
-    setCapturePath,
+    viewport,
     mapUnavailable,
     setMapError,
     zones,
+    photos,
     center,
     boundary,
     currentIndex,
     handleGeocoded,
+    handleCaptured,
     addZone,
+    addZones,
     updateZone,
     removeZone,
+    addPhoto,
+    removePhoto,
   } = usePropertyStepState({ control, setValue, onCompletionChange, onNavChange, onAdvanceStep })
+
+  // Tâche 7 : le bandeau de sous-étapes fait partie du chrome masqué en mode plein
+  // écran — mêmes conditions que l'`immersive` rapporté par les sous-étapes elles-mêmes
+  // (carte réellement disponible, pas la sous-étape Valider qui n'a pas de carte).
+  const showSubStepBar = subStep === 'validate' || mapUnavailable
 
   return (
     <div className="flex h-full flex-col gap-3">
-      <div className="flex shrink-0 items-center gap-2 text-label text-reca-gray-medium">
-        {SUB_STEP_ORDER.map((step, index) => (
-          <div key={step} className="flex items-center gap-2">
-            <span className={index <= currentIndex ? 'font-medium text-reca-red' : ''}>{SUB_STEP_LABELS[step]}</span>
-            {index < SUB_STEP_ORDER.length - 1 && <span aria-hidden="true">→</span>}
-          </div>
-        ))}
-      </div>
+      {showSubStepBar && (
+        <div className="flex shrink-0 items-center gap-2 px-4 pt-3 text-label text-reca-gray-medium sm:px-6 lg:px-8">
+          {SUB_STEP_ORDER.map((step, index) => (
+            <div key={step} className="flex items-center gap-2">
+              <span className={index <= currentIndex ? 'font-medium text-reca-red' : ''}>{SUB_STEP_LABELS[step]}</span>
+              {index < SUB_STEP_ORDER.length - 1 && <span aria-hidden="true">→</span>}
+            </div>
+          ))}
+        </div>
+      )}
 
-      <div className="min-h-0 flex-1">
+      <div className={subStep === 'validate' ? 'min-h-0 flex-1 overflow-y-auto px-4 pb-4 sm:px-6 lg:px-8' : 'min-h-0 flex-1'}>
         {subStep === 'locate' && (
           <PropertySubStepLocate
             client={client}
             contractId={contractId}
             boundary={boundary}
             capturePath={capturePath}
+            initialViewport={viewport}
             mapUnavailable={mapUnavailable}
             onMapError={setMapError}
-            onCaptured={setCapturePath}
+            onCaptured={handleCaptured}
             onGeocoded={handleGeocoded}
             onContinue={() => setSubStep('delineate')}
             onNavChange={onNavChange}
@@ -88,20 +108,33 @@ export function WizardStepProperty({
         )}
         {subStep === 'delineate' && (
           <PropertySubStepDelineate
+            contractId={contractId}
             center={center}
             boundary={boundary}
             capturePath={capturePath}
+            initialViewport={viewport}
             mapUnavailable={mapUnavailable}
             onMapError={setMapError}
             zones={zones}
             onAddZone={addZone}
+            onAddZones={addZones}
             onUpdateZone={updateZone}
             onRemoveZone={removeZone}
+            onCaptured={handleCaptured}
             onContinue={() => setSubStep('validate')}
             onNavChange={onNavChange}
           />
         )}
-        {subStep === 'validate' && <PropertySubStepValidate zones={zones} capturePath={capturePath} />}
+        {subStep === 'validate' && (
+          <PropertySubStepValidate
+            zones={zones}
+            capturePath={capturePath}
+            contractId={contractId}
+            photos={photos}
+            onAddPhoto={addPhoto}
+            onRemovePhoto={removePhoto}
+          />
+        )}
       </div>
     </div>
   )

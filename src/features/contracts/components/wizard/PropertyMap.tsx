@@ -3,6 +3,8 @@ import { MapCanvas } from '@/components/map/MapCanvas'
 
 type PropertyMapProps = {
   center: [number, number]
+  /** Zoom initial de la carte — défaut 19.5 (cadrage serré sur une propriété résidentielle). */
+  zoom?: number
   onMapReady?: (map: MapboxMap) => void
   onError?: (message: string) => void
 }
@@ -13,8 +15,14 @@ type PropertyMapProps = {
  * dominant de l'étape, pas un widget de taille fixe) : le parent doit fournir une
  * hauteur définie (`flex-1 min-h-0` dans une colonne flex).
  */
-export function PropertyMap({ center, onMapReady, onError }: PropertyMapProps) {
+export function PropertyMap({ center, zoom, onMapReady, onError }: PropertyMapProps) {
   return (
-    <MapCanvas center={center} zoom={19.5} className="h-full w-full rounded-card" onMapReady={onMapReady} onError={onError} />
+    <MapCanvas
+      center={center}
+      zoom={zoom ?? 19.5}
+      className="h-full w-full rounded-card"
+      onMapReady={onMapReady}
+      onError={onError}
+    />
   )
 }

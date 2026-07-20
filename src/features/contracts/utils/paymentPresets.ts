@@ -1,29 +1,26 @@
 import type { PaymentScheduleEntryFormValues } from '../schemas/contractCreation.schema'
 
-export type PaymentPresetId = 'annuel' | 'deux_versements' | 'mensuel'
+export type PaymentPresetId = 'annuel' | 'deux_versements'
 
 export const PAYMENT_PRESET_LABELS: Record<PaymentPresetId, string> = {
-  annuel: 'Paiement annuel',
-  deux_versements: 'Deux versements',
-  mensuel: 'Mensuel',
+  annuel: 'Annuel',
+  deux_versements: 'Bi-paiement',
 }
 
-function addMonths(dateStr: string, months: number): string {
-  const date = new Date(`${dateStr}T00:00:00`)
-  date.setMonth(date.getMonth() + months)
-  return date.toISOString().slice(0, 10)
+/** Échéance la plus proche (date croissante) d'un échéancier — réutilisé partout où une "prochaine échéance" est affichée. */
+export function getNextPaymentEntry<T extends { dateEcheance: string }>(entries: T[]): T | undefined {
+  return [...entries].sort((a, b) => a.dateEcheance.localeCompare(b.dateEcheance))[0]
 }
 
-function countMonthsInclusive(dateDebut: string, dateFin: string): number {
-  const start = new Date(`${dateDebut}T00:00:00`)
-  const end = new Date(`${dateFin}T00:00:00`)
-  return Math.max(1, (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1)
-}
-
-/** Génère l'échéancier `modalitesPaiement` pour un preset donné — remplace la saisie manuelle par défaut. */
+/**
+ * Génère l'échéancier `modalitesPaiement` pour un preset donné. Tâche 11 : la date du 2e
+ * versement (Bi-paiement) est désormais une date fixe configurée dans les paramètres du
+ * Wizard (`ContractWizardDefaults.dateDeuxiemeVersement`), plus calculée à +3 mois.
+ */
 export function buildPaymentSchedule(
   preset: PaymentPresetId,
   dateDebut: string,
+  dateDeuxiemeVersement: string,
 ): PaymentScheduleEntryFormValues[] {
   switch (preset) {
     case 'annuel':
@@ -31,38 +28,27 @@ export function buildPaymentSchedule(
     case 'deux_versements':
       return [
         { description: 'Premier versement', type: 'pourcentage', valeur: '50', dateEcheance: dateDebut },
-        {
-          description: 'Second versement',
-          type: 'pourcentage',
-          valeur: '50',
-          dateEcheance: dateDebut ? addMonths(dateDebut, 3) : '',
-        },
+        { description: 'Second versement', type: 'pourcentage', valeur: '50', dateEcheance: dateDeuxiemeVersement },
       ]
-    case 'mensuel': {
-      if (!dateDebut) return []
-      const months = 5
-      const valeur = (100 / months).toFixed(2)
-      return Array.from({ length: months }, (_, index) => ({
-        description: `Versement ${index + 1}/${months}`,
-        type: 'pourcentage' as const,
-        valeur,
-        dateEcheance: addMonths(dateDebut, index),
-      }))
-    }
     default:
       return []
   }
 }
 
-/** Variante utilisée quand une date de fin de saison est connue, pour un mensuel réparti sur la durée réelle. */
-export function buildMonthlySchedule(dateDebut: string, dateFin: string): PaymentScheduleEntryFormValues[] {
-  if (!dateDebut || !dateFin) return buildPaymentSchedule('mensuel', dateDebut)
-  const months = countMonthsInclusive(dateDebut, dateFin)
-  const valeur = (100 / months).toFixed(2)
-  return Array.from({ length: months }, (_, index) => ({
-    description: `Versement ${index + 1}/${months}`,
-    type: 'pourcentage' as const,
-    valeur,
-    dateEcheance: addMonths(dateDebut, index),
-  }))
+/** Détecte quel preset correspond à l'échéancier courant — sert à surligner le sélecteur actif (tâche 11). */
+export function detectPreset(entries: { description: string }[]): PaymentPresetId | null {
+  if (entries.length === 1 && entries[0].description === 'Paiement annuel') return 'annuel'
+  if (entries.length === 2 && entries[0].description === 'Premier versement' && entries[1].description === 'Second versement') {
+    return 'deux_versements'
+  }
+  return null
+}
+
+/** Montant réel (en $) d'une échéance — pourcentage résolu contre le prix du contrat, sinon montant fixe. Partagé par `contracts.service.ts` (génération de factures) et les prévisualisations. */
+export function computeInstallmentAmount(
+  entry: { type: 'pourcentage' | 'montant'; valeur: number },
+  prix: number | null,
+): number {
+  if (entry.type === 'pourcentage') return Math.round((((prix ?? 0) * entry.valeur) / 100) * 100) / 100
+  return entry.valeur
 }

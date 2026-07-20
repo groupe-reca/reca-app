@@ -32,7 +32,7 @@ export function MobileHeader() {
   const parent = crumbs.length >= 2 ? allCrumbs[allCrumbs.length - 2] : null
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-reca-gray-light bg-white px-2 pt-[env(safe-area-inset-top)]">
+    <header className="flex h-14 shrink-0 items-center gap-2 border-b border-reca-gray-light bg-reca-white px-2 pt-[env(safe-area-inset-top)]">
       {parent ? (
         <Link
           to={parent.pathname}

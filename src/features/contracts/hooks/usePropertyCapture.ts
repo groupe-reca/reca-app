@@ -4,9 +4,11 @@ import type { Polygon } from 'geojson'
 import { supabase } from '@/lib/supabaseClient'
 import { toast } from '@/stores/toastStore'
 
+export type MapViewport = { center: [number, number]; zoom: number }
+
 export type PropertyCapture = {
   storagePath: string
-  viewport: { center: [number, number]; zoom: number }
+  viewport: MapViewport
   boundary: Polygon | null
 }
 

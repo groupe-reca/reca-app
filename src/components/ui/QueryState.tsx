@@ -32,7 +32,7 @@ export function QueryState<T>({
 
   if (isError) {
     return (
-      <div className="flex flex-col items-center gap-2 rounded-control border border-red-200 bg-red-50 px-4 py-8 text-center text-body text-red-700">
+      <div className="flex flex-col items-center gap-2 rounded-control border border-red-200 bg-red-50 px-4 py-8 text-center text-body text-red-700 dark:border-red-500/30 dark:bg-red-500/15 dark:text-red-400">
         <TriangleAlert className="size-5" aria-hidden="true" />
         {errorLabel}
       </div>

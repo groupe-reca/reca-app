@@ -32,7 +32,7 @@ export function MobileBottomNavigation() {
   return (
     <>
       <nav
-        className="flex h-16 shrink-0 items-stretch border-t border-reca-gray-light bg-white pb-[env(safe-area-inset-bottom)]"
+        className="flex h-16 shrink-0 items-stretch border-t border-reca-gray-light bg-reca-white pb-[env(safe-area-inset-bottom)]"
         aria-label="Navigation principale"
       >
         {PRIMARY_ITEMS.map((item) => (

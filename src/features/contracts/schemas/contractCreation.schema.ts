@@ -29,53 +29,47 @@ export const contractZoneSchema = z.object({
   capturedAt: z.string(),
 })
 
-export const serviceEntrySchema = z.object({
-  code: z.enum(['deneigement', 'epandage', 'soufflage', 'escaliers', 'toiture', 'autres']),
-  label: z.string(),
-  active: z.boolean(),
-  precisions: z.string().nullable(),
+export const contractPhotoSchema = z.object({
+  id: z.string(),
+  storagePath: z.string().min(1),
+  ordre: z.number(),
 })
 
-export const obligationsAnswersSchema = z.object({
-  balisesRequises: z.boolean(),
-  seuilDeclenchementCm: z.union([z.literal(2), z.literal(3), z.literal(5)]),
-  accumulationMaximaleCm: z.number().min(0).nullable(),
-  entreeLibreObligatoire: z.boolean(),
-  animaux: z.boolean(),
-  portail: z.boolean(),
-  autresParticularites: z.string(),
-})
-
-export const contractCreationSchema = z.object({
-  // Étape 1 — Client (informations générales du contrat)
-  type: z.string().optional(),
-  saison: z.string().optional(),
-  prix: optionalNumericString,
-  dateSignature: z.string().optional(),
-  dateDebut: z.string().optional(),
-  dateFin: z.string().optional(),
-  renouvellement: z.boolean().optional(),
-  notes: z.string().optional(),
-
-  // Étape 2 — Analyse de la propriété
+/**
+ * Champs communs aux 4 étapes, sans les contraintes qui ne doivent s'appliquer
+ * qu'à la finalisation (voir contractCreationSchema vs contractDraftSchema plus
+ * bas). Tâche 5 : "Client & Propriété" n'a plus de champ de formulaire propre
+ * (type/saison/dates/mode de conclusion/renouvellement viennent désormais des
+ * paramètres par défaut du Wizard, cf. `ContractWizardDefaults` — voir
+ * `contracts.service.ts`) — seule l'étape "Analyse & Zones" (désormais
+ * optionnelle, `zones`/`photos` peuvent rester vides) et "Modalités de
+ * paiement" gardent des champs de formulaire.
+ */
+const contractFieldsShape = {
+  // Analyse & Zones (optionnelle — déclenchée par "Outil de mesure")
   adresseGeocodee: z.string().optional(),
   latitude: z.number().nullable().optional(),
   longitude: z.number().nullable().optional(),
-  zones: z.array(contractZoneSchema).min(1, 'Au moins une zone doit être tracée'),
+  zones: z.array(contractZoneSchema),
+  photos: z.array(contractPhotoSchema),
 
-  // Étape 3 — Services
-  services: z.array(serviceEntrySchema),
-
-  // Étape 4 — Obligations (génère les clauses automatiquement)
-  obligations: obligationsAnswersSchema,
-
-  // Étape 5 — Paiement
-  modePaiement: z.string().min(1, 'Mode de paiement requis'),
+  // Modalités de paiement
+  prix: optionalNumericString,
+  modePaiement: z.string(),
   modalitesPaiement: z.array(paymentScheduleEntrySchema),
+  notes: z.string().optional(),
+}
+
+/** Schéma strict — utilisé pour "Créer" (finalisation). */
+export const contractCreationSchema = z.object(contractFieldsShape).extend({
+  modePaiement: z.string().min(1, 'Mode de paiement requis'),
 })
+
+/** Schéma allégé — utilisé pour "Enregistrer le brouillon", disponible dès l'étape 1 (aucune zone/échéancier requis). */
+export const contractDraftSchema = z.object(contractFieldsShape)
 
 export type PaymentScheduleEntryFormValues = z.infer<typeof paymentScheduleEntrySchema>
 export type ContractZoneFormValues = z.infer<typeof contractZoneSchema>
-export type ServiceEntryFormValues = z.infer<typeof serviceEntrySchema>
-export type ObligationsAnswersFormValues = z.infer<typeof obligationsAnswersSchema>
+export type ContractPhotoFormValues = z.infer<typeof contractPhotoSchema>
 export type ContractCreationFormValues = z.infer<typeof contractCreationSchema>
+export type ContractDraftFormValues = z.infer<typeof contractDraftSchema>

@@ -15,6 +15,7 @@ export const settingsSchema = z.object({
   tvq: numericString,
   couleurPrimaire: z.string().optional(),
   couleurSecondaire: z.string().optional(),
+  assurancePoliceNo: z.string().optional(),
 })
 
 export type SettingsFormValues = z.infer<typeof settingsSchema>

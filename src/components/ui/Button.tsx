@@ -2,31 +2,34 @@ import { forwardRef } from 'react'
 import type { ButtonHTMLAttributes } from 'react'
 import { Loader2 } from 'lucide-react'
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost'
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'info'
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: ButtonVariant
   isLoading?: boolean
+  fullWidth?: boolean
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
   primary:
     'bg-reca-red text-white hover:bg-reca-red-dark focus-visible:ring-reca-red/40 disabled:bg-reca-red/60',
   secondary:
-    'bg-white text-reca-black border border-reca-gray-light hover:bg-reca-gray-light focus-visible:ring-reca-black/20',
+    'bg-reca-white text-reca-black border border-reca-gray-light hover:bg-reca-gray-light focus-visible:ring-reca-black/20',
   ghost:
     'bg-transparent text-reca-gray-medium hover:bg-reca-gray-light focus-visible:ring-reca-black/10',
+  info:
+    'bg-reca-info text-white hover:bg-reca-info/90 focus-visible:ring-reca-info/40 disabled:bg-reca-info/60',
 }
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button(
-  { variant = 'primary', isLoading = false, disabled, className = '', children, ...props },
+  { variant = 'primary', isLoading = false, fullWidth = false, disabled, className = '', children, ...props },
   ref,
 ) {
   return (
     <button
       ref={ref}
       disabled={disabled || isLoading}
-      className={`inline-flex h-11 items-center justify-center gap-2 rounded-control px-4 text-body font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${VARIANT_CLASSES[variant]} ${className}`}
+      className={`inline-flex h-11 items-center justify-center gap-2 rounded-control px-4 text-body font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 disabled:cursor-not-allowed ${fullWidth ? 'w-full' : ''} ${VARIANT_CLASSES[variant]} ${className}`}
       {...props}
     >
       {isLoading && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}

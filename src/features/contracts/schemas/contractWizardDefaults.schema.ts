@@ -1,0 +1,26 @@
+import { z } from 'zod'
+import { DEPOT_NEIGE, MODE_CONCLUSION } from '../types/contract.types'
+import { AI_MODEL_OPTIONS_BY_PROVIDER } from '../constants/wizardOptions'
+
+export const contractWizardDefaultsSchema = z
+  .object({
+    saison: z.string().min(1, 'La saison est requise'),
+    dateDebut: z.string().min(1, 'La date de début est requise'),
+    dateFin: z.string().min(1, 'La date de fin est requise'),
+    dateDeuxiemeVersement: z.string().min(1, 'La date du deuxième versement est requise'),
+    serviceCodes: z.array(z.string()).min(1, 'Au moins un service doit être actif par défaut'),
+    seuilDeclenchementCm: z.union([z.literal(2), z.literal(3), z.literal(5)]),
+    heurePremierPassage: z.string().min(1, "L'heure limite est requise"),
+    depotNeige: z.enum(DEPOT_NEIGE),
+    modeConclusion: z.enum(MODE_CONCLUSION),
+    aiProvider: z.enum(['google', 'tokenrouter']),
+    aiModel: z.string().min(1, 'Le modèle est requis'),
+    aiPromptDetection: z.string().min(1, 'Le texte du prompt est requis'),
+    prixTaxes: z.enum(['avant_taxes', 'apres_taxes']),
+  })
+  .refine(
+    (values) => AI_MODEL_OPTIONS_BY_PROVIDER[values.aiProvider].some((option) => option.value === values.aiModel),
+    { message: "Ce modèle n'appartient pas au fournisseur IA sélectionné", path: ['aiModel'] },
+  )
+
+export type ContractWizardDefaultsFormValues = z.infer<typeof contractWizardDefaultsSchema>

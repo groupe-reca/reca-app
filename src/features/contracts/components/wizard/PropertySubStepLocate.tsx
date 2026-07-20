@@ -7,6 +7,7 @@ import type { Client } from '@/features/clients/types/client.types'
 import { geocodeAddress } from '../../services/geocoding.service'
 import type { GeocodeResult } from '../../services/geocoding.service'
 import { usePropertyCapture } from '../../hooks/usePropertyCapture'
+import type { MapViewport } from '../../hooks/usePropertyCapture'
 import { PropertyMapStage } from './PropertyMapStage'
 import { PropertyInfoPanel } from './PropertyInfoPanel'
 import type { PropertyNav } from './WizardStepProperty'
@@ -18,9 +19,11 @@ type PropertySubStepLocateProps = {
   contractId: string
   boundary: Polygon
   capturePath: string | null
+  /** Cadrage déjà capturé (persiste entre les sous-étapes) — voir `PropertyMapStage`. */
+  initialViewport: MapViewport | null
   mapUnavailable: boolean
   onMapError: (message: string) => void
-  onCaptured: (path: string) => void
+  onCaptured: (path: string, viewport: MapViewport) => void
   onGeocoded: (result: GeocodeResult | null) => void
   onContinue: () => void
   onNavChange: (nav: PropertyNav) => void
@@ -39,6 +42,7 @@ export function PropertySubStepLocate({
   contractId,
   boundary,
   capturePath,
+  initialViewport,
   mapUnavailable,
   onMapError,
   onCaptured,
@@ -90,13 +94,14 @@ export function PropertySubStepLocate({
             icon: Camera,
             onClick: () => {
               void capture().then((result) => {
-                if (result) onCaptured(result.storagePath)
+                if (result) onCaptured(result.storagePath, result.viewport)
               })
             },
             disabled: !map,
             isLoading: isCapturing,
           }
         : null,
+      immersive: showMap,
     })
     // capture/onCaptured/onContinue/onNavChange sont recréés à chaque rendu du parent —
     // seules les valeurs qui doivent réellement redéclencher un nouveau rapport de nav
@@ -104,34 +109,51 @@ export function PropertySubStepLocate({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [canContinue, showMap, map, isCapturing, boundary])
 
-  return (
-    <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)]">
-      <PropertyInfoPanel
-        client={client}
-        geocode={geocode}
-        isGeocoding={isGeocoding}
-        mapUnavailable={!isMapboxConfigured || mapUnavailable}
-        located={revealed}
-        onRecenter={() => recenter?.()}
-        recenterDisabled={!recenter}
-      />
+  const infoPanel = (
+    <PropertyInfoPanel
+      client={client}
+      geocode={geocode}
+      isGeocoding={isGeocoding}
+      mapUnavailable={!isMapboxConfigured || mapUnavailable}
+      located={revealed}
+      onRecenter={() => recenter?.()}
+      recenterDisabled={!recenter}
+    />
+  )
 
-      <PropertyMapStage
-        ready={showMap}
-        unavailableMessage={
-          !isMapboxConfigured
-            ? "Le géocodage automatique et la carte satellite nécessitent un token Mapbox (VITE_MAPBOX_TOKEN)."
-            : mapUnavailable
-              ? 'La carte est indisponible pour le moment — ajoutez les zones manuellement à la prochaine sous-étape.'
-              : "Géocodage de l'adresse du client en cours…"
-        }
-        center={center}
-        boundary={boundary}
-        onMapError={onMapError}
-        onMapReady={setMap}
-        onRevealChange={setRevealed}
-        onRecenterReady={(fn) => setRecenter(() => fn)}
-      />
+  const mapStage = (
+    <PropertyMapStage
+      ready={showMap}
+      unavailableMessage={
+        !isMapboxConfigured
+          ? "Le géocodage automatique et la carte satellite nécessitent un token Mapbox (VITE_MAPBOX_TOKEN)."
+          : mapUnavailable
+            ? 'La carte est indisponible pour le moment — ajoutez les zones manuellement à la prochaine sous-étape.'
+            : "Géocodage de l'adresse du client en cours…"
+      }
+      center={center}
+      boundary={boundary}
+      initialViewport={initialViewport}
+      onMapError={onMapError}
+      onMapReady={setMap}
+      onRevealChange={setRevealed}
+      onRecenterReady={(fn) => setRecenter(() => fn)}
+    />
+  )
+
+  if (!showMap) {
+    return (
+      <div className="grid h-full grid-cols-1 gap-4 px-4 pb-4 sm:px-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,7fr)] lg:px-8">
+        {infoPanel}
+        {mapStage}
+      </div>
+    )
+  }
+
+  return (
+    <div className="relative h-full w-full">
+      <div className="absolute inset-0">{mapStage}</div>
+      <div className="absolute left-4 top-4 z-20 w-80 max-h-[calc(100%-2rem)] overflow-y-auto">{infoPanel}</div>
     </div>
   )
 }

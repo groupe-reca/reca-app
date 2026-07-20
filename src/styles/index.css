@@ -5,13 +5,18 @@
 @import "@fontsource/manrope/600.css";
 @import "@fontsource/manrope/700.css";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --font-sans: "Manrope", system-ui, sans-serif;
 
   /* Placeholder brand palette — swap once exact "Rouge RECA" hex is confirmed. */
   --color-reca-red: #ed1c24;
   --color-reca-red-dark: #c8151c;
+  /* Theme-reactive tokens (light defaults here, redefined under `.dark` below —
+     redefining the CSS variable is enough, no `dark:` utility needed at call sites). */
   --color-reca-black: #111111;
+  --color-reca-white: #ffffff;
   --color-reca-snow: #fafbfc;
   --color-reca-gray-light: #e5e7eb;
   --color-reca-gray-medium: #6b7280;
@@ -24,6 +29,9 @@
   --radius-card: 16px;
   --radius-modal: 20px;
 
+  --shadow-card: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  --shadow-floating: 0 4px 12px rgba(15, 23, 42, 0.1), 0 16px 40px rgba(15, 23, 42, 0.16);
+
   --text-h1: 36px;
   --text-section: 24px;
   --text-subtitle: 18px;
@@ -31,9 +39,25 @@
   --text-label: 13px;
 }
 
+/*
+ * Thème sombre (tâche "Optimisation UI v3") — sombre par défaut (voir `index.html`,
+ * classe `dark` posée sur `<html>`), bascule vers clair possible depuis
+ * Paramètres > Préférences (`useTheme`). Seuls les tokens de surface/texte/bordure
+ * sont redéfinis ici ; la marque (rouge, succès/attention/info) et la Sidebar
+ * (`--color-reca-night-blue`) restent constants dans les deux thèmes.
+ */
+.dark {
+  --color-reca-black: #f1f5f9;
+  --color-reca-white: #131b2e;
+  --color-reca-snow: #0b1220;
+  --color-reca-gray-light: rgba(255, 255, 255, 0.08);
+  --color-reca-gray-medium: #94a3b8;
+}
+
 body {
   font-family: var(--font-sans);
   color: var(--color-reca-black);
+  background-color: var(--color-reca-snow);
 }
 
 /*

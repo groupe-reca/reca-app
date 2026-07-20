@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { useWatch } from 'react-hook-form'
 import type { Control, UseFormSetValue } from 'react-hook-form'
 import { isMapboxConfigured } from '@/lib/mapboxClient'
-import type { ContractCreationFormValues, ContractZoneFormValues } from '../schemas/contractCreation.schema'
+import type { ContractCreationFormValues, ContractPhotoFormValues, ContractZoneFormValues } from '../schemas/contractCreation.schema'
 import type { GeocodeResult } from '../services/geocoding.service'
+import type { MapViewport } from './usePropertyCapture'
 import { buildDemoBoundary } from '../utils/propertyBoundary'
 import type { PropertyNav } from '../components/wizard/WizardStepProperty'
 
@@ -39,8 +40,10 @@ export function usePropertyStepState({
   const [subStep, setSubStep] = useState<PropertySubStep>('locate')
   const [geocode, setGeocode] = useState<GeocodeResult | null>(null)
   const [capturePath, setCapturePath] = useState<string | null>(null)
+  const [viewport, setViewport] = useState<MapViewport | null>(null)
   const [mapError, setMapError] = useState<string | null>(null)
   const zones = useWatch({ control, name: 'zones' }) ?? []
+  const photos = useWatch({ control, name: 'photos' }) ?? []
   const mapUnavailable = !isMapboxConfigured || Boolean(mapError)
 
   useEffect(() => {
@@ -61,8 +64,24 @@ export function usePropertyStepState({
     setValue('longitude', result?.lng ?? null)
   }
 
+  function handleCaptured(path: string, capturedViewport: MapViewport) {
+    setCapturePath(path)
+    setViewport(capturedViewport)
+  }
+
   function addZone(zone: ContractZoneFormValues) {
     setValue('zones', [...zones, zone], { shouldValidate: true })
+  }
+
+  /**
+   * Ajout groupé (détection automatique, tâche 1) — plusieurs appels synchrones à
+   * `addZone` dans une boucle liraient tous la même valeur `zones` figée (fermeture
+   * React state non encore réconciliée entre les appels), et seul le dernier
+   * survivrait : bug réel observé en test (3 zones tracées sur la carte, 1 seule dans
+   * le formulaire). Une unique mise à jour d'état avec tout le lot évite ce problème.
+   */
+  function addZones(newZones: ContractZoneFormValues[]) {
+    setValue('zones', [...zones, ...newZones], { shouldValidate: true })
   }
 
   function updateZone(id: string, patch: Partial<ContractZoneFormValues>) {
@@ -81,6 +100,18 @@ export function usePropertyStepState({
     )
   }
 
+  function addPhoto(photo: ContractPhotoFormValues) {
+    setValue('photos', [...photos, photo], { shouldValidate: true })
+  }
+
+  function removePhoto(id: string) {
+    setValue(
+      'photos',
+      photos.filter((photo) => photo.id !== id),
+      { shouldValidate: true },
+    )
+  }
+
   const center: [number, number] = useMemo(() => (geocode ? [geocode.lng, geocode.lat] : QUEBEC_CENTER), [geocode])
   const currentIndex = SUB_STEP_ORDER.indexOf(subStep)
 
@@ -94,16 +125,22 @@ export function usePropertyStepState({
     geocode,
     capturePath,
     setCapturePath,
+    viewport,
     mapError,
     setMapError,
     zones,
+    photos,
     mapUnavailable,
     center,
     boundary,
     currentIndex,
     handleGeocoded,
+    handleCaptured,
     addZone,
+    addZones,
     updateZone,
     removeZone,
+    addPhoto,
+    removePhoto,
   }
 }

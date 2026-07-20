@@ -1,9 +1,16 @@
 import { useMemo, useRef, useState } from 'react'
 import { Mail, Phone, Plus, Search } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { formatAddress, formatPhone } from '@/lib/format'
 import { useClients } from '../hooks/useClients'
 import { ClientFormModal } from './ClientFormModal'
 import type { Client } from '../types/client.types'
+
+const CLIENT_TYPE_BADGE: Record<string, { label: string; color: 'blue' | 'orange' }> = {
+  residentiel: { label: 'Résidentiel', color: 'blue' },
+  commercial: { label: 'Commercial', color: 'orange' },
+}
 
 type ClientSearchPickerProps = {
   value: Client | null
@@ -49,7 +56,14 @@ export function ClientSearchPicker({ value, onChange }: ClientSearchPickerProps)
     return (
       <Card>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-subtitle font-semibold text-reca-black">Client</h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-subtitle font-semibold text-reca-black">Client</h2>
+            {value.typeClient && CLIENT_TYPE_BADGE[value.typeClient] && (
+              <Badge color={CLIENT_TYPE_BADGE[value.typeClient].color} size="sm">
+                {CLIENT_TYPE_BADGE[value.typeClient].label}
+              </Badge>
+            )}
+          </div>
           <button
             type="button"
             onClick={() => setOpen(true)}
@@ -73,10 +87,12 @@ export function ClientSearchPicker({ value, onChange }: ClientSearchPickerProps)
               {value.prenom} {value.nom}
               {value.entreprise && <span className="text-reca-gray-medium"> — {value.entreprise}</span>}
             </p>
-            <p className="text-reca-gray-medium">{value.adresse ?? 'Adresse non renseignée'}</p>
+            <p className="text-reca-gray-medium">
+              {formatAddress(value.adresse, value.ville, value.codePostal) || 'Adresse non renseignée'}
+            </p>
             <div className="flex items-center gap-2 text-reca-gray-medium">
               <Phone className="size-4" aria-hidden="true" />
-              {value.telephone ?? '—'}
+              {formatPhone(value.telephone) || '—'}
             </div>
             <div className="flex items-center gap-2 text-reca-gray-medium">
               <Mail className="size-4" aria-hidden="true" />
@@ -136,7 +152,7 @@ function SearchInput({ query, setQuery, onFocus, autoFocus }: SearchInputProps) 
         value={query}
         onChange={(event) => setQuery(event.target.value)}
         onFocus={onFocus}
-        className="h-11 w-full rounded-control border border-reca-gray-light bg-white pl-9 pr-3 text-body text-reca-black placeholder:text-reca-gray-medium/70 focus:outline-none focus:ring-2 focus:ring-reca-red/30"
+        className="h-11 w-full rounded-control border border-reca-gray-light bg-reca-white pl-9 pr-3 text-body text-reca-black placeholder:text-reca-gray-medium/70 focus:outline-none focus:ring-2 focus:ring-reca-red/30"
       />
     </div>
   )
@@ -150,7 +166,7 @@ type ResultsListProps = {
 
 function ResultsList({ results, onSelect, onAddNew }: ResultsListProps) {
   return (
-    <div className="relative z-10 mt-1 flex flex-col gap-1 rounded-control border border-reca-gray-light bg-white p-1 shadow-lg">
+    <div className="relative z-10 mt-1 flex flex-col gap-1 rounded-control border border-reca-gray-light bg-reca-white p-1 shadow-lg">
       {results.length === 0 && (
         <p className="px-3 py-2 text-label text-reca-gray-medium">Aucun client trouvé.</p>
       )}
@@ -158,6 +174,7 @@ function ResultsList({ results, onSelect, onAddNew }: ResultsListProps) {
         <button
           key={client.id}
           type="button"
+          onMouseDown={(event) => event.preventDefault()}
           onClick={() => onSelect(client)}
           className="flex flex-col rounded-control px-3 py-2 text-left hover:bg-reca-snow"
         >
@@ -172,6 +189,7 @@ function ResultsList({ results, onSelect, onAddNew }: ResultsListProps) {
       ))}
       <button
         type="button"
+        onMouseDown={(event) => event.preventDefault()}
         onClick={onAddNew}
         className="flex items-center gap-2 rounded-control border-t border-reca-gray-light px-3 py-2 text-left text-body font-medium text-reca-red hover:bg-reca-snow"
       >

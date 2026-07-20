@@ -5,6 +5,7 @@ import { PropertyMapStage } from '../wizard/PropertyMapStage'
 import { PolygonEditor } from '../wizard/PolygonEditor'
 import { ZoneNamingModal } from '../wizard/ZoneNamingModal'
 import { useDelineateState } from '../../hooks/useDelineateState'
+import type { MapViewport } from '../../hooks/usePropertyCapture'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
 import type { PropertyNav } from '../wizard/WizardStepProperty'
 import { PropertyZonesSheet } from './PropertyZonesSheet'
@@ -12,15 +13,22 @@ import { ZoneToolbarFloating } from './ZoneToolbarFloating'
 import { ZoneDetailSheet } from './ZoneDetailSheet'
 
 type MobilePropertySubStepDelineateProps = {
+  contractId: string
   center: [number, number]
   boundary: Polygon
   capturePath: string | null
+  /** Cadrage déjà capturé à Localiser (persiste ici) — voir `PropertyMapStage`. */
+  initialViewport: MapViewport | null
   mapUnavailable: boolean
   onMapError: (message: string) => void
   zones: ContractZoneFormValues[]
   onAddZone: (zone: ContractZoneFormValues) => void
+  /** Ajout groupé (détection automatique) — une seule mise à jour d'état pour tout le lot, voir `usePropertyStepState.addZones`. */
+  onAddZones: (zones: ContractZoneFormValues[]) => void
   onUpdateZone: (id: string, patch: Partial<ContractZoneFormValues>) => void
   onRemoveZone: (id: string) => void
+  /** Reporte la nouvelle capture prise en quittant Délimiter (tâche 8) — voir `useDelineateState`. */
+  onCaptured: (path: string, viewport: MapViewport) => void
   onContinue: () => void
   onNavChange: (nav: PropertyNav) => void
 }
@@ -33,15 +41,19 @@ type MobilePropertySubStepDelineateProps = {
  * `ZoneDetailSheet` (nom/surface réels + placeholder services/notes/photos/priorité).
  */
 export function MobilePropertySubStepDelineate({
+  contractId,
   center,
   boundary,
   capturePath,
+  initialViewport,
   mapUnavailable,
   onMapError,
   zones,
   onAddZone,
+  onAddZones,
   onUpdateZone,
   onRemoveZone,
+  onCaptured,
   onContinue,
   onNavChange,
 }: MobilePropertySubStepDelineateProps) {
@@ -68,7 +80,23 @@ export function MobilePropertySubStepDelineate({
     handleZoomZone,
     handleModeChange,
     addManualZone,
-  } = useDelineateState({ mapUnavailable, capturePath, zones, onAddZone, onUpdateZone, onRemoveZone, onContinue, onNavChange })
+    isAnalyzing,
+    handleAutoDetect,
+  } = useDelineateState({
+    contractId,
+    boundary,
+    mapUnavailable,
+    capturePath,
+    viewport: initialViewport,
+    zones,
+    onAddZone,
+    onAddZones,
+    onUpdateZone,
+    onRemoveZone,
+    onCaptured,
+    onContinue,
+    onNavChange,
+  })
 
   function handleSelectZone(id: string) {
     setSelectedZoneId(id)
@@ -88,6 +116,7 @@ export function MobilePropertySubStepDelineate({
         unavailableMessage="La carte est indisponible pour le moment — ajoutez les zones manuellement dans la feuille du bas."
         center={center}
         boundary={boundary}
+        initialViewport={initialViewport}
         onMapError={onMapError}
         onMapReady={handleMapReady}
         onRecenterReady={(fn) => setRecenter(() => fn)}
@@ -112,6 +141,9 @@ export function MobilePropertySubStepDelineate({
           onDelete={() => selectedZoneId && handleDeleteZone(selectedZoneId)}
           onRecenter={() => recenter?.()}
           recenterDisabled={!recenter}
+          onAutoDetect={handleAutoDetect}
+          autoDetectDisabled={!capturePath || mode !== 'idle' || pendingZone !== null}
+          isAnalyzing={isAnalyzing}
         />
       )}
 

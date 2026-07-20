@@ -1,24 +1,25 @@
 import type { ReactNode } from 'react'
+import { STATUS_BG_CLASSES, STATUS_TEXT_CLASSES } from './statusColors'
+import type { StatusColor } from './statusColors'
 
-export type BadgeColor = 'gray' | 'red' | 'green' | 'orange' | 'blue'
+export type BadgeColor = StatusColor
+export type BadgeSize = 'sm' | 'md'
 
-const COLOR_CLASSES: Record<BadgeColor, string> = {
-  gray: 'bg-reca-gray-light text-reca-gray-medium',
-  red: 'bg-red-50 text-reca-red',
-  green: 'bg-green-50 text-reca-success',
-  orange: 'bg-orange-50 text-reca-warning',
-  blue: 'bg-blue-50 text-reca-info',
+const SIZE_CLASSES: Record<BadgeSize, string> = {
+  sm: 'px-2 py-0.5 text-xs',
+  md: 'px-2.5 py-1 text-label',
 }
 
 type BadgeProps = {
   color?: BadgeColor
+  size?: BadgeSize
   children: ReactNode
 }
 
-export function Badge({ color = 'gray', children }: BadgeProps) {
+export function Badge({ color = 'gray', size = 'md', children }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-1 text-label font-medium ${COLOR_CLASSES[color]}`}
+      className={`inline-flex items-center rounded-full font-medium ${STATUS_BG_CLASSES[color]} ${STATUS_TEXT_CLASSES[color]} ${SIZE_CLASSES[size]}`}
     >
       {children}
     </span>

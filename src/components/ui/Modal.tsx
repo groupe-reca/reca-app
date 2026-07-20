@@ -49,7 +49,7 @@ export function Modal({ open, onClose, title, children }: ModalProps) {
             animate={isMobile ? { y: 0 } : { opacity: 1, scale: 1 }}
             exit={isMobile ? { y: '100%' } : { opacity: 0, scale: 0.96 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className="max-h-[90dvh] w-full overflow-y-auto rounded-t-modal bg-white p-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] shadow-lg sm:max-h-[85vh] sm:max-w-lg sm:rounded-modal sm:pb-6"
+            className="max-h-[90dvh] w-full overflow-y-auto rounded-t-modal bg-reca-white p-6 pb-[calc(env(safe-area-inset-bottom)+1.5rem)] shadow-lg sm:max-h-[85vh] sm:max-w-lg sm:rounded-modal sm:pb-6"
           >
             <div className="mb-4 flex items-center justify-between">
               <h2 id="modal-title" className="text-subtitle font-semibold text-reca-black">

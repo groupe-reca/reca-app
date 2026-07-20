@@ -38,16 +38,21 @@ export function MobileWizardStepProperty({
     subStep,
     setSubStep,
     capturePath,
-    setCapturePath,
+    viewport,
     mapUnavailable,
     setMapError,
     zones,
+    photos,
     center,
     boundary,
     handleGeocoded,
+    handleCaptured,
     addZone,
+    addZones,
     updateZone,
     removeZone,
+    addPhoto,
+    removePhoto,
   } = usePropertyStepState({ control, setValue, onCompletionChange, onNavChange, onAdvanceStep })
 
   return (
@@ -58,9 +63,10 @@ export function MobileWizardStepProperty({
           contractId={contractId}
           boundary={boundary}
           capturePath={capturePath}
+          initialViewport={viewport}
           mapUnavailable={mapUnavailable}
           onMapError={setMapError}
-          onCaptured={setCapturePath}
+          onCaptured={handleCaptured}
           onGeocoded={handleGeocoded}
           onContinue={() => setSubStep('delineate')}
           onNavChange={onNavChange}
@@ -68,22 +74,33 @@ export function MobileWizardStepProperty({
       )}
       {subStep === 'delineate' && (
         <MobilePropertySubStepDelineate
+          contractId={contractId}
           center={center}
           boundary={boundary}
           capturePath={capturePath}
+          initialViewport={viewport}
           mapUnavailable={mapUnavailable}
           onMapError={setMapError}
           zones={zones}
           onAddZone={addZone}
+          onAddZones={addZones}
           onUpdateZone={updateZone}
           onRemoveZone={removeZone}
+          onCaptured={handleCaptured}
           onContinue={() => setSubStep('validate')}
           onNavChange={onNavChange}
         />
       )}
       {subStep === 'validate' && (
         <div className="h-full overflow-y-auto p-4">
-          <PropertySubStepValidate zones={zones} capturePath={capturePath} />
+          <PropertySubStepValidate
+            zones={zones}
+            capturePath={capturePath}
+            contractId={contractId}
+            photos={photos}
+            onAddPhoto={addPhoto}
+            onRemovePhoto={removePhoto}
+          />
         </div>
       )}
     </div>

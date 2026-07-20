@@ -7,6 +7,7 @@ import type { Client } from '@/features/clients/types/client.types'
 import { geocodeAddress } from '../../services/geocoding.service'
 import type { GeocodeResult } from '../../services/geocoding.service'
 import { usePropertyCapture } from '../../hooks/usePropertyCapture'
+import type { MapViewport } from '../../hooks/usePropertyCapture'
 import { PropertyMapStage } from '../wizard/PropertyMapStage'
 import type { PropertyNav } from '../wizard/WizardStepProperty'
 import { PropertyInfoSheet } from './PropertyInfoSheet'
@@ -18,9 +19,11 @@ type MobilePropertySubStepLocateProps = {
   contractId: string
   boundary: Polygon
   capturePath: string | null
+  /** Cadrage déjà capturé (persiste entre les sous-étapes) — voir `PropertyMapStage`. */
+  initialViewport: MapViewport | null
   mapUnavailable: boolean
   onMapError: (message: string) => void
-  onCaptured: (path: string) => void
+  onCaptured: (path: string, viewport: MapViewport) => void
   onGeocoded: (result: GeocodeResult | null) => void
   onContinue: () => void
   onNavChange: (nav: PropertyNav) => void
@@ -38,6 +41,7 @@ export function MobilePropertySubStepLocate({
   contractId,
   boundary,
   capturePath,
+  initialViewport,
   mapUnavailable,
   onMapError,
   onCaptured,
@@ -87,7 +91,7 @@ export function MobilePropertySubStepLocate({
             icon: Camera,
             onClick: () => {
               void capture().then((result) => {
-                if (result) onCaptured(result.storagePath)
+                if (result) onCaptured(result.storagePath, result.viewport)
               })
             },
             disabled: !map,
@@ -111,6 +115,7 @@ export function MobilePropertySubStepLocate({
         }
         center={center}
         boundary={boundary}
+        initialViewport={initialViewport}
         onMapError={onMapError}
         onMapReady={setMap}
         onRevealChange={setRevealed}

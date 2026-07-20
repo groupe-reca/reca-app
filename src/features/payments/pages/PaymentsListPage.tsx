@@ -1,4 +1,4 @@
-import { PaymentTable } from '../components/PaymentTable'
+import { PaymentsListContent } from '../components/PaymentsListContent'
 import { usePayments } from '../hooks/usePayments'
 
 export function PaymentsListPage() {
@@ -11,7 +11,7 @@ export function PaymentsListPage() {
         <p className="text-body text-reca-gray-medium">Historique des paiements reçus.</p>
       </div>
 
-      <PaymentTable payments={payments} isLoading={isLoading} isError={isError} />
+      <PaymentsListContent payments={payments} isLoading={isLoading} isError={isError} />
     </div>
   )
 }

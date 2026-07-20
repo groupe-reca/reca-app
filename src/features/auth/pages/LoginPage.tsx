@@ -9,7 +9,7 @@ export function LoginPage() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.25, ease: 'easeOut' }}
-        className="w-full max-w-[420px] rounded-card border border-reca-gray-light bg-white p-8 shadow-sm"
+        className="w-full max-w-[420px] rounded-card border border-reca-gray-light bg-reca-white p-8 shadow-sm"
       >
         <div className="mb-6 flex flex-col items-center text-center">
           <img src={logo} alt="Groupe RECA" className="mb-4 h-24 w-auto object-contain" />

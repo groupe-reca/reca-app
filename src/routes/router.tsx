@@ -17,8 +17,10 @@ import { ClientCreatePage } from '@/features/clients/pages/ClientCreatePage'
 import { ClientDetailPage } from '@/features/clients/pages/ClientDetailPage'
 import { ClientsListPage } from '@/features/clients/pages/ClientsListPage'
 import { ContractWizardPage } from '@/features/contracts/pages/ContractWizardPage'
+import { ContractCreatedPage } from '@/features/contracts/pages/ContractCreatedPage'
 import { ContractDetailPage } from '@/features/contracts/pages/ContractDetailPage'
 import { ContractsListPage } from '@/features/contracts/pages/ContractsListPage'
+import { ContractWizardSettingsPage } from '@/features/contracts/pages/ContractWizardSettingsPage'
 import { InvoiceCreatePage } from '@/features/invoices/pages/InvoiceCreatePage'
 import { InvoiceDetailPage } from '@/features/invoices/pages/InvoiceDetailPage'
 import { InvoicesListPage } from '@/features/invoices/pages/InvoicesListPage'
@@ -70,7 +72,7 @@ export const router = createBrowserRouter([
             children: [
               { path: 'clients', element: <ClientsListPage />, handle: { breadcrumb: 'Clients' } },
               { path: 'clients/new', element: <ClientCreatePage />, handle: { breadcrumb: 'Nouveau client' } },
-              { path: 'clients/:id', element: <ClientDetailPage />, handle: { breadcrumb: 'Détail' } },
+              { path: 'clients/:id', element: <ClientDetailPage />, handle: { breadcrumb: 'Détail client' } },
             ],
           },
           {
@@ -88,6 +90,21 @@ export const router = createBrowserRouter([
                     handle: { breadcrumb: 'Nouveau contrat', hideMobileNav: true },
                   },
                   { path: ':id', element: <ContractDetailPage />, handle: { breadcrumb: 'Détail' } },
+                  {
+                    path: ':id/created',
+                    element: <ContractCreatedPage />,
+                    handle: { breadcrumb: 'Contrat enregistré', hideMobileNav: true },
+                  },
+                  {
+                    element: <RequireRole roles={['administrateur']} />,
+                    children: [
+                      {
+                        path: 'parametres',
+                        element: <ContractWizardSettingsPage />,
+                        handle: { breadcrumb: 'Paramètres du Wizard' },
+                      },
+                    ],
+                  },
                 ],
               },
             ],
@@ -97,7 +114,7 @@ export const router = createBrowserRouter([
             children: [
               { path: 'invoices', element: <InvoicesListPage />, handle: { breadcrumb: 'Factures' } },
               { path: 'invoices/new', element: <InvoiceCreatePage />, handle: { breadcrumb: 'Nouvelle facture' } },
-              { path: 'invoices/:id', element: <InvoiceDetailPage />, handle: { breadcrumb: 'Détail' } },
+              { path: 'invoices/:id', element: <InvoiceDetailPage />, handle: { breadcrumb: 'Détail facture' } },
             ],
           },
           {

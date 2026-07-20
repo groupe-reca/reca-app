@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { Building2, Image, Mail, MapPin, Palette, Percent, Phone } from 'lucide-react'
+import { Building2, Image, Mail, MapPin, Palette, Percent, Phone, Shield } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { settingsSchema } from '../schemas/settings.schema'
@@ -31,6 +31,7 @@ export function CompanySettingsForm({ settings, isSubmitting, onSubmit }: Compan
       tvq: String(settings.taxes.tvq),
       couleurPrimaire: settings.couleurs.primaire,
       couleurSecondaire: settings.couleurs.secondaire,
+      assurancePoliceNo: settings.assurancePoliceNo ?? '',
     },
   })
 
@@ -45,6 +46,12 @@ export function CompanySettingsForm({ settings, isSubmitting, onSubmit }: Compan
         <Input label="Téléphone" icon={Phone} error={errors.telephone?.message} {...register('telephone')} />
         <Input label="Courriel" icon={Mail} error={errors.courriel?.message} {...register('courriel')} />
       </div>
+      <Input
+        label="N° de police d'assurance responsabilité civile"
+        icon={Shield}
+        error={errors.assurancePoliceNo?.message}
+        {...register('assurancePoliceNo')}
+      />
       <div className="grid grid-cols-2 gap-4">
         <Input
           label="TPS (%)"
@@ -76,7 +83,7 @@ export function CompanySettingsForm({ settings, isSubmitting, onSubmit }: Compan
             <input
               id="couleurPrimaire"
               type="color"
-              className="h-11 w-full rounded-control border border-reca-gray-light bg-white pl-9 pr-3"
+              className="h-11 w-full rounded-control border border-reca-gray-light bg-reca-white pl-9 pr-3"
               {...register('couleurPrimaire')}
             />
           </div>
@@ -93,7 +100,7 @@ export function CompanySettingsForm({ settings, isSubmitting, onSubmit }: Compan
             <input
               id="couleurSecondaire"
               type="color"
-              className="h-11 w-full rounded-control border border-reca-gray-light bg-white pl-9 pr-3"
+              className="h-11 w-full rounded-control border border-reca-gray-light bg-reca-white pl-9 pr-3"
               {...register('couleurSecondaire')}
             />
           </div>

@@ -1,31 +1,66 @@
 import { useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router'
-import { Pencil, Trash2 } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
-import { Card } from '@/components/ui/Card'
-import { Dropdown, DropdownItem } from '@/components/ui/Dropdown'
-import { InvoiceStatusBadge } from '@/features/invoices/components/InvoiceStatusBadge'
+import { useNavigate, useParams } from 'react-router'
+import { QueryState } from '@/components/ui/QueryState'
+import { SendEmailModal } from '@/components/email/SendEmailModal'
+import { useClient } from '@/features/clients/hooks/useClient'
 import { useContractInvoices } from '@/features/invoices/hooks/useContractInvoices'
-import { formatCurrency } from '@/lib/format'
-import { useContract } from '../../hooks/useContract'
-import { useDeleteContract } from '../../hooks/useDeleteContract'
-import { useUpdateContractStatus } from '../../hooks/useUpdateContractStatus'
+import { usePaymentsByContract } from '@/features/payments/hooks/usePaymentsByContract'
+import { useSettings } from '@/features/settings/hooks/useSettings'
+import { toast } from '@/stores/toastStore'
 import { ContractFormModal } from '../../components/ContractFormModal'
-import { ContractStatusBadge } from '../../components/ContractStatusBadge'
-import { CONTRACT_STATUSES, CONTRACT_STATUS_LABELS } from '../../types/contract.types'
+import { ContractDetailHeader } from '../../components/detail/ContractDetailHeader'
+import { ContractInfoStrip } from '../../components/detail/ContractInfoStrip'
+import { ContractMapCard } from '../../components/detail/ContractMapCard'
+import { ContractOperatorInfoCard } from '../../components/detail/ContractOperatorInfoCard'
+import { ContractClausesCard } from '../../components/detail/ContractClausesCard'
+import { ContractClientCard } from '../../components/detail/ContractClientCard'
+import { ContractPaymentsCard } from '../../components/detail/ContractPaymentsCard'
+import { ContractNotesCard } from '../../components/detail/ContractNotesCard'
+import { ContractHistoryCard } from '../../components/detail/ContractHistoryCard'
+import { useContract } from '../../hooks/useContract'
+import { useContractZones } from '../../hooks/useContractZones'
+import { useDeleteContract } from '../../hooks/useDeleteContract'
+import { useLogContractEvent } from '../../hooks/useLogContractEvent'
+import { useSignedCaptureUrl } from '../../hooks/useSignedCaptureUrl'
+import { useUpdateContractStatus } from '../../hooks/useUpdateContractStatus'
+import { mapZoneRowToFormValues } from '../../services/contracts.service'
 
-/** Contenu Desktop/Tablette — inchangé, seulement déplacé/renommé depuis `ContractDetailPage.tsx` (sprint012). */
+/** Refonte complète (tâche 9, restyle maquette v2) — mêmes composants `detail/` que la version Mobile, seule la composition en grille change. */
 export function DesktopContractDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
-  const { data: contract, isLoading } = useContract(id)
+  const { data: contract, isLoading, isError } = useContract(id)
+  const { data: zoneRows } = useContractZones(id)
+  const { data: invoices } = useContractInvoices(id)
+  const { data: payments } = usePaymentsByContract(id)
+  const { data: settings } = useSettings()
+  const { data: fullClient } = useClient(contract?.clientId ?? '')
+  const zones = (zoneRows ?? []).map(mapZoneRowToFormValues)
+  const imageUrl = useSignedCaptureUrl(zones[0]?.imageStoragePath)
   const updateStatus = useUpdateContractStatus(id)
   const deleteContract = useDeleteContract()
-  const { data: invoices } = useContractInvoices(id)
+  const logEvent = useLogContractEvent(id)
   const [editOpen, setEditOpen] = useState(false)
+  const [emailOpen, setEmailOpen] = useState(false)
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
 
-  if (isLoading || !contract) {
-    return <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
+  function handleOpenEmail() {
+    if (!contract || !settings || !fullClient) return
+    setEmailOpen(true)
+  }
+
+  async function handleDownloadPdf() {
+    if (!contract || !settings || !fullClient) return
+    setIsDownloadingPdf(true)
+    try {
+      const { generateContractPdf } = await import('../../pdf/generateContractPdf')
+      await generateContractPdf({ contract, client: fullClient, zones, settings, imageUrl })
+      logEvent.mutate({ type: 'pdf_genere' })
+    } catch {
+      toast.error('Impossible de générer le PDF du contrat.')
+    } finally {
+      setIsDownloadingPdf(false)
+    }
   }
 
   function handleDelete() {
@@ -34,124 +69,66 @@ export function DesktopContractDetailPage() {
     deleteContract.mutate(contract.id, { onSuccess: () => navigate('/contracts') })
   }
 
+  function handleCancelContract() {
+    if (!contract) return
+    if (!window.confirm(`Annuler le contrat ${contract.numero} ?`)) return
+    updateStatus.mutate('annule')
+  }
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-label text-reca-gray-medium">{contract.numero}</p>
-          <h1 className="text-section font-semibold text-reca-black">
-            {contract.type ?? 'Contrat'} {contract.saison ? `— ${contract.saison}` : ''}
-          </h1>
-          <div className="mt-2">
-            <ContractStatusBadge status={contract.statut} />
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => setEditOpen(true)}>
-            <Pencil className="size-4" aria-hidden="true" />
-            Modifier
-          </Button>
-          <Dropdown trigger={<Button variant="ghost">Statut</Button>}>
-            {CONTRACT_STATUSES.map((status) => (
-              <DropdownItem key={status} onClick={() => updateStatus.mutate(status)}>
-                {CONTRACT_STATUS_LABELS[status]}
-              </DropdownItem>
-            ))}
-          </Dropdown>
-          <Button variant="ghost" onClick={handleDelete}>
-            <Trash2 className="size-4" aria-hidden="true" />
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Card>
-          <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Détails</h2>
-          <div className="flex flex-col gap-2 text-body text-reca-gray-medium">
-            <p>Prix : {contract.prix != null ? formatCurrency(contract.prix) : '—'}</p>
-            <p>Signature : {contract.dateSignature ?? '—'}</p>
-            <p>Début : {contract.dateDebut ?? '—'}</p>
-            <p>Fin : {contract.dateFin ?? '—'}</p>
-            <p>Renouvellement automatique : {contract.renouvellement ? 'Oui' : 'Non'}</p>
-            <p>Notes : {contract.notes ?? '—'}</p>
-          </div>
-        </Card>
-
-        <Card>
-          <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Client</h2>
-          {contract.client ? (
-            <p className="text-body text-reca-gray-medium">
-              <Link to={`/clients/${contract.client.id}`} className="text-reca-red hover:underline">
-                {contract.client.prenom} {contract.client.nom} ({contract.client.numero})
-              </Link>
-            </p>
-          ) : (
-            <p className="text-body text-reca-gray-medium">Aucun client associé.</p>
-          )}
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Card>
-          <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Clauses du contrat</h2>
-          <div className="flex flex-col gap-2 text-body text-reca-gray-medium">
-            <p>Zone desservie : {contract.zoneDesservie}</p>
-            <p>Superficie : {contract.superficie != null ? `${contract.superficie} m²` : '—'}</p>
-            <p>Exclusions : {contract.exclusions}</p>
-            <p>Seuil de déclenchement : {contract.seuilDeclenchementCm} cm</p>
-            <p>Premier passage garanti : {contract.heurePremierPassage}</p>
-            <p>Nettoyage final : {contract.nettoyageFinal}</p>
-            <p>Distance de sécurité : {contract.distanceSecuriteCm} cm</p>
-            <p>Balises requises : {contract.balisesRequises ? 'Oui' : 'Non'}</p>
-            <p>Obligations du client : {contract.obligationsClient}</p>
-            <p>Responsabilités : {contract.responsabilites}</p>
-          </div>
-        </Card>
-
-        <Card>
-          <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Échéancier de paiement</h2>
-          {contract.modalitesPaiement.length > 0 ? (
-            <div className="flex flex-col gap-2">
-              {contract.modalitesPaiement.map((entry, index) => (
-                <div key={index} className="flex items-center justify-between text-body text-reca-gray-medium">
-                  <span>{entry.description || 'Échéance'}</span>
-                  <span>
-                    {entry.type === 'pourcentage' ? `${entry.valeur}%` : formatCurrency(entry.valeur)}
-                    {entry.dateEcheance && ` — ${entry.dateEcheance}`}
-                  </span>
-                </div>
-              ))}
+    <QueryState
+      isLoading={isLoading}
+      isError={isError}
+      data={contract}
+      errorLabel="Impossible de charger ce contrat."
+    >
+      {(contractData) => {
+        return (
+          <div className="flex flex-col gap-6">
+            <ContractDetailHeader
+              contract={contractData}
+              onEdit={() => setEditOpen(true)}
+              onEmail={handleOpenEmail}
+              onDownloadPdf={handleDownloadPdf}
+              onCancelContract={handleCancelContract}
+              onChangeStatus={(status) => updateStatus.mutate(status)}
+              onDelete={handleDelete}
+              onResumeDraft={() => navigate(`/contracts/new?draftId=${contractData.id}`)}
+              isCancelling={updateStatus.isPending}
+              isDownloadingPdf={isDownloadingPdf}
+            />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <ContractInfoStrip contract={contractData} />
+              <ContractClientCard client={contractData.client} />
+              <ContractMapCard zones={zones} />
             </div>
-          ) : (
-            <p className="text-body text-reca-gray-medium">Aucune échéance.</p>
-          )}
-        </Card>
-      </div>
-
-      <Card>
-        <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Factures liées</h2>
-        {invoices && invoices.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {invoices.map((invoice) => (
-              <Link
-                key={invoice.id}
-                to={`/invoices/${invoice.id}`}
-                className="flex items-center justify-between rounded-control border border-reca-gray-light px-4 py-3 hover:bg-reca-snow"
-              >
-                <div className="text-body text-reca-black">
-                  <span className="font-medium">{invoice.numero}</span>
-                  <span className="text-reca-gray-medium"> — {formatCurrency(invoice.total)}</span>
-                </div>
-                <InvoiceStatusBadge status={invoice.statut} />
-              </Link>
-            ))}
+            <ContractPaymentsCard contract={contractData} invoices={invoices ?? []} payments={payments ?? []} />
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <ContractNotesCard contractId={contractData.id} />
+              <ContractOperatorInfoCard contract={contractData} />
+            </div>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <ContractClausesCard contract={contractData} />
+              <ContractHistoryCard contractId={contractData.id} />
+            </div>
+            <ContractFormModal open={editOpen} onClose={() => setEditOpen(false)} contract={contractData} />
+            <SendEmailModal
+              open={emailOpen}
+              onClose={() => setEmailOpen(false)}
+              defaultTo={fullClient?.courriel ?? ''}
+              defaultSubject={`Votre contrat ${contractData.numero} — Groupe RECA`}
+              defaultMessage={`Bonjour,\n\nVeuillez trouver ci-joint votre contrat de déneigement ${contractData.numero}.\n\nMerci de faire affaire avec Groupe RECA.\n\nL'équipe Groupe RECA`}
+              attachmentFilename={`Contrat-${contractData.numero}.pdf`}
+              buildAttachmentBlob={async () => {
+                if (!settings || !fullClient) throw new Error('Données du contrat non chargées.')
+                const { buildContractPdfBlob } = await import('../../pdf/generateContractPdf')
+                return buildContractPdfBlob({ contract: contractData, client: fullClient, zones, settings, imageUrl })
+              }}
+              onSent={() => logEvent.mutate({ type: 'courriel_envoye' })}
+            />
           </div>
-        ) : (
-          <p className="text-body text-reca-gray-medium">Aucune facture liée à ce contrat.</p>
-        )}
-      </Card>
-
-      <ContractFormModal open={editOpen} onClose={() => setEditOpen(false)} contract={contract} />
-    </div>
+        )
+      }}
+    </QueryState>
   )
 }
