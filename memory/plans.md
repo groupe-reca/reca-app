@@ -329,3 +329,9 @@ Décisions prises (voir détail complet dans `/root/.claude/plans/temporal-swimm
 Plan détaillé complet (contexte, décisions, fichiers, vérification) : `/root/.claude/plans/nested-painting-shamir.md`.
 
 Résumé : voir `memory/tasks.md` (section "Tâche 8") et `memory/memory.md` pour les pièges CSS (zoom vs Grid, breakpoints Tailwind viewport-vs-colonne) et décisions (StatCard écarté, site web/RBQ statiques) découverts pendant l'implémentation. Vérifié en navigateur aux 3 largeurs avec données de test réelles, toutes supprimées après coup. Pas encore commité.
+
+## [x] Module de création PDF — Contrats & Factures (branche `module-creation-pdf`, depuis `optimisation-ui`, terminé et vérifié)
+
+Plan détaillé complet (contexte, arborescence, points d'intégration, vérification) : `/root/.claude/plans/ouvre-une-nouvelle-branche-memoized-book.md`.
+
+Résumé : brancher un vrai téléchargement PDF (`@react-pdf/renderer`, choisi par l'utilisateur plutôt que `html2canvas`+`jsPDF`) sur les boutons "Télécharger PDF" déjà présents en placeholder sur les fiches Contrat/Facture + "Voir le contrat (PDF)" sur `ContractCreatedPage.tsx`. "Envoyer par courriel" reste hors périmètre (nécessite Edge Function + service tiers, décision séparée). Nouveau dossier partagé `src/components/pdf/` (primitives transverses, ni Contrats ni Factures ne s'importent l'un l'autre) + `src/features/contracts/pdf/` (mire le contenu de `contract-document/` existant en primitives react-pdf) + `src/features/invoices/pdf/` (nouveau, aucun aperçu HTML n'existait avant). Point technique clé : ni `logo.jpg` (JPEG progressif, plante react-pdf) ni les `.svg` existants (non supportés par `<Image>` react-pdf) n'étaient utilisables — décidé de rastériser `logo-sombre.svg` au runtime via `<canvas>` dans le navigateur plutôt que de dépendre d'un outil de conversion externe (aucun disponible dans ce sandbox : pas d'ImageMagick/cairosvg/sharp).

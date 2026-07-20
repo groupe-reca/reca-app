@@ -15,6 +15,7 @@ type InvoiceDetailHeaderProps = {
   onChangeStatus: (status: InvoiceStatus) => void
   onDelete: () => void
   isCancelling?: boolean
+  isDownloadingPdf?: boolean
 }
 
 /** Même gabarit que `ContractDetailHeader.tsx` : bloc d'actions groupé, statut arbitraire + suppression dans le menu "…". */
@@ -27,6 +28,7 @@ export function InvoiceDetailHeader({
   onChangeStatus,
   onDelete,
   isCancelling = false,
+  isDownloadingPdf = false,
 }: InvoiceDetailHeaderProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -46,7 +48,13 @@ export function InvoiceDetailHeader({
           <Mail className="size-4" aria-hidden="true" />
           Envoyer par courriel
         </Button>
-        <Button variant="secondary" fullWidth onClick={onDownloadPdf} className="sm:w-auto">
+        <Button
+          variant="secondary"
+          fullWidth
+          onClick={onDownloadPdf}
+          isLoading={isDownloadingPdf}
+          className="sm:w-auto"
+        >
           <Download className="size-4" aria-hidden="true" />
           Télécharger PDF
         </Button>

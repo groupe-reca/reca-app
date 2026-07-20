@@ -15,6 +15,7 @@ type ContractDetailHeaderProps = {
   onDelete: () => void
   onResumeDraft: () => void
   isCancelling?: boolean
+  isDownloadingPdf?: boolean
 }
 
 /**
@@ -32,6 +33,7 @@ export function ContractDetailHeader({
   onDelete,
   onResumeDraft,
   isCancelling = false,
+  isDownloadingPdf = false,
 }: ContractDetailHeaderProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
@@ -59,7 +61,13 @@ export function ContractDetailHeader({
           <Mail className="size-4" aria-hidden="true" />
           Envoyer par courriel
         </Button>
-        <Button variant="secondary" fullWidth onClick={onDownloadPdf} className="sm:w-auto">
+        <Button
+          variant="secondary"
+          fullWidth
+          onClick={onDownloadPdf}
+          isLoading={isDownloadingPdf}
+          className="sm:w-auto"
+        >
           <Download className="size-4" aria-hidden="true" />
           Télécharger PDF
         </Button>

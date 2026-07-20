@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { QueryState } from '@/components/ui/QueryState'
+import { useClient } from '@/features/clients/hooks/useClient'
+import { useContract } from '@/features/contracts/hooks/useContract'
+import { useInvoicePayments } from '@/features/payments/hooks/useInvoicePayments'
+import { useSettings } from '@/features/settings/hooks/useSettings'
 import { toast } from '@/stores/toastStore'
 import { InvoiceFormModal } from '../../components/InvoiceFormModal'
 import { InvoiceDetailHeader } from '../../components/detail/InvoiceDetailHeader'
@@ -16,12 +20,36 @@ export function MobileInvoiceDetailPage() {
   const { id = '' } = useParams()
   const navigate = useNavigate()
   const { data: invoice, isLoading, isError } = useInvoice(id)
+  const { data: settings } = useSettings()
+  const { data: fullClient } = useClient(invoice?.clientId ?? '')
+  const { data: fullContract } = useContract(invoice?.contratId ?? '')
+  const { data: payments } = useInvoicePayments(id)
   const updateStatus = useUpdateInvoiceStatus(id)
   const deleteInvoice = useDeleteInvoice()
   const [editOpen, setEditOpen] = useState(false)
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
 
   function handlePlaceholder() {
     toast.success('Cette fonctionnalité arrive au prochain sprint.')
+  }
+
+  async function handleDownloadPdf() {
+    if (!invoice || !settings) return
+    setIsDownloadingPdf(true)
+    try {
+      const { generateInvoicePdf } = await import('../../pdf/generateInvoicePdf')
+      await generateInvoicePdf({
+        invoice,
+        client: fullClient ?? null,
+        contract: fullContract ?? null,
+        payments: payments ?? [],
+        settings,
+      })
+    } catch {
+      toast.error('Impossible de générer le PDF de la facture.')
+    } finally {
+      setIsDownloadingPdf(false)
+    }
   }
 
   function handleDelete() {
@@ -50,11 +78,12 @@ export function MobileInvoiceDetailPage() {
               invoice={invoiceData}
               onEdit={() => setEditOpen(true)}
               onEmail={handlePlaceholder}
-              onDownloadPdf={handlePlaceholder}
+              onDownloadPdf={handleDownloadPdf}
               onCancelInvoice={handleCancelInvoice}
               onChangeStatus={(status) => updateStatus.mutate(status)}
               onDelete={handleDelete}
               isCancelling={updateStatus.isPending}
+              isDownloadingPdf={isDownloadingPdf}
             />
             <InvoiceSummaryCard invoice={invoiceData} />
             <InvoiceClientContractCard client={invoiceData.client} contract={invoiceData.contract} />

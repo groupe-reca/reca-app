@@ -83,6 +83,20 @@ export function ContractCreatedPage() {
   const readyData: ContractDocumentData | undefined =
     settings && contract && client ? { settings, contract, client, zones, imageUrl } : undefined
 
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
+
+  async function handleDownloadPdf(data: ContractDocumentData) {
+    setIsDownloadingPdf(true)
+    try {
+      const { generateContractPdf } = await import('../pdf/generateContractPdf')
+      await generateContractPdf(data)
+    } catch {
+      toast.error('Impossible de générer le PDF du contrat.')
+    } finally {
+      setIsDownloadingPdf(false)
+    }
+  }
+
   function handlePlaceholder() {
     toast.success('Cette fonctionnalité arrive au prochain sprint.')
   }
@@ -119,7 +133,7 @@ export function ContractCreatedPage() {
               <Button variant="secondary" onClick={() => navigate('/contracts')}>
                 Fermer
               </Button>
-              <Button variant="secondary" onClick={handlePlaceholder}>
+              <Button variant="secondary" isLoading={isDownloadingPdf} onClick={() => handleDownloadPdf(data)}>
                 Voir le contrat (PDF)
               </Button>
               <Button onClick={handlePlaceholder}>Envoyer le contrat</Button>

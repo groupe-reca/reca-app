@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { QueryState } from '@/components/ui/QueryState'
+import { useClient } from '@/features/clients/hooks/useClient'
 import { useContractInvoices } from '@/features/invoices/hooks/useContractInvoices'
 import { usePaymentsByContract } from '@/features/payments/hooks/usePaymentsByContract'
+import { useSettings } from '@/features/settings/hooks/useSettings'
 import { toast } from '@/stores/toastStore'
 import { MobileContractLayout } from '../../components/mobile/MobileContractLayout'
 import { ContractFormModal } from '../../components/ContractFormModal'
@@ -19,6 +21,7 @@ import { useContract } from '../../hooks/useContract'
 import { useContractZones } from '../../hooks/useContractZones'
 import { useDeleteContract } from '../../hooks/useDeleteContract'
 import { useLogContractEvent } from '../../hooks/useLogContractEvent'
+import { useSignedCaptureUrl } from '../../hooks/useSignedCaptureUrl'
 import { useUpdateContractStatus } from '../../hooks/useUpdateContractStatus'
 import { mapZoneRowToFormValues } from '../../services/contracts.service'
 
@@ -35,19 +38,33 @@ export function MobileContractDetailPage() {
   const { data: zoneRows } = useContractZones(id)
   const { data: invoices } = useContractInvoices(id)
   const { data: payments } = usePaymentsByContract(id)
+  const { data: settings } = useSettings()
+  const { data: fullClient } = useClient(contract?.clientId ?? '')
+  const zones = (zoneRows ?? []).map(mapZoneRowToFormValues)
+  const imageUrl = useSignedCaptureUrl(zones[0]?.imageStoragePath)
   const updateStatus = useUpdateContractStatus(id)
   const deleteContract = useDeleteContract()
   const logEvent = useLogContractEvent(id)
   const [editOpen, setEditOpen] = useState(false)
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
 
   function handleEmailPlaceholder() {
     logEvent.mutate({ type: 'courriel_envoye' })
     toast.success('Cette fonctionnalité arrive au prochain sprint.')
   }
 
-  function handleDownloadPdfPlaceholder() {
-    logEvent.mutate({ type: 'pdf_genere' })
-    toast.success('Cette fonctionnalité arrive au prochain sprint.')
+  async function handleDownloadPdf() {
+    if (!contract || !settings || !fullClient) return
+    setIsDownloadingPdf(true)
+    try {
+      const { generateContractPdf } = await import('../../pdf/generateContractPdf')
+      await generateContractPdf({ contract, client: fullClient, zones, settings, imageUrl })
+      logEvent.mutate({ type: 'pdf_genere' })
+    } catch {
+      toast.error('Impossible de générer le PDF du contrat.')
+    } finally {
+      setIsDownloadingPdf(false)
+    }
   }
 
   function handleDelete() {
@@ -71,19 +88,19 @@ export function MobileContractDetailPage() {
         errorLabel="Impossible de charger ce contrat."
       >
         {(contractData) => {
-          const zones = (zoneRows ?? []).map(mapZoneRowToFormValues)
           return (
             <div className="flex flex-col gap-4">
               <ContractDetailHeader
                 contract={contractData}
                 onEdit={() => setEditOpen(true)}
                 onEmail={handleEmailPlaceholder}
-                onDownloadPdf={handleDownloadPdfPlaceholder}
+                onDownloadPdf={handleDownloadPdf}
                 onCancelContract={handleCancelContract}
                 onChangeStatus={(status) => updateStatus.mutate(status)}
                 onDelete={handleDelete}
                 onResumeDraft={() => navigate(`/contracts/new?draftId=${contractData.id}`)}
                 isCancelling={updateStatus.isPending}
+                isDownloadingPdf={isDownloadingPdf}
               />
               <ContractMapCard zones={zones} />
               <ContractInfoStrip contract={contractData} />
