@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { QueryState } from '@/components/ui/QueryState'
+import { SendEmailModal } from '@/components/email/SendEmailModal'
 import { useClient } from '@/features/clients/hooks/useClient'
 import { useContractInvoices } from '@/features/invoices/hooks/useContractInvoices'
 import { usePaymentsByContract } from '@/features/payments/hooks/usePaymentsByContract'
@@ -46,11 +47,12 @@ export function MobileContractDetailPage() {
   const deleteContract = useDeleteContract()
   const logEvent = useLogContractEvent(id)
   const [editOpen, setEditOpen] = useState(false)
+  const [emailOpen, setEmailOpen] = useState(false)
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
 
-  function handleEmailPlaceholder() {
-    logEvent.mutate({ type: 'courriel_envoye' })
-    toast.success('Cette fonctionnalité arrive au prochain sprint.')
+  function handleOpenEmail() {
+    if (!contract || !settings || !fullClient) return
+    setEmailOpen(true)
   }
 
   async function handleDownloadPdf() {
@@ -93,7 +95,7 @@ export function MobileContractDetailPage() {
               <ContractDetailHeader
                 contract={contractData}
                 onEdit={() => setEditOpen(true)}
-                onEmail={handleEmailPlaceholder}
+                onEmail={handleOpenEmail}
                 onDownloadPdf={handleDownloadPdf}
                 onCancelContract={handleCancelContract}
                 onChangeStatus={(status) => updateStatus.mutate(status)}
@@ -111,6 +113,20 @@ export function MobileContractDetailPage() {
               <ContractClausesCard contract={contractData} />
               <ContractHistoryCard contractId={contractData.id} />
               <ContractFormModal open={editOpen} onClose={() => setEditOpen(false)} contract={contractData} />
+              <SendEmailModal
+                open={emailOpen}
+                onClose={() => setEmailOpen(false)}
+                defaultTo={fullClient?.courriel ?? ''}
+                defaultSubject={`Votre contrat ${contractData.numero} — Groupe RECA`}
+                defaultMessage={`Bonjour,\n\nVeuillez trouver ci-joint votre contrat de déneigement ${contractData.numero}.\n\nMerci de faire affaire avec Groupe RECA.\n\nL'équipe Groupe RECA`}
+                attachmentFilename={`Contrat-${contractData.numero}.pdf`}
+                buildAttachmentBlob={async () => {
+                  if (!settings || !fullClient) throw new Error('Données du contrat non chargées.')
+                  const { buildContractPdfBlob } = await import('../../pdf/generateContractPdf')
+                  return buildContractPdfBlob({ contract: contractData, client: fullClient, zones, settings, imageUrl })
+                }}
+                onSent={() => logEvent.mutate({ type: 'courriel_envoye' })}
+              />
             </div>
           )
         }}

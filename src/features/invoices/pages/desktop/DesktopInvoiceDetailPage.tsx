@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
 import { QueryState } from '@/components/ui/QueryState'
+import { SendEmailModal } from '@/components/email/SendEmailModal'
 import { useClient } from '@/features/clients/hooks/useClient'
 import { useContract } from '@/features/contracts/hooks/useContract'
 import { useInvoicePayments } from '@/features/payments/hooks/useInvoicePayments'
@@ -27,10 +28,12 @@ export function DesktopInvoiceDetailPage() {
   const updateStatus = useUpdateInvoiceStatus(id)
   const deleteInvoice = useDeleteInvoice()
   const [editOpen, setEditOpen] = useState(false)
+  const [emailOpen, setEmailOpen] = useState(false)
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
 
-  function handlePlaceholder() {
-    toast.success('Cette fonctionnalité arrive au prochain sprint.')
+  function handleOpenEmail() {
+    if (!invoice || !settings) return
+    setEmailOpen(true)
   }
 
   async function handleDownloadPdf() {
@@ -76,7 +79,7 @@ export function DesktopInvoiceDetailPage() {
           <InvoiceDetailHeader
             invoice={invoiceData}
             onEdit={() => setEditOpen(true)}
-            onEmail={handlePlaceholder}
+            onEmail={handleOpenEmail}
             onDownloadPdf={handleDownloadPdf}
             onCancelInvoice={handleCancelInvoice}
             onChangeStatus={(status) => updateStatus.mutate(status)}
@@ -90,6 +93,25 @@ export function DesktopInvoiceDetailPage() {
           </div>
           <InvoicePaymentsCard invoiceId={invoiceData.id} />
           <InvoiceFormModal open={editOpen} onClose={() => setEditOpen(false)} invoice={invoiceData} />
+          <SendEmailModal
+            open={emailOpen}
+            onClose={() => setEmailOpen(false)}
+            defaultTo={fullClient?.courriel ?? ''}
+            defaultSubject={`Votre facture ${invoiceData.numero} — Groupe RECA`}
+            defaultMessage={`Bonjour,\n\nVeuillez trouver ci-joint votre facture ${invoiceData.numero}.\n\nMerci de faire affaire avec Groupe RECA.\n\nL'équipe Groupe RECA`}
+            attachmentFilename={`Facture-${invoiceData.numero}.pdf`}
+            buildAttachmentBlob={async () => {
+              if (!settings) throw new Error('Données de la facture non chargées.')
+              const { buildInvoicePdfBlob } = await import('../../pdf/generateInvoicePdf')
+              return buildInvoicePdfBlob({
+                invoice: invoiceData,
+                client: fullClient ?? null,
+                contract: fullContract ?? null,
+                payments: payments ?? [],
+                settings,
+              })
+            }}
+          />
         </div>
       )}
     </QueryState>
