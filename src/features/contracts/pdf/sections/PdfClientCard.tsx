@@ -2,10 +2,14 @@ import { Text, View } from '@react-pdf/renderer'
 import { pdfStyles } from '@/components/pdf/pdfStyles'
 import type { ContractDocumentData } from '../../components/contract-document/types'
 
-type PdfClientZonesProps = Pick<ContractDocumentData, 'contract' | 'client' | 'zones'>
+type PdfClientCardProps = Pick<ContractDocumentData, 'contract' | 'client'>
 
-/** Mire `DocumentClientZones.tsx` — carte Client + liste des zones tracées. */
-export function PdfClientZones({ contract, client, zones }: PdfClientZonesProps) {
+/**
+ * Carte Client — nom, type, adresse. La liste détaillée des zones ne vit plus ici : elle est
+ * couverte en entier par la page dédiée au tracé (`PdfSatelliteZones`), pour ne pas dupliquer
+ * la même information sur les deux pages et garder cette carte courte.
+ */
+export function PdfClientCard({ contract, client }: PdfClientCardProps) {
   return (
     <View style={pdfStyles.card}>
       <View style={pdfStyles.sectionHeaderNavy}>
@@ -25,20 +29,6 @@ export function PdfClientZones({ contract, client, zones }: PdfClientZonesProps)
           </Text>
         )}
       </View>
-
-      <View style={pdfStyles.divider} />
-
-      <Text style={{ ...pdfStyles.label, marginBottom: 4 }}>Zones tracées</Text>
-      {zones.length === 0 ? (
-        <Text style={{ color: '#6b7280' }}>Aucune zone tracée pour l'instant.</Text>
-      ) : (
-        zones.map((zone) => (
-          <View key={zone.id} style={pdfStyles.tableRow}>
-            <Text>{zone.label}</Text>
-            <Text style={{ color: '#6b7280' }}>{zone.surfaceM2.toFixed(2)} m²</Text>
-          </View>
-        ))
-      )}
     </View>
   )
 }

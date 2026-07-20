@@ -17,13 +17,13 @@ export function PdfSignatures({ client }: PdfSignaturesProps) {
           <Text style={{ marginTop: 4 }}>
             {client.prenom} {client.nom}
           </Text>
-          <View style={{ marginTop: 24, borderBottom: '1pt solid #e5e7eb' }} />
+          <View style={{ marginTop: 16, borderBottom: '1pt solid #e5e7eb' }} />
           <Text style={{ marginTop: 4, color: '#6b7280' }}>Date : ____________________</Text>
         </View>
         <View style={pdfStyles.col}>
           <Text style={pdfStyles.label}>Groupe RÉCA</Text>
           <Text style={{ marginTop: 4 }}>Entrepreneur</Text>
-          <View style={{ marginTop: 24, borderBottom: '1pt solid #e5e7eb' }} />
+          <View style={{ marginTop: 16, borderBottom: '1pt solid #e5e7eb' }} />
           <Text style={{ marginTop: 4, color: '#6b7280' }}>Date : ____________________</Text>
         </View>
       </View>
