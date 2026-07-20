@@ -61,16 +61,19 @@ Convention de chaque module : `types/`, `schemas/`, `services/`, `hooks/`, `comp
 - schemas: `src/features/invoices/schemas/invoice.schema.ts`
 - services: `src/features/invoices/services/invoices.service.ts`
 - hooks: `src/features/invoices/hooks/invoiceKeys.ts`, `useClientInvoices.ts`, `useContractInvoices.ts`, `useCreateInvoice.ts`, `useDeleteInvoice.ts`, `useInvoices.ts`, `useInvoice.ts`, `useUpdateInvoiceStatus.ts`, `useUpdateInvoice.ts`
-- components: `src/features/invoices/components/InvoiceFormModal.tsx`, `InvoiceForm.tsx`, `InvoiceStatusBadge.tsx`, `InvoiceTable.tsx`
-- pages: `src/features/invoices/pages/InvoiceCreatePage.tsx`, `InvoiceDetailPage.tsx`, `InvoicesListPage.tsx`
+- components: `src/features/invoices/components/InvoiceFormModal.tsx`, `InvoiceForm.tsx`, `InvoiceStatusBadge.tsx`, `InvoiceTable.tsx` (liste uniquement — la fiche détail utilise désormais `components/detail/`, pas ce tableau)
+- components/detail (nouveau, branche `optimisation-ui` — même pattern que `contracts/components/detail/`/`clients/components/detail/`, composants purs partagés desktop/mobile) : `InvoiceDetailHeader.tsx` (Modifier/Envoyer par courriel[bleu, placeholder]/Télécharger PDF[placeholder]/Annuler la facture + menu "…" statut arbitraire+suppression), `InvoiceSummaryCard.tsx` (Date/Sous-total/TPS/TVQ/Total/Solde/Statut, liste verticale), `InvoiceClientContractCard.tsx` (`ListRow` client + `ListRow` contrat), `InvoicePaymentsCard.tsx` (bouton "Enregistrer un paiement" ouvrant `PaymentFormModal` inchangé + tableau `Table` générique, remplace l'ancienne liste `<div>` brute).
+- pages: `src/features/invoices/pages/InvoiceCreatePage.tsx`, `InvoicesListPage.tsx`, `InvoiceDetailPage.tsx` (**branche `optimisation-ui` — devient un dispatcher `useDeviceTier()` pur**). Breadcrumb `invoices/:id` renommé `'Détail'` → `'Détail facture'` dans `router.tsx`.
+- pages/desktop (nouveau) : `DesktopInvoiceDetailPage.tsx`
+- pages/mobile (nouveau) : `MobileInvoiceDetailPage.tsx` (pas de composant de layout partagé, même raison que `MobileClientDetailPage.tsx`)
 
 ## payments
 - types: `src/features/payments/types/payment.types.ts`
 - schemas: `src/features/payments/schemas/payment.schema.ts`
 - services: `src/features/payments/services/payments.service.ts` (**tâche 9 (contrats) — `listPaymentsByContract(contratId)` ajouté : passe par `invoices.contrat_id` puis `payments.facture_id in (...)`, les paiements ne sont liés qu'à une facture, jamais directement à un contrat**)
-- hooks: `src/features/payments/hooks/paymentKeys.ts` (**tâche 9 — `byContract` ajouté**), `useCreatePayment.ts`, `useDeletePayment.ts`, `useInvoicePayments.ts`, `usePayments.ts`, `usePaymentsByContract.ts` (nouveau, tâche 9 — consommé par `ContractPaymentsCard.tsx`/`ContractPaymentsHistoryModal.tsx` du module Contrats)
-- components: `src/features/payments/components/PaymentFormModal.tsx`, `PaymentForm.tsx`, `PaymentTable.tsx`
-- pages: `src/features/payments/pages/PaymentsListPage.tsx`
+- hooks: `src/features/payments/hooks/paymentKeys.ts` (**tâche 9 — `byContract` ajouté**), `useCreatePayment.ts`, `useDeletePayment.ts`, `useInvoicePayments.ts`, `usePayments.ts`, `usePaymentsByContract.ts` (nouveau, tâche 9 — consommé par `ContractPaymentsCard.tsx`/`ContractPaymentsHistoryModal.tsx` du module Contrats), `usePaymentsListFilters.ts` (nouveau, branche `optimisation-ui` — recherche+filtre par méthode de la page liste, même pattern que `useContractsListFilters.ts`, `PAYMENT_METHOD_FILTER_OPTIONS` exporté)
+- components: `src/features/payments/components/PaymentFormModal.tsx`, `PaymentForm.tsx` (inchangés, toujours utilisés depuis `InvoicePaymentsCard.tsx`), `PaymentsStatsRow.tsx`/`PaymentCard.tsx`/`PaymentsListContent.tsx` (nouveaux, branche `optimisation-ui` — restyle "cartes" de la page liste, même langage que `ContractsStatsRow.tsx`/`ContractCard.tsx`/`ContractsListContent.tsx` ; `PaymentCard` navigue vers la facture liée au clic, aucune fiche paiement dédiée n'existe). **`PaymentTable.tsx` supprimé** (code mort, remplacé par `PaymentsListContent.tsx`, plus aucun appelant).
+- pages: `src/features/payments/pages/PaymentsListPage.tsx` (branche `optimisation-ui` — corps délégué à `PaymentsListContent`, reste une page **unique**, pas de split desktop/mobile — aucune "fiche paiement" détail n'existe, voir `memory/memory.md`)
 
 ## equipments
 *(dossier réel `src/features/equipments/`, pluriel — pas `equipment`)*

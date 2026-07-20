@@ -114,7 +114,7 @@ export const router = createBrowserRouter([
             children: [
               { path: 'invoices', element: <InvoicesListPage />, handle: { breadcrumb: 'Factures' } },
               { path: 'invoices/new', element: <InvoiceCreatePage />, handle: { breadcrumb: 'Nouvelle facture' } },
-              { path: 'invoices/:id', element: <InvoiceDetailPage />, handle: { breadcrumb: 'Détail' } },
+              { path: 'invoices/:id', element: <InvoiceDetailPage />, handle: { breadcrumb: 'Détail facture' } },
             ],
           },
           {
