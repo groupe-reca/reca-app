@@ -97,9 +97,11 @@ Convention de chaque module : `types/`, `schemas/`, `services/`, `hooks/`, `comp
 ## routes
 - types: `src/features/routes/types/route.types.ts`
 - schemas: `src/features/routes/schemas/route.schema.ts`
-- services: `src/features/routes/services/routeAssignments.service.ts`, `routeClients.service.ts`, `routes.service.ts`
-- hooks: `src/features/routes/hooks/routeKeys.ts`, `useAddRouteClient.ts`, `useCreateRouteAssignment.ts`, `useCreateRoute.ts`, `useDeleteRouteAssignment.ts`, `useDeleteRoute.ts`, `useRemoveRouteClient.ts`, `useReorderRouteClient.ts`, `useRouteAssignments.ts`, `useRouteClients.ts`, `useRoutes.ts`, `useRoute.ts`, `useUpdateAssignmentStatus.ts`, `useUpdateRouteStatus.ts`, `useUpdateRoute.ts`
-- components: `src/features/routes/components/RouteFormModal.tsx`, `RouteForm.tsx`, `RouteStatusBadge.tsx`, `RouteTable.tsx`
+- services: `src/features/routes/services/routeAssignments.service.ts`, `routeClients.service.ts`, `routes.service.ts`, `routeMetrics.service.ts` (calcul auto distance/durée/tracé via Mapbox Directions), `routesMap.service.ts` (données de la vue Carte)
+- hooks: `src/features/routes/hooks/routeKeys.ts`, `useAddRouteClient.ts`, `useCreateRouteAssignment.ts`, `useCreateRoute.ts`, `useDeleteRouteAssignment.ts`, `useDeleteRoute.ts`, `useRemoveRouteClient.ts`, `useReorderRouteClient.ts`, `useRouteAssignments.ts`, `useRouteAssignmentsRange.ts` (vue Timeline), `useRouteClients.ts`, `useRoutes.ts`, `useRoute.ts`, `useRoutesMapData.ts`, `useTimelineWeek.ts`, `useUpdateAssignmentStatus.ts`, `useUpdateRouteStatus.ts`, `useUpdateRoute.ts`, `routeMetricsFeedback.ts` (helper partagé, pas un hook)
+- components: `src/features/routes/components/RouteFormModal.tsx`, `RouteForm.tsx`, `RouteStatusBadge.tsx`, `RouteTable.tsx`, `RoutesViewSwitcher.tsx`, `detail/RouteDetailHeader.tsx`, `map/RoutesMapView.tsx`, `timeline/RoutesTimelineView.tsx`
+- pdf: `src/features/routes/pdf/generateRoutePdf.tsx`, `RoutePdfDocument.tsx`, `types.ts`, `sections/PdfRouteHeader.tsx`, `PdfRouteDetails.tsx`, `PdfRouteClientsList.tsx`, `PdfRouteAssignmentsTable.tsx`
+- utils: `src/features/routes/utils/mapBounds.ts`
 - pages: `src/features/routes/pages/RouteCreatePage.tsx`, `RouteDetailPage.tsx`, `RoutesListPage.tsx`
 
 ## settings

@@ -15,18 +15,26 @@ function mapRoute(row: RouteRow): Route {
     dureeEstimee: row.duree_estimee,
     distance: row.distance,
     couleur: row.couleur,
+    traceGeojson: row.trace_geojson,
     createdAt: row.created_at,
   }
 }
 
+/**
+ * `dureeEstimee`/`distance` ne sont inclus que si le formulaire les a soumis
+ * (repli manuel, Mapbox non configuré — voir `RouteForm.tsx`). Quand Mapbox est
+ * configuré, ces champs ne sont pas `register()`és et RHF ne les envoie pas :
+ * les omettre ici (plutôt que les écraser à `null`) évite d'effacer les valeurs
+ * calculées par `recalculateRouteMetrics()` à chaque "Modifier".
+ */
 function toRowInput(values: RouteFormValues): Partial<RouteRow> {
   return {
     nom: values.nom,
     secteur: values.secteur || null,
     description: values.description || null,
-    duree_estimee: values.dureeEstimee || null,
-    distance: values.distance ? Number(values.distance) : null,
     couleur: values.couleur || null,
+    ...(values.dureeEstimee !== undefined ? { duree_estimee: values.dureeEstimee || null } : {}),
+    ...(values.distance !== undefined ? { distance: values.distance ? Number(values.distance) : null } : {}),
   }
 }
 

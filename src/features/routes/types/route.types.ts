@@ -1,3 +1,5 @@
+import type { LineString } from 'geojson'
+
 export type RouteStatus = 'planifiee' | 'en_cours' | 'terminee' | 'suspendue'
 
 export const ROUTE_STATUSES: RouteStatus[] = ['planifiee', 'en_cours', 'terminee', 'suspendue']
@@ -19,6 +21,7 @@ export type RouteRow = {
   duree_estimee: string | null
   distance: number | null
   couleur: string | null
+  trace_geojson: LineString | null
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -34,5 +37,6 @@ export type Route = {
   dureeEstimee: string | null
   distance: number | null
   couleur: string | null
+  traceGeojson: LineString | null
   createdAt: string
 }
