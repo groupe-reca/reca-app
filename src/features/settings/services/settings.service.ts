@@ -14,6 +14,7 @@ const DEFAULT_MODULES: SettingsModules = {
   routes: true,
   equipment: true,
   employees: true,
+  interventions: true,
 }
 
 function mapSettings(row: SettingsRow): Settings {

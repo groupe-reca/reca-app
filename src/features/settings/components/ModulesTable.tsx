@@ -15,6 +15,7 @@ const MODULE_LABELS: Record<ModuleKey, string> = {
   routes: 'Routes',
   equipment: 'Équipements',
   employees: 'Employés',
+  interventions: 'Interventions',
 }
 
 const MODULE_ORDER: ModuleKey[] = [
@@ -25,6 +26,7 @@ const MODULE_ORDER: ModuleKey[] = [
   'invoices',
   'payments',
   'routes',
+  'interventions',
   'equipment',
   'employees',
 ]

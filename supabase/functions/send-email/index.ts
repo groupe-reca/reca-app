@@ -3,16 +3,13 @@
 // tierce (RESEND_API_KEY) ne doit jamais être exposée côté client — cette fonction est
 // le seul endroit qui la lit.
 //
-// Expéditeur fixé à `onboarding@resend.dev` (domaine de test Resend, décision explicite
-// de l'utilisateur en attendant qu'un domaine réel type `groupereca.ca` soit vérifié
-// dans Resend) — **limitation connue de ce domaine de test : Resend n'autorise l'envoi
-// qu'à l'adresse e-mail du compte Resend lui-même**, pas à un vrai client. Le jour où un
-// domaine vérifié est disponible, il suffit de changer la constante `FROM_ADDRESS`
-// ci-dessous, rien d'autre à modifier dans ce fichier ni côté client.
+// Expéditeur : domaine `signaweb.ca` vérifié dans Resend (décision explicite de
+// l'utilisateur, 2026-07-20). Remplace le domaine de test `onboarding@resend.dev`
+// utilisé précédemment.
 
 import { z } from 'npm:zod@3'
 
-const FROM_ADDRESS = 'Groupe RECA <onboarding@resend.dev>'
+const FROM_ADDRESS = 'Groupe RECA <info@signaweb.ca>'
 const RESEND_API_URL = 'https://api.resend.com/emails'
 
 const requestSchema = z.object({
