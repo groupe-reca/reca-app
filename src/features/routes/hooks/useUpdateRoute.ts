@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/stores/toastStore'
 import * as routesService from '../services/routes.service'
-import type { RouteFormValues } from '../schemas/route.schema'
 import { routeKeys } from './routeKeys'
+import type { RouteFormValues } from '../schemas/route.schema'
 
 export function useUpdateRoute(id: string) {
   const queryClient = useQueryClient()

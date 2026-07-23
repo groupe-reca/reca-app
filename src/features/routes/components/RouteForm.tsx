@@ -1,11 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { Clock, MapPin, Palette, Route as RouteIcon } from 'lucide-react'
+import { Controller, useForm } from 'react-hook-form'
+import { MapPin, Truck, User } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Select } from '@/components/ui/Select'
+import { useEmployees } from '@/features/employees/hooks/useEmployees'
+import { useEquipments } from '@/features/equipments/hooks/useEquipments'
 import { routeSchema } from '../schemas/route.schema'
 import type { RouteFormValues } from '../schemas/route.schema'
+import { ROUTE_COLOR_PRESETS } from '../types/route.types'
 import type { Route } from '../types/route.types'
+import { RouteColorPicker } from './RouteColorPicker'
 
 type RouteFormProps = {
   route?: Route
@@ -15,77 +20,64 @@ type RouteFormProps = {
 }
 
 export function RouteForm({ route, isSubmitting, onSubmit, onCancel }: RouteFormProps) {
+  const { data: employees } = useEmployees()
+  const { data: equipments } = useEquipments()
+
   const {
     register,
     handleSubmit,
+    control,
     formState: { errors },
   } = useForm<RouteFormValues>({
     resolver: zodResolver(routeSchema),
     mode: 'onTouched',
-    defaultValues: route
-      ? {
-          nom: route.nom,
-          secteur: route.secteur ?? '',
-          description: route.description ?? '',
-          dureeEstimee: route.dureeEstimee ?? '',
-          distance: route.distance?.toString() ?? '',
-          couleur: route.couleur ?? '#DA291C',
-        }
-      : { couleur: '#DA291C' },
+    defaultValues: {
+      nom: route?.nom ?? '',
+      couleur: route?.couleur ?? ROUTE_COLOR_PRESETS[0],
+      operatorId: route?.operatorId ?? '',
+      equipmentId: route?.equipmentId ?? '',
+    },
   })
 
   return (
     <form className="flex flex-col gap-4" onSubmit={handleSubmit(onSubmit)} noValidate>
-      <div className="grid grid-cols-2 gap-4">
-        <Input label="Nom" icon={RouteIcon} error={errors.nom?.message} {...register('nom')} />
-        <Input label="Secteur" icon={MapPin} error={errors.secteur?.message} {...register('secteur')} />
-      </div>
-      <div className="grid grid-cols-3 gap-4">
-        <Input
-          label="Durée estimée"
-          icon={Clock}
-          placeholder="ex : 3h30"
-          error={errors.dureeEstimee?.message}
-          {...register('dureeEstimee')}
-        />
-        <Input
-          label="Distance (km)"
-          type="number"
-          step="0.1"
-          icon={MapPin}
-          error={errors.distance?.message}
-          {...register('distance')}
-        />
-        <div className="flex flex-col gap-1.5">
-          <label htmlFor="couleur" className="text-label font-medium text-reca-gray-medium">
-            Couleur
-          </label>
-          <div className="relative">
-            <Palette
-              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-reca-gray-medium"
-              aria-hidden="true"
-            />
-            <input
-              id="couleur"
-              type="color"
-              className="h-11 w-full rounded-control border border-reca-gray-light bg-reca-white pl-9 pr-3"
-              {...register('couleur')}
-            />
-          </div>
-        </div>
-      </div>
+      <Input label="Nom" icon={MapPin} error={errors.nom?.message} {...register('nom')} />
 
-      <div className="flex flex-col gap-1.5">
-        <label htmlFor="description" className="text-label font-medium text-reca-gray-medium">
-          Description
-        </label>
-        <textarea
-          id="description"
-          rows={3}
-          className="rounded-control border border-reca-gray-light bg-reca-white px-3 py-2 text-body text-reca-black focus:outline-none focus:ring-2 focus:ring-reca-red/30"
-          {...register('description')}
-        />
-      </div>
+      <Controller
+        control={control}
+        name="couleur"
+        render={({ field }) => (
+          <RouteColorPicker value={field.value} onChange={field.onChange} error={errors.couleur?.message} />
+        )}
+      />
+
+      <Select
+        label="Opérateur assigné"
+        icon={User}
+        error={errors.operatorId?.message}
+        {...register('operatorId')}
+      >
+        <option value="">Sélectionner...</option>
+        {employees?.map((employee) => (
+          <option key={employee.id} value={employee.id}>
+            {employee.prenom} {employee.nom}
+          </option>
+        ))}
+      </Select>
+
+      <Select
+        label="Équipement assigné"
+        icon={Truck}
+        error={errors.equipmentId?.message}
+        {...register('equipmentId')}
+      >
+        <option value="">Sélectionner...</option>
+        {equipments?.map((equipment) => (
+          <option key={equipment.id} value={equipment.id}>
+            {equipment.nom}
+          </option>
+        ))}
+      </Select>
 
       <div className="mt-2 flex justify-end gap-3">
         <Button type="button" variant="secondary" onClick={onCancel}>

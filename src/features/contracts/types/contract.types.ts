@@ -1,10 +1,18 @@
-export type ContractStatus = 'brouillon' | 'a_signer' | 'en_attente' | 'actif' | 'expire' | 'annule'
+export type ContractStatus =
+  | 'brouillon'
+  | 'a_signer'
+  | 'en_attente'
+  | 'actif'
+  | 'suspendu'
+  | 'expire'
+  | 'annule'
 
 export const CONTRACT_STATUSES: ContractStatus[] = [
   'brouillon',
   'a_signer',
   'en_attente',
   'actif',
+  'suspendu',
   'expire',
   'annule',
 ]
@@ -14,6 +22,7 @@ export const CONTRACT_STATUS_LABELS: Record<ContractStatus, string> = {
   a_signer: 'À signer',
   en_attente: 'Signature en attente',
   actif: 'Actif',
+  suspendu: 'Suspendu',
   expire: 'Expiré',
   annule: 'Annulé',
 }

@@ -5,6 +5,6 @@ import { routeKeys } from './routeKeys'
 export function useRoutes() {
   return useQuery({
     queryKey: routeKeys.list(),
-    queryFn: routesService.listRoutes,
+    queryFn: routesService.listRoutesSummary,
   })
 }
