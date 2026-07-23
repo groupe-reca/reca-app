@@ -15,6 +15,7 @@ const MODULE_LABELS: Record<ModuleKey, string> = {
   routes: 'Routes',
   equipment: 'Équipements',
   employees: 'Employés',
+  missions: 'Missions',
 }
 
 const MODULE_ORDER: ModuleKey[] = [
@@ -27,6 +28,7 @@ const MODULE_ORDER: ModuleKey[] = [
   'routes',
   'equipment',
   'employees',
+  'missions',
 ]
 
 type ModuleRow = {
