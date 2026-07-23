@@ -25,19 +25,8 @@ type RouteAssignmentRow = {
   equipment: { id: string; numero: string; nom: string } | null
 }
 
-export type RouteAssignmentWithRoute = RouteAssignment & {
-  route: { id: string; numero: string; nom: string; couleur: string | null } | null
-}
-
-type RouteAssignmentWithRouteRow = RouteAssignmentRow & {
-  route: { id: string; numero: string; nom: string; couleur: string | null } | null
-}
-
 const SELECT_WITH_RELATIONS =
   'id, date, statut, employee:employees(id, prenom, nom), equipment:equipments(id, numero, nom)'
-
-const SELECT_WITH_ROUTE =
-  'id, date, statut, employee:employees(id, prenom, nom), equipment:equipments(id, numero, nom), route:routes(id, numero, nom, couleur)'
 
 export async function listAssignments(routeId: string): Promise<RouteAssignment[]> {
   const { data, error } = await supabase
@@ -49,20 +38,6 @@ export async function listAssignments(routeId: string): Promise<RouteAssignment[
 
   if (error) throw error
   return (data ?? []) as unknown as RouteAssignmentRow[]
-}
-
-/** Toutes les assignations (toutes routes confondues) sur une plage de dates — vue Timeline. */
-export async function listAssignmentsInRange(startDate: string, endDate: string): Promise<RouteAssignmentWithRoute[]> {
-  const { data, error } = await supabase
-    .from('route_assignments')
-    .select(SELECT_WITH_ROUTE)
-    .is('deleted_at', null)
-    .gte('date', startDate)
-    .lte('date', endDate)
-    .order('date', { ascending: true })
-
-  if (error) throw error
-  return (data ?? []) as unknown as RouteAssignmentWithRouteRow[]
 }
 
 export async function createAssignment(

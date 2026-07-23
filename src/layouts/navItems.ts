@@ -4,7 +4,6 @@ import {
   FileSignature,
   FileText,
   LayoutDashboard,
-  PlayCircle,
   Receipt,
   Route as RouteIcon,
   Settings,
@@ -39,7 +38,6 @@ export const NAV_ITEMS: NavItemConfig[] = [
   { label: 'Factures', to: '/invoices', icon: Receipt, moduleKey: 'invoices' },
   { label: 'Paiements', to: '/payments', icon: CreditCard, moduleKey: 'payments' },
   { label: 'Routes', to: '/routes', icon: RouteIcon, moduleKey: 'routes' },
-  { label: 'Interventions', to: '/interventions', icon: PlayCircle, moduleKey: 'interventions' },
   { label: 'Équipements', to: '/equipment', icon: Truck, moduleKey: 'equipment' },
   { label: 'Employés', to: '/employees', icon: UserCog, moduleKey: 'employees' },
 ]

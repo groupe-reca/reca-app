@@ -34,16 +34,6 @@ export function formatDateTime(iso: string): string {
   return dateTimeFormatter.format(new Date(iso))
 }
 
-/** Formatte une durée courte en secondes (ex. temps de déplacement/intervention d'une résidence) en "Xh Ymin" ou "Ymin". */
-export function formatDurationShort(seconds: number | null | undefined): string {
-  if (seconds == null) return '—'
-  const totalMinutes = Math.round(seconds / 60)
-  const hours = Math.floor(totalMinutes / 60)
-  const minutes = totalMinutes % 60
-  if (hours > 0) return `${hours}h ${minutes}min`
-  return `${minutes}min`
-}
-
 const relativeTimeFormatter = new Intl.RelativeTimeFormat('fr-CA', { numeric: 'auto' })
 
 export function formatRelativeTime(iso: string): string {

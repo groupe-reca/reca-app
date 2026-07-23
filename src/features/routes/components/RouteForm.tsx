@@ -3,7 +3,6 @@ import { useForm } from 'react-hook-form'
 import { Clock, MapPin, Palette, Route as RouteIcon } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
-import { isMapboxConfigured } from '@/lib/mapboxClient'
 import { routeSchema } from '../schemas/route.schema'
 import type { RouteFormValues } from '../schemas/route.schema'
 import type { Route } from '../types/route.types'
@@ -42,35 +41,21 @@ export function RouteForm({ route, isSubmitting, onSubmit, onCancel }: RouteForm
         <Input label="Secteur" icon={MapPin} error={errors.secteur?.message} {...register('secteur')} />
       </div>
       <div className="grid grid-cols-3 gap-4">
-        {isMapboxConfigured ? (
-          <div className="col-span-2 flex flex-col gap-1.5">
-            <p className="text-label font-medium text-reca-gray-medium">Distance et durée estimée</p>
-            <p className="text-body text-reca-black">
-              {route?.distance != null ? `${route.distance} km` : '—'} · {route?.dureeEstimee ?? '—'}
-            </p>
-            <p className="text-label text-reca-gray-medium">
-              Distance et durée sont calculées automatiquement à partir de l'ordre des clients.
-            </p>
-          </div>
-        ) : (
-          <>
-            <Input
-              label="Durée estimée"
-              icon={Clock}
-              placeholder="3 hours 30 minutes"
-              error={errors.dureeEstimee?.message}
-              {...register('dureeEstimee')}
-            />
-            <Input
-              label="Distance (km)"
-              type="number"
-              step="0.1"
-              icon={MapPin}
-              error={errors.distance?.message}
-              {...register('distance')}
-            />
-          </>
-        )}
+        <Input
+          label="Durée estimée"
+          icon={Clock}
+          placeholder="ex : 3h30"
+          error={errors.dureeEstimee?.message}
+          {...register('dureeEstimee')}
+        />
+        <Input
+          label="Distance (km)"
+          type="number"
+          step="0.1"
+          icon={MapPin}
+          error={errors.distance?.message}
+          {...register('distance')}
+        />
         <div className="flex flex-col gap-1.5">
           <label htmlFor="couleur" className="text-label font-medium text-reca-gray-medium">
             Couleur
@@ -89,11 +74,6 @@ export function RouteForm({ route, isSubmitting, onSubmit, onCancel }: RouteForm
           </div>
         </div>
       </div>
-      {!isMapboxConfigured && (
-        <p className="text-label text-reca-gray-medium">
-          Calcul automatique indisponible (token Mapbox non configuré) — saisie manuelle.
-        </p>
-      )}
 
       <div className="flex flex-col gap-1.5">
         <label htmlFor="description" className="text-label font-medium text-reca-gray-medium">
