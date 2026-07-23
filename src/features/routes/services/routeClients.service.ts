@@ -8,19 +8,27 @@ export type RouteClient = {
   prenom: string
   nom: string
   adresse: string | null
+  telephone: string | null
 }
 
 type RouteClientRow = {
   id: string
   client_id: string
   ordre: number
-  client: { id: string; numero: string; prenom: string; nom: string; adresse: string | null } | null
+  client: {
+    id: string
+    numero: string
+    prenom: string
+    nom: string
+    adresse: string | null
+    telephone: string | null
+  } | null
 }
 
 export async function listRouteClients(routeId: string): Promise<RouteClient[]> {
   const { data, error } = await supabase
     .from('route_clients')
-    .select('id, client_id, ordre, client:clients(id, numero, prenom, nom, adresse)')
+    .select('id, client_id, ordre, client:clients(id, numero, prenom, nom, adresse, telephone)')
     .eq('route_id', routeId)
     .is('deleted_at', null)
     .order('ordre', { ascending: true })
@@ -37,6 +45,7 @@ export async function listRouteClients(routeId: string): Promise<RouteClient[]> 
       prenom: row.client!.prenom,
       nom: row.client!.nom,
       adresse: row.client!.adresse,
+      telephone: row.client!.telephone,
     }))
 }
 

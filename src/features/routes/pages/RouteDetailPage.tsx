@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router'
-import { ArrowDown, ArrowUp, Calendar, Pencil, Plus, Trash2, Truck, UserCog, Users } from 'lucide-react'
+import { ArrowDown, ArrowUp, Calendar, Plus, Trash2, Truck, UserCog, Users } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
@@ -10,6 +10,8 @@ import { Select } from '@/components/ui/Select'
 import { useClients } from '@/features/clients/hooks/useClients'
 import { useEmployees } from '@/features/employees/hooks/useEmployees'
 import { useEquipments } from '@/features/equipments/hooks/useEquipments'
+import { useSettings } from '@/features/settings/hooks/useSettings'
+import { toast } from '@/stores/toastStore'
 import { ASSIGNMENT_STATUS_LABELS } from '../services/routeAssignments.service'
 import type { AssignmentStatus } from '../services/routeAssignments.service'
 import { useAddRouteClient } from '../hooks/useAddRouteClient'
@@ -23,9 +25,8 @@ import { useRouteAssignments } from '../hooks/useRouteAssignments'
 import { useRouteClients } from '../hooks/useRouteClients'
 import { useUpdateAssignmentStatus } from '../hooks/useUpdateAssignmentStatus'
 import { useUpdateRouteStatus } from '../hooks/useUpdateRouteStatus'
+import { RouteDetailHeader } from '../components/detail/RouteDetailHeader'
 import { RouteFormModal } from '../components/RouteFormModal'
-import { RouteStatusBadge } from '../components/RouteStatusBadge'
-import { ROUTE_STATUSES, ROUTE_STATUS_LABELS } from '../types/route.types'
 
 function today(): string {
   return new Date().toISOString().slice(0, 10)
@@ -37,6 +38,7 @@ export function RouteDetailPage() {
   const { data: route, isLoading } = useRoute(id)
   const updateStatus = useUpdateRouteStatus(id)
   const deleteRoute = useDeleteRoute()
+  const { data: settings } = useSettings()
 
   const { data: routeClients } = useRouteClients(id)
   const { data: clients } = useClients()
@@ -56,6 +58,7 @@ export function RouteDetailPage() {
   const [assignEmployee, setAssignEmployee] = useState('')
   const [assignEquipment, setAssignEquipment] = useState('')
   const [assignDate, setAssignDate] = useState(today())
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false)
 
   if (isLoading || !route) {
     return <div className="h-32 animate-pulse rounded-card bg-reca-gray-light" />
@@ -67,45 +70,38 @@ export function RouteDetailPage() {
     deleteRoute.mutate(route.id, { onSuccess: () => navigate('/routes') })
   }
 
+  async function handleDownloadPdf() {
+    if (!route || !settings) return
+    setIsDownloadingPdf(true)
+    try {
+      const { generateRoutePdf } = await import('../pdf/generateRoutePdf')
+      await generateRoutePdf({
+        route,
+        routeClients: routeClients ?? [],
+        assignments: assignments ?? [],
+        settings,
+      })
+    } catch {
+      toast.error('Impossible de générer le PDF de la route.')
+    } finally {
+      setIsDownloadingPdf(false)
+    }
+  }
+
   const assignedClientIds = new Set((routeClients ?? []).map((item) => item.clientId))
   const availableClients = (clients ?? []).filter((client) => !assignedClientIds.has(client.id))
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-3">
-          {route.couleur && (
-            <span
-              className="mt-1 size-4 shrink-0 rounded-full border border-reca-gray-light"
-              style={{ backgroundColor: route.couleur }}
-              aria-hidden="true"
-            />
-          )}
-          <div>
-            <p className="text-label text-reca-gray-medium">{route.numero}</p>
-            <h1 className="text-section font-semibold text-reca-black">{route.nom}</h1>
-            <div className="mt-2">
-              <RouteStatusBadge status={route.statut} />
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => setEditOpen(true)}>
-            <Pencil className="size-4" aria-hidden="true" />
-            Modifier
-          </Button>
-          <Dropdown trigger={<Button variant="ghost">Statut</Button>}>
-            {ROUTE_STATUSES.map((status) => (
-              <DropdownItem key={status} onClick={() => updateStatus.mutate(status)}>
-                {ROUTE_STATUS_LABELS[status]}
-              </DropdownItem>
-            ))}
-          </Dropdown>
-          <Button variant="ghost" onClick={handleDelete}>
-            <Trash2 className="size-4" aria-hidden="true" />
-          </Button>
-        </div>
-      </div>
+      <RouteDetailHeader
+        route={route}
+        onEdit={() => setEditOpen(true)}
+        onDownloadPdf={handleDownloadPdf}
+        onChangeStatus={(status) => updateStatus.mutate(status)}
+        onDelete={handleDelete}
+        isChangingStatus={updateStatus.isPending}
+        isDownloadingPdf={isDownloadingPdf}
+      />
 
       <Card>
         <h2 className="mb-3 text-subtitle font-semibold text-reca-black">Détails</h2>

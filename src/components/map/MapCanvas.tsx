@@ -7,6 +7,7 @@ import { isMapboxConfigured } from '@/lib/mapboxClient'
 type MapCanvasProps = {
   center: [number, number]
   zoom?: number
+  style?: string
   className?: string
   onMapReady?: (map: MapboxMap) => void
   onError?: (message: string) => void
@@ -15,11 +16,12 @@ type MapCanvasProps = {
 /**
  * Wrapper générique bas-niveau autour de Mapbox GL JS — sans connaissance du domaine
  * (aucun type Contract/Zone ici), réutilisable par n'importe quel futur module ayant
- * besoin d'une carte.
+ * besoin d'une carte. `style` par défaut = satellite (comportement historique du
+ * Wizard Contrats, inchangé) ; un module comme Routes peut passer un style routier.
  */
-export function MapCanvas({ center, zoom, className, onMapReady, onError }: MapCanvasProps) {
+export function MapCanvas({ center, zoom, style, className, onMapReady, onError }: MapCanvasProps) {
   const containerRef = useRef<HTMLDivElement>(null)
-  const { map, isLoaded, error } = useMapboxMap(containerRef, { center, zoom })
+  const { map, isLoaded, error } = useMapboxMap(containerRef, { center, zoom, style })
 
   useEffect(() => {
     if (map && isLoaded) onMapReady?.(map)

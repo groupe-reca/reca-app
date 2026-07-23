@@ -34,6 +34,9 @@ import { EmployeesListPage } from '@/features/employees/pages/EmployeesListPage'
 import { RouteCreatePage } from '@/features/routes/pages/RouteCreatePage'
 import { RouteDetailPage } from '@/features/routes/pages/RouteDetailPage'
 import { RoutesListPage } from '@/features/routes/pages/RoutesListPage'
+import { InterventionCreatePage } from '@/features/interventions/pages/InterventionCreatePage'
+import { InterventionDetailPage } from '@/features/interventions/pages/InterventionDetailPage'
+import { InterventionsListPage } from '@/features/interventions/pages/InterventionsListPage'
 import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 
 export const router = createBrowserRouter([
@@ -147,6 +150,18 @@ export const router = createBrowserRouter([
               { path: 'routes', element: <RoutesListPage />, handle: { breadcrumb: 'Routes' } },
               { path: 'routes/new', element: <RouteCreatePage />, handle: { breadcrumb: 'Nouvelle route' } },
               { path: 'routes/:id', element: <RouteDetailPage />, handle: { breadcrumb: 'Détail' } },
+            ],
+          },
+          {
+            element: <RequireModule moduleKey="interventions" />,
+            children: [
+              { path: 'interventions', element: <InterventionsListPage />, handle: { breadcrumb: 'Interventions' } },
+              {
+                path: 'interventions/new',
+                element: <InterventionCreatePage />,
+                handle: { breadcrumb: 'Nouvelle intervention' },
+              },
+              { path: 'interventions/:id', element: <InterventionDetailPage />, handle: { breadcrumb: 'Détail' } },
             ],
           },
           {
