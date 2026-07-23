@@ -37,6 +37,9 @@ import { RoutesShellPage } from '@/features/routes/pages/RoutesShellPage'
 import { RoutesListTabPage } from '@/features/routes/pages/RoutesListTabPage'
 import { CarteTabPage } from '@/features/routes/pages/CarteTabPage'
 import { ContratsTabPage } from '@/features/routes/pages/ContratsTabPage'
+import { MissionCreatePage } from '@/features/missions/pages/MissionCreatePage'
+import { MissionDetailPage } from '@/features/missions/pages/MissionDetailPage'
+import { MissionsListPage } from '@/features/missions/pages/MissionsListPage'
 import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 
 export const router = createBrowserRouter([
@@ -159,6 +162,14 @@ export const router = createBrowserRouter([
               },
               { path: 'routes/new', element: <RouteCreatePage />, handle: { breadcrumb: 'Nouvelle route' } },
               { path: 'routes/:id', element: <RouteDetailPage />, handle: { breadcrumb: 'Détail' } },
+            ],
+          },
+          {
+            element: <RequireModule moduleKey="missions" />,
+            children: [
+              { path: 'missions', element: <MissionsListPage />, handle: { breadcrumb: 'Missions' } },
+              { path: 'missions/new', element: <MissionCreatePage />, handle: { breadcrumb: 'Nouvelle mission' } },
+              { path: 'missions/:id', element: <MissionDetailPage />, handle: { breadcrumb: 'Détail' } },
             ],
           },
           {

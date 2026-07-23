@@ -1,5 +1,6 @@
 import { useMemo } from 'react'
 import {
+  ClipboardList,
   CreditCard,
   FileSignature,
   FileText,
@@ -40,6 +41,7 @@ export const NAV_ITEMS: NavItemConfig[] = [
   { label: 'Routes', to: '/routes', icon: RouteIcon, moduleKey: 'routes' },
   { label: 'Équipements', to: '/equipment', icon: Truck, moduleKey: 'equipment' },
   { label: 'Employés', to: '/employees', icon: UserCog, moduleKey: 'employees' },
+  { label: 'Missions', to: '/missions', icon: ClipboardList, moduleKey: 'missions' },
 ]
 
 export const SETTINGS_ITEM: NavItemConfig = { label: 'Paramètres', to: '/settings', icon: Settings }

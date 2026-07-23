@@ -18,6 +18,7 @@ export type ModuleKey =
   | 'routes'
   | 'equipment'
   | 'employees'
+  | 'missions'
 
 export type SettingsModules = Record<ModuleKey, boolean>
 
