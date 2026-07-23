@@ -2,10 +2,11 @@ import { useMemo, useState } from 'react'
 import type { FilterChipOption } from '@/components/ui/FilterChips'
 import type { Contract, ContractStatus } from '../types/contract.types'
 
-export type ContractStatusFilter = 'tous' | 'actif' | 'a_signer' | 'brouillon' | 'expire'
+export type ContractStatusFilter = 'tous' | 'actif' | 'suspendu' | 'a_signer' | 'brouillon' | 'expire'
 
 const STATUS_FILTER_TO_STATUS: Partial<Record<ContractStatusFilter, ContractStatus>> = {
   actif: 'actif',
+  suspendu: 'suspendu',
   a_signer: 'a_signer',
   brouillon: 'brouillon',
   expire: 'expire',
@@ -14,6 +15,7 @@ const STATUS_FILTER_TO_STATUS: Partial<Record<ContractStatusFilter, ContractStat
 export const CONTRACT_STATUS_FILTER_OPTIONS: FilterChipOption[] = [
   { id: 'tous', label: 'Tous' },
   { id: 'actif', label: 'Actifs' },
+  { id: 'suspendu', label: 'Suspendus' },
   { id: 'a_signer', label: 'À signer' },
   { id: 'brouillon', label: 'Brouillons' },
   { id: 'expire', label: 'Expirés' },

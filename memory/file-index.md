@@ -95,12 +95,18 @@ Convention de chaque module : `types/`, `schemas/`, `services/`, `hooks/`, `comp
 - pages: `src/features/employees/pages/EmployeeCreatePage.tsx`, `EmployeeDetailPage.tsx`, `EmployeesListPage.tsx`
 
 ## routes
-- types: `src/features/routes/types/route.types.ts`
-- schemas: `src/features/routes/schemas/route.schema.ts`
-- services: `src/features/routes/services/routeAssignments.service.ts`, `routeClients.service.ts`, `routes.service.ts`
-- hooks: `src/features/routes/hooks/routeKeys.ts`, `useAddRouteClient.ts`, `useCreateRouteAssignment.ts`, `useCreateRoute.ts`, `useDeleteRouteAssignment.ts`, `useDeleteRoute.ts`, `useRemoveRouteClient.ts`, `useReorderRouteClient.ts`, `useRouteAssignments.ts`, `useRouteClients.ts`, `useRoutes.ts`, `useRoute.ts`, `useUpdateAssignmentStatus.ts`, `useUpdateRouteStatus.ts`, `useUpdateRoute.ts`
-- components: `src/features/routes/components/RouteFormModal.tsx`, `RouteForm.tsx`, `RouteStatusBadge.tsx`, `RouteTable.tsx`
-- pages: `src/features/routes/pages/RouteCreatePage.tsx`, `RouteDetailPage.tsx`, `RoutesListPage.tsx`
+*(module V2, refonte complète 2026-07-22 — basé sur les contrats, pas les clients ; l'ancien `route_clients`/`route_assignments` a été entièrement abandonné)*
+- types: `src/features/routes/types/route.types.ts` (`Route`/`RouteSummary`, `ROUTE_COLOR_PRESETS`), `routeContract.types.ts` (`RouteContract`), `unassignedContract.types.ts` (`UnassignedContract`), `routeMapPoint.types.ts` (`RouteMapPoint`/`RouteMapData`)
+- schemas: `src/features/routes/schemas/route.schema.ts` (`routeSchema`, réutilisé création+Paramètres), `routeRename.schema.ts` (renommage inline ✏️)
+- services: `src/features/routes/services/routes.service.ts` (`listRoutesSummary`/`getRoute`/`createRoute`/`updateRoute`/`renameRoute`/`deleteRoute`), `routeContracts.service.ts` (`assignContractToRoute` partagé par quick-assign/Ajouter/Transférer, `removeContractFromRoute`, `reorderRouteContract` → RPC), `unassignedContracts.service.ts` (`listUnassignedContracts(season)`, anti-join côté client), `routesMap.service.ts` (`getRoutesMapData`, calcule un point par contrat via `utils/contractPoint.ts`)
+- hooks: `src/features/routes/hooks/routeKeys.ts` + `useRoutes.ts`/`useRoute.ts`/`useCreateRoute.ts`/`useUpdateRoute.ts`/`useRenameRoute.ts`/`useDeleteRoute.ts`/`useRouteContracts.ts`/`useAssignContractToRoute.ts`/`useRemoveContractFromRoute.ts`/`useReorderRouteContract.ts`/`useUnassignedContracts.ts` (dépend de `useContractWizardDefaults()` du module Contrats pour la "saison courante")/`useRoutesMapData.ts`
+- utils: `src/features/routes/utils/contractPoint.ts` (`computeContractPoint` — centroïde `@turf/centroid` de la plus grande zone, repli adresse géocodée), `mapBounds.ts` (`boundsFromPoints`)
+- components: `RouteColorPicker.tsx`, `RouteForm.tsx`, `RouteSettingsModal.tsx`, `RouteCard.tsx`, `RoutesTabs.tsx` (barre d'onglets locale, ne pas confondre avec `components/layout/PageTabs.tsx` partagé — padding différent, voir `memory/memory.md`)
+- components/quickAssign: `UnassignedContractCard.tsx`, `QuickAssignControl.tsx` (boutons numérotés ≤5 routes / `<Select>` au-delà)
+- components/detail: `RouteDetailHeader.tsx` (✏️ renommage inline), `RouteActionBar.tsx`, `RouteContractCard.tsx` (⬆⬇➡🗑), `RouteContractsList.tsx`, `AddContractToRouteModal.tsx`, `TransferContractModal.tsx`
+- components/map: `RoutesMapView.tsx` (marqueurs `mapboxgl.Marker` colorés par route + popup, pas de source/layer GeoJSON — volume de points faible), `RouteSelector.tsx`
+- pages: `RoutesShellPage.tsx` (coquille 3 onglets, `<Outlet/>`), `RoutesListTabPage.tsx`, `ContratsTabPage.tsx`, `CarteTabPage.tsx`, `RouteCreatePage.tsx`, `RouteDetailPage.tsx` (fiche Route — pas de split desktop/mobile ce sprint, voir `memory/memory.md`)
+- Migrations : `supabase/migrations/20260722000000_contract_status_suspendu.sql` (statut `suspendu` sur `contracts`), `20260722010000_drop_routes_v1.sql`, `20260722020000_routes_v2.sql` (tables `routes`+`route_contracts`, policies SELECT élargies admin — voir piège RLS dans `memory/memory.md`), `20260722030000_reorder_route_contract.sql` (RPC)
 
 ## settings
 - types: `src/features/settings/types/settings.types.ts` (sprint014 — `assurancePoliceNo`/`assurance_police_no`)

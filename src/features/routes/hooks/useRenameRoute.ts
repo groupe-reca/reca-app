@@ -1,18 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from '@/stores/toastStore'
 import * as routesService from '../services/routes.service'
-import type { RouteStatus } from '../types/route.types'
 import { routeKeys } from './routeKeys'
+import type { RouteRenameFormValues } from '../schemas/routeRename.schema'
 
-export function useUpdateRouteStatus(id: string) {
+export function useRenameRoute(id: string) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (statut: RouteStatus) => routesService.updateRouteStatus(id, statut),
+    mutationFn: (values: RouteRenameFormValues) => routesService.renameRoute(id, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: routeKeys.all })
-      toast.success('Statut mis à jour.')
+      toast.success('Route renommée.')
     },
-    onError: () => toast.error('Impossible de mettre à jour le statut.'),
+    onError: () => toast.error('Impossible de renommer la route.'),
   })
 }

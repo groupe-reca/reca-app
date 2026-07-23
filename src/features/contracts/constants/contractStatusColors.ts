@@ -6,6 +6,7 @@ export const CONTRACT_STATUS_COLORS: Record<ContractStatus, BadgeColor> = {
   a_signer: 'purple',
   en_attente: 'yellow',
   actif: 'green',
+  suspendu: 'orange',
   expire: 'red',
   annule: 'gray',
 }

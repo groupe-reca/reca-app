@@ -33,7 +33,10 @@ import { EmployeeDetailPage } from '@/features/employees/pages/EmployeeDetailPag
 import { EmployeesListPage } from '@/features/employees/pages/EmployeesListPage'
 import { RouteCreatePage } from '@/features/routes/pages/RouteCreatePage'
 import { RouteDetailPage } from '@/features/routes/pages/RouteDetailPage'
-import { RoutesListPage } from '@/features/routes/pages/RoutesListPage'
+import { RoutesShellPage } from '@/features/routes/pages/RoutesShellPage'
+import { RoutesListTabPage } from '@/features/routes/pages/RoutesListTabPage'
+import { CarteTabPage } from '@/features/routes/pages/CarteTabPage'
+import { ContratsTabPage } from '@/features/routes/pages/ContratsTabPage'
 import { SettingsPage } from '@/features/settings/pages/SettingsPage'
 
 export const router = createBrowserRouter([
@@ -144,7 +147,16 @@ export const router = createBrowserRouter([
           {
             element: <RequireModule moduleKey="routes" />,
             children: [
-              { path: 'routes', element: <RoutesListPage />, handle: { breadcrumb: 'Routes' } },
+              {
+                path: 'routes',
+                element: <RoutesShellPage />,
+                handle: { breadcrumb: 'Routes' },
+                children: [
+                  { index: true, element: <RoutesListTabPage /> },
+                  { path: 'carte', element: <CarteTabPage /> },
+                  { path: 'contrats', element: <ContratsTabPage /> },
+                ],
+              },
               { path: 'routes/new', element: <RouteCreatePage />, handle: { breadcrumb: 'Nouvelle route' } },
               { path: 'routes/:id', element: <RouteDetailPage />, handle: { breadcrumb: 'Détail' } },
             ],
