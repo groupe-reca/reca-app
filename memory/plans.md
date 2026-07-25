@@ -14,6 +14,26 @@ Demande (2026-07-25) : "quand l'opérateur appuie sur Démarrer, la mission pass
 - INSERT/DELETE restent admin-only (aucune UI ne permet à un employé de créer/copier des MissionItems ni de créer une Mission — hors scope de la demande).
 - Pas de changement côté client (`missions.service.ts`/`missionItems.service.ts`/composants) : le flux existant fonctionnera tel quel dès que la migration sera appliquée.
 - **Migration à appliquer par l'utilisateur** (comme toutes les précédentes de ce sandbox) avant qu'un compte employé puisse réellement Débuter/mettre à jour une mission qui lui est assignée.
+- **Appliquée par l'utilisateur le 2026-07-25.** Committée/poussée sur `main` (`eb260cb`).
+
+## [x] Suite — réconciliation de schéma + démarrage de Mission câblé dans `reca-operator` — implémenté, migration à appliquer
+
+Après la tâche ci-dessus, l'utilisateur a rendu accessible `/var/www/html/reca-operator` (repo **distinct**, app terrain mobile "opérateur", même Supabase que `reca-app`) et demandé si des changements y étaient aussi nécessaires. Découvert : (1) son `memory/` documente 2 changements Supabase appliqués à la main (`users.role` élargi à `'operateur'`, policy `mission_items_update_operator`) sur une branche `feat/operator-integration` qui n'existe nulle part dans ce repo — dérive de schéma jamais committée ici ; (2) `reca-operator` n'écrit jamais dans `missions` (seulement `mission_items.statut`) — son bouton "Play" ne démarre que le moteur GPS local, la Mission ne passe jamais à `en_cours` côté base depuis l'app opérateur.
+
+**Confirmé avec l'utilisateur** : réconcilier + câbler.
+
+**Implémenté** :
+1. `reca-app` — `supabase/migrations/20260725020000_reconcile_operator_role_and_policies.sql` : élargit `users_role_check` à `'operateur'` (idempotent) et retire l'ancienne policy ad hoc `mission_items_update_operator` (doublon avec `mission_items_update_admin_or_operator` de la tâche précédente, une seule policy UPDATE permissive suffit).
+2. `reca-operator` (voir son propre `memory/` pour le détail) :
+   - `domain/types.ts` — `Mission` gagne `id: string | null`.
+   - `services/missionSupabase.ts` — `loadAssignedMission()` renvoie désormais `id: mission.id`.
+   - `services/missionSync.ts` — nouvelle `startMission(missionId)` : `missions.update({statut:'en_cours', heure_debut: now()}).eq('id', missionId).eq('statut','planifiee')`, best-effort (ne lève jamais, même convention que `persistItemStatus`). Le filtre `.eq('statut','planifiee')` rend l'appel **idempotent** : à chaque reconnexion/rechargement, le moteur rejoue `MISSION_STARTED` (fresh start à chaque nouvelle instance du moteur) mais la Mission est déjà `en_cours` en base, donc l'update ne touche aucune ligne — `heure_debut` n'est jamais écrasée.
+   - `hooks/useMissionEngine.ts` — expose `missionId: mission?.id ?? null`.
+   - `hooks/useMissionSync.ts` — accepte `missionId`, appelle `startMission(missionId)` sur l'événement `MISSION_STARTED` du moteur (déjà émis uniquement sur un vrai fresh start IDLE/STOPPED→RUNNING, jamais une reprise après pause — hook point naturel, aucune nouvelle UI nécessaire puisque la prod démarre déjà automatiquement le moteur au chargement de la mission).
+   - `pages/MissionPage.tsx` — passe `missionId: engine.missionId` à `useMissionSync`.
+3. Aucun nouveau bouton "Démarrer" ajouté côté `reca-operator` : en production l'engine démarre déjà automatiquement (`if (!engine.getConfig().devControls) engine.play()`), donc le hook sur `MISSION_STARTED` suffit à refléter fidèlement "l'opérateur a commencé sa tournée" sans changer l'UX existante.
+
+`tsc -b`/`npm run lint`/`npm run build` propres sur `reca-operator` (après `npm install`, `node_modules` absent au départ dans ce sandbox). **Migration `20260725020000` à appliquer par l'utilisateur** avant que le rôle `operateur` soit formellement reconnu par ce repo — la policy `mission_items_update_operator` ad hoc reste fonctionnelle en attendant (elle n'est retirée qu'après application, pas de régression entre-temps).
 
 ## [x] Modernisation fiche contrat v2 (branche `modernisation-fiche-contrat-v2`, depuis `optimisation-fiche-contrat-v2` committé) — implémenté et vérifié
 
