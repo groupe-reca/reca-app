@@ -8,6 +8,7 @@ import { useEmployees } from '@/features/employees/hooks/useEmployees'
 import { useEquipments } from '@/features/equipments/hooks/useEquipments'
 import { useRoutes } from '@/features/routes/hooks/useRoutes'
 import { MissionCard } from './MissionCard'
+import { MissionsStatsRow } from './MissionsStatsRow'
 import { MISSION_STATUS_FILTER_OPTIONS, useMissionsListFilters } from '../hooks/useMissionsListFilters'
 import type { MissionStatusFilter } from '../hooks/useMissionsListFilters'
 import type { MissionSummary } from '../types/mission.types'
@@ -16,9 +17,10 @@ type MissionsListContentProps = {
   missions: MissionSummary[] | undefined
   isLoading: boolean
   isError: boolean
+  showStats?: boolean
 }
 
-export function MissionsListContent({ missions, isLoading, isError }: MissionsListContentProps) {
+export function MissionsListContent({ missions, isLoading, isError, showStats = true }: MissionsListContentProps) {
   const navigate = useNavigate()
 
   return (
@@ -31,7 +33,11 @@ export function MissionsListContent({ missions, isLoading, isError }: MissionsLi
       errorLabel="Impossible de charger les missions."
     >
       {(data) => (
-        <MissionsListBody missions={data} onSelect={(mission) => navigate(`/missions/${mission.id}`)} />
+        <MissionsListBody
+          missions={data}
+          showStats={showStats}
+          onSelect={(mission) => navigate(`/missions/${mission.id}`)}
+        />
       )}
     </QueryState>
   )
@@ -39,9 +45,11 @@ export function MissionsListContent({ missions, isLoading, isError }: MissionsLi
 
 function MissionsListBody({
   missions,
+  showStats,
   onSelect,
 }: {
   missions: MissionSummary[]
+  showStats: boolean
   onSelect: (mission: MissionSummary) => void
 }) {
   const { data: routes } = useRoutes()
@@ -66,6 +74,8 @@ function MissionsListBody({
 
   return (
     <div className="flex flex-col gap-4">
+      {showStats && <MissionsStatsRow missions={missions} />}
+
       <Input
         label="Rechercher"
         icon={Search}
