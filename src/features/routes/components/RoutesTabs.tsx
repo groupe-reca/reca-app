@@ -19,7 +19,7 @@ type RoutesTabsProps = {
  */
 export function RoutesTabs({ activeId, onChange }: RoutesTabsProps) {
   return (
-    <div role="tablist" className="flex min-w-0 gap-1 overflow-x-auto">
+    <div role="tablist" className="flex min-w-0 flex-1 gap-1 overflow-x-auto md:flex-none">
       {TABS.map((tab) => {
         const isActive = tab.id === activeId
         return (
@@ -29,7 +29,7 @@ export function RoutesTabs({ activeId, onChange }: RoutesTabsProps) {
             role="tab"
             aria-selected={isActive}
             onClick={() => onChange(tab.id)}
-            className={`relative flex items-center gap-1.5 whitespace-nowrap px-3 py-3 text-label font-medium transition-colors ${
+            className={`relative flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap px-3 py-3 text-label font-medium transition-colors md:flex-none md:justify-start ${
               isActive ? 'text-reca-red' : 'text-reca-gray-medium hover:text-reca-black'
             }`}
           >
