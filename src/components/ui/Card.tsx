@@ -2,15 +2,23 @@ import { ChevronRight } from 'lucide-react'
 import type { HTMLAttributes } from 'react'
 
 type CardVariant = 'default' | 'clickable'
+type CardPadding = 'sm' | 'md'
 
 type CardProps = HTMLAttributes<HTMLDivElement> & {
   variant?: CardVariant
   chevron?: boolean
+  padding?: CardPadding
+}
+
+const PADDING_CLASSES: Record<CardPadding, string> = {
+  sm: 'p-3',
+  md: 'p-6',
 }
 
 export function Card({
   variant = 'default',
   chevron = false,
+  padding = 'md',
   className = '',
   children,
   ...props
@@ -21,7 +29,7 @@ export function Card({
     <div
       role={isClickable ? 'button' : undefined}
       tabIndex={isClickable ? 0 : undefined}
-      className={`rounded-card bg-reca-white p-6 shadow-card transition-shadow duration-150 ${
+      className={`rounded-card bg-reca-white ${PADDING_CLASSES[padding]} shadow-card transition-shadow duration-150 ${
         isClickable ? 'cursor-pointer hover:shadow-floating active:shadow-card' : ''
       } ${chevron ? 'flex items-center justify-between gap-4' : ''} ${className}`}
       {...props}
