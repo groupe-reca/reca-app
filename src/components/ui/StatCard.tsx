@@ -16,8 +16,6 @@ type StatCardProps = {
   label: string
   delta?: StatCardDelta
   className?: string
-  /** Format réduit (icône + nombre seulement, sans libellé) — pour les rangées de stats visibles en mobile (Contrats, Routes). Défaut `false`, aucun effet sur les autres usages. */
-  compact?: boolean
 }
 
 const DELTA_TONE_CLASSES: Record<NonNullable<StatCardDelta['tone']>, string> = {
@@ -33,26 +31,7 @@ export function StatCard({
   label,
   delta,
   className = '',
-  compact = false,
 }: StatCardProps) {
-  if (compact) {
-    return (
-      <Card
-        padding="xs"
-        className={`flex flex-col items-center justify-center gap-1 ${className}`}
-        aria-label={`${label} : ${value}`}
-      >
-        <span
-          className={`flex size-6 shrink-0 items-center justify-center rounded-control ${STATUS_BG_CLASSES[iconColor]}`}
-          aria-hidden="true"
-        >
-          <Icon className={`size-3.5 ${STATUS_TEXT_CLASSES[iconColor]}`} aria-hidden="true" />
-        </span>
-        <p className="text-label font-semibold text-reca-black">{value}</p>
-      </Card>
-    )
-  }
-
   return (
     <Card className={`flex flex-col gap-3 ${className}`}>
       <span

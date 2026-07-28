@@ -35,7 +35,7 @@ export function MobileContractsListPage() {
         </div>
       }
     >
-      <ContractsListContent contracts={contracts} isLoading={isLoading} isError={isError} />
+      <ContractsListContent contracts={contracts} isLoading={isLoading} isError={isError} showStats={false} />
     </MobileContractLayout>
   )
 }

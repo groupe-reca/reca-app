@@ -8,10 +8,14 @@ type RoutesStatsRowProps = {
   routes: RouteSummary[]
 }
 
-/** Pas d'axe de statut ici : les Routes n'ont aucun champ de statut réel (juste nom/couleur/opérateur/équipement) — les 4 cartes restent des comptages honnêtes sur des données existantes, pas une catégorie inventée. */
+/**
+ * Pas d'axe de statut ici : les Routes n'ont aucun champ de statut réel (juste nom/couleur/opérateur/équipement) —
+ * les 4 cartes restent des comptages honnêtes sur des données existantes, pas une catégorie inventée.
+ * Masqué entièrement en mobile (module sans split Desktop/Mobile, contrairement aux autres modules qui
+ * gèrent ça via `showStats` sur la page liste) — décision utilisateur, même traitement que les 7 autres modules.
+ */
 export function RoutesStatsRow({ routes }: RoutesStatsRowProps) {
   const tier = useDeviceTier()
-  const compact = tier === 'mobile'
 
   const counts = useMemo(
     () => ({
@@ -23,12 +27,14 @@ export function RoutesStatsRow({ routes }: RoutesStatsRowProps) {
     [routes],
   )
 
+  if (tier === 'mobile') return null
+
   return (
-    <div className={compact ? 'grid grid-cols-4 gap-1.5' : 'grid grid-cols-2 gap-4 sm:grid-cols-4'}>
-      <StatCard compact={compact} icon={MapPin} iconColor="blue" value={counts.total} label="Total" />
-      <StatCard compact={compact} icon={User} iconColor="purple" value={counts.avecOperateur} label="Avec opérateur" />
-      <StatCard compact={compact} icon={Truck} iconColor="orange" value={counts.avecEquipement} label="Avec équipement" />
-      <StatCard compact={compact} icon={FileText} iconColor="green" value={counts.totalContrats} label="Contrats assignés" />
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <StatCard icon={MapPin} iconColor="blue" value={counts.total} label="Total" />
+      <StatCard icon={User} iconColor="purple" value={counts.avecOperateur} label="Avec opérateur" />
+      <StatCard icon={Truck} iconColor="orange" value={counts.avecEquipement} label="Avec équipement" />
+      <StatCard icon={FileText} iconColor="green" value={counts.totalContrats} label="Contrats assignés" />
     </div>
   )
 }
