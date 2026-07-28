@@ -23,6 +23,10 @@ export type MissionItemRow = {
   mission_id: string
   contract_id: string
   statut: MissionItemStatus
+  /** Durée réelle du trajet (s), mesurée par RECA Operator, null si non finalisé. */
+  duree_trajet_secondes: number | null
+  /** Durée réelle de l'intervention sur place (s), null si non finalisé. */
+  duree_intervention_secondes: number | null
   created_at: string
   updated_at: string
   deleted_at: string | null
@@ -33,6 +37,10 @@ export type MissionItem = {
   missionId: string
   contractId: string
   statut: MissionItemStatus
+  /** Durée réelle du trajet (s), null tant que la résidence n'est pas finalisée. */
+  dureeTrajetSecondes: number | null
+  /** Durée réelle de l'intervention sur place (s), null si non finalisée. */
+  dureeInterventionSecondes: number | null
   createdAt: string
 }
 

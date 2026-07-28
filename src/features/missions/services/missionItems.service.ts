@@ -37,6 +37,10 @@ function mapMissionItem(row: MissionItemRow): MissionItem {
     missionId: row.mission_id,
     contractId: row.contract_id,
     statut: row.statut,
+    // `?? null` tolère l'absence des colonnes tant que la migration
+    // 20260725100000_mission_items_durations.sql n'est pas appliquée (undefined → null).
+    dureeTrajetSecondes: row.duree_trajet_secondes ?? null,
+    dureeInterventionSecondes: row.duree_intervention_secondes ?? null,
     createdAt: row.created_at,
   }
 }

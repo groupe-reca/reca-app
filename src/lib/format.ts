@@ -34,6 +34,21 @@ export function formatDateTime(iso: string): string {
   return dateTimeFormatter.format(new Date(iso))
 }
 
+/**
+ * Formate une durée exprimée en **secondes** en texte français compact :
+ * `1 h 05 min` / `12 min 30 s` / `45 s`. Renvoie `'—'` si null/undefined.
+ */
+export function formatDuration(totalSeconds: number | null | undefined): string {
+  if (totalSeconds == null) return '—'
+  const s = Math.max(0, Math.round(totalSeconds))
+  const hours = Math.floor(s / 3600)
+  const minutes = Math.floor((s % 3600) / 60)
+  const seconds = s % 60
+  if (hours > 0) return `${hours} h ${String(minutes).padStart(2, '0')} min`
+  if (minutes > 0) return `${minutes} min ${String(seconds).padStart(2, '0')} s`
+  return `${seconds} s`
+}
+
 const relativeTimeFormatter = new Intl.RelativeTimeFormat('fr-CA', { numeric: 'auto' })
 
 export function formatRelativeTime(iso: string): string {
