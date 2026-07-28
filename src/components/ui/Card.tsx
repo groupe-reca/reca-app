@@ -2,7 +2,7 @@ import { ChevronRight } from 'lucide-react'
 import type { HTMLAttributes } from 'react'
 
 type CardVariant = 'default' | 'clickable'
-type CardPadding = 'sm' | 'md'
+type CardPadding = 'xs' | 'sm' | 'md'
 
 type CardProps = HTMLAttributes<HTMLDivElement> & {
   variant?: CardVariant
@@ -11,6 +11,7 @@ type CardProps = HTMLAttributes<HTMLDivElement> & {
 }
 
 const PADDING_CLASSES: Record<CardPadding, string> = {
+  xs: 'p-2',
   sm: 'p-3',
   md: 'p-6',
 }

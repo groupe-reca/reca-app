@@ -24,7 +24,7 @@ export function ContractsStatsRow({ contracts }: ContractsStatsRowProps) {
   )
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-5">
+    <div className={compact ? 'grid grid-cols-5 gap-1.5' : 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5'}>
       <StatCard compact={compact} icon={FileText} iconColor="blue" value={counts.total} label="Total" />
       <StatCard compact={compact} icon={ShieldCheck} iconColor="green" value={counts.actifs} label="Actifs" />
       <StatCard compact={compact} icon={Signature} iconColor="purple" value={counts.aSigner} label="À signer" />

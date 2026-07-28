@@ -37,14 +37,18 @@ export function StatCard({
 }: StatCardProps) {
   if (compact) {
     return (
-      <Card padding="sm" className={`flex items-center gap-2 ${className}`} aria-label={`${label} : ${value}`}>
+      <Card
+        padding="xs"
+        className={`flex flex-col items-center justify-center gap-1 ${className}`}
+        aria-label={`${label} : ${value}`}
+      >
         <span
-          className={`flex size-8 shrink-0 items-center justify-center rounded-control ${STATUS_BG_CLASSES[iconColor]}`}
+          className={`flex size-6 shrink-0 items-center justify-center rounded-control ${STATUS_BG_CLASSES[iconColor]}`}
           aria-hidden="true"
         >
-          <Icon className={`size-4 ${STATUS_TEXT_CLASSES[iconColor]}`} aria-hidden="true" />
+          <Icon className={`size-3.5 ${STATUS_TEXT_CLASSES[iconColor]}`} aria-hidden="true" />
         </span>
-        <p className="truncate text-body font-semibold text-reca-black">{value}</p>
+        <p className="text-label font-semibold text-reca-black">{value}</p>
       </Card>
     )
   }

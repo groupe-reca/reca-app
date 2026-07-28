@@ -24,7 +24,7 @@ export function RoutesStatsRow({ routes }: RoutesStatsRowProps) {
   )
 
   return (
-    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-4">
+    <div className={compact ? 'grid grid-cols-4 gap-1.5' : 'grid grid-cols-2 gap-4 sm:grid-cols-4'}>
       <StatCard compact={compact} icon={MapPin} iconColor="blue" value={counts.total} label="Total" />
       <StatCard compact={compact} icon={User} iconColor="purple" value={counts.avecOperateur} label="Avec opérateur" />
       <StatCard compact={compact} icon={Truck} iconColor="orange" value={counts.avecEquipement} label="Avec équipement" />
