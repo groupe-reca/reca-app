@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { RoutesTabs } from '../components/RoutesTabs'
 
@@ -17,14 +18,20 @@ export function RoutesShellPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-section font-semibold text-reca-black">Routes</h1>
-        <p className="text-body text-reca-gray-medium">
-          Organisation permanente du territoire de déneigement.
-        </p>
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between gap-2 border-b border-reca-gray-light">
+        <RoutesTabs activeId={activeTabId} onChange={handleTabChange} />
+        {activeTabId === 'routes' && (
+          <button
+            type="button"
+            onClick={() => navigate('/routes/new')}
+            aria-label="Nouvelle route"
+            className="flex size-11 shrink-0 items-center justify-center rounded-control text-reca-red hover:bg-reca-snow"
+          >
+            <Plus className="size-5" aria-hidden="true" />
+          </button>
+        )}
       </div>
-      <RoutesTabs activeId={activeTabId} onChange={handleTabChange} />
       <Outlet />
     </div>
   )

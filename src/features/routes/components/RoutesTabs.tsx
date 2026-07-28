@@ -19,7 +19,7 @@ type RoutesTabsProps = {
  */
 export function RoutesTabs({ activeId, onChange }: RoutesTabsProps) {
   return (
-    <div role="tablist" className="flex gap-1 overflow-x-auto border-b border-reca-gray-light">
+    <div role="tablist" className="flex min-w-0 gap-1 overflow-x-auto">
       {TABS.map((tab) => {
         const isActive = tab.id === activeId
         return (

@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { Plus, Search } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Search } from 'lucide-react'
 import { Input } from '@/components/ui/Input'
 import { QueryState } from '@/components/ui/QueryState'
 import { useRoutes } from '../hooks/useRoutes'
@@ -24,12 +23,6 @@ export function RoutesListTabPage() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex justify-end">
-        <Button onClick={() => navigate('/routes/new')}>
-          <Plus className="size-4" aria-hidden="true" />
-          Nouvelle Route
-        </Button>
-      </div>
       <QueryState
         isLoading={isLoading}
         isError={isError}
