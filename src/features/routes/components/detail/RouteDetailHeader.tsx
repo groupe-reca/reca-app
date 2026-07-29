@@ -3,6 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { Check, Pencil, X } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
+import { Card } from '@/components/ui/Card'
 import { routeRenameSchema } from '../../schemas/routeRename.schema'
 import type { RouteRenameFormValues } from '../../schemas/routeRename.schema'
 import { useRenameRoute } from '../../hooks/useRenameRoute'
@@ -30,7 +31,7 @@ export function RouteDetailHeader({ route }: RouteDetailHeaderProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-card bg-reca-white p-6 shadow-card">
+    <Card className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-3">
         <span
           className="size-4 shrink-0 rounded-full"
@@ -78,6 +79,6 @@ export function RouteDetailHeader({ route }: RouteDetailHeaderProps) {
           {route.contractCount} contrat{route.contractCount > 1 ? 's' : ''}
         </span>
       </div>
-    </div>
+    </Card>
   )
 }
