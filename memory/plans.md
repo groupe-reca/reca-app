@@ -1,5 +1,40 @@
 # Plans — RECA Centre des opérations
 
+## [x] RLS Missions — écriture ouverte à l'opérateur assigné — implémenté, migration à appliquer
+
+Demande (2026-07-25) : "quand l'opérateur appuie sur Démarrer, la mission passe en_cours + heure de départ notée ; s'il se déconnecte et revient, il doit récupérer sa mission en_cours et continuer où il en était ; le statut des résidences doit être à jour instantanément en base pour survivre à une perte de connexion."
+
+**Vérification faite avant tout code** : les 3 comportements demandés existent déjà côté données/UI — `updateMissionStatus(id, 'en_cours')` (`missions.service.ts`) écrit déjà `heure_debut` au clic sur "Débuter" ; `useUpdateMissionItemStatus`/`updateMissionItemStatus` écrit déjà chaque changement de statut de MissionItem immédiatement en base (pas de buffer local) ; `useMission`/`useMissionItems` (React Query, défauts `refetchOnWindowFocus`/`refetchOnReconnect` non désactivés) refetchent automatiquement à la reconnexion, donc rouvrir la fiche mission affiche toujours l'état réel en base. **Le seul vrai blocage** : les policies RLS `missions_update_admin`/`mission_items_update_admin` (migration `20260723000000_missions.sql`) n'autorisent l'UPDATE qu'à `administrateur` — un compte `employe` (l'opérateur assigné via `missions.operator_id` → `employees.id` → `employees.user_id` → `auth.uid()`) ne peut aujourd'hui ni cliquer "Débuter" ni changer le statut d'un MissionItem, alors qu'aucune UI ne le lui interdit (`MissionDetailHeader.tsx`/`MissionItemCard.tsx` n'ont aucune garde de rôle).
+
+**Confirmé avec l'utilisateur** (question posée) : ouvrir l'écriture aux employés assignés, sans les rendre administrateurs.
+
+**Implémentation** : nouvelle migration `supabase/migrations/20260725010000_missions_operator_write_access.sql` — remplace les 2 policies UPDATE par des versions `admin OR opérateur assigné` :
+- `missions` : `operator_id in (select id from employees where user_id = auth.uid())` en plus de `current_user_role() = 'administrateur'`.
+- `mission_items` : même condition mais via jointure `missions m join employees e on e.id = m.operator_id where e.id = mission_items.mission_id`'s mission's operator, en pratique `mission_id in (select m.id from missions m join employees e on e.id = m.operator_id where e.user_id = auth.uid())`.
+- INSERT/DELETE restent admin-only (aucune UI ne permet à un employé de créer/copier des MissionItems ni de créer une Mission — hors scope de la demande).
+- Pas de changement côté client (`missions.service.ts`/`missionItems.service.ts`/composants) : le flux existant fonctionnera tel quel dès que la migration sera appliquée.
+- **Migration à appliquer par l'utilisateur** (comme toutes les précédentes de ce sandbox) avant qu'un compte employé puisse réellement Débuter/mettre à jour une mission qui lui est assignée.
+- **Appliquée par l'utilisateur le 2026-07-25.** Committée/poussée sur `main` (`eb260cb`).
+
+## [x] Suite — réconciliation de schéma + démarrage de Mission câblé dans `reca-operator` — implémenté, migration à appliquer
+
+Après la tâche ci-dessus, l'utilisateur a rendu accessible `/var/www/html/reca-operator` (repo **distinct**, app terrain mobile "opérateur", même Supabase que `reca-app`) et demandé si des changements y étaient aussi nécessaires. Découvert : (1) son `memory/` documente 2 changements Supabase appliqués à la main (`users.role` élargi à `'operateur'`, policy `mission_items_update_operator`) sur une branche `feat/operator-integration` qui n'existe nulle part dans ce repo — dérive de schéma jamais committée ici ; (2) `reca-operator` n'écrit jamais dans `missions` (seulement `mission_items.statut`) — son bouton "Play" ne démarre que le moteur GPS local, la Mission ne passe jamais à `en_cours` côté base depuis l'app opérateur.
+
+**Confirmé avec l'utilisateur** : réconcilier + câbler.
+
+**Implémenté** :
+1. `reca-app` — `supabase/migrations/20260725020000_reconcile_operator_role_and_policies.sql` : élargit `users_role_check` à `'operateur'` (idempotent) et retire l'ancienne policy ad hoc `mission_items_update_operator` (doublon avec `mission_items_update_admin_or_operator` de la tâche précédente, une seule policy UPDATE permissive suffit).
+2. `reca-operator` (voir son propre `memory/` pour le détail) :
+   - `domain/types.ts` — `Mission` gagne `id: string | null`.
+   - `services/missionSupabase.ts` — `loadAssignedMission()` renvoie désormais `id: mission.id`.
+   - `services/missionSync.ts` — nouvelle `startMission(missionId)` : `missions.update({statut:'en_cours', heure_debut: now()}).eq('id', missionId).eq('statut','planifiee')`, best-effort (ne lève jamais, même convention que `persistItemStatus`). Le filtre `.eq('statut','planifiee')` rend l'appel **idempotent** : à chaque reconnexion/rechargement, le moteur rejoue `MISSION_STARTED` (fresh start à chaque nouvelle instance du moteur) mais la Mission est déjà `en_cours` en base, donc l'update ne touche aucune ligne — `heure_debut` n'est jamais écrasée.
+   - `hooks/useMissionEngine.ts` — expose `missionId: mission?.id ?? null`.
+   - `hooks/useMissionSync.ts` — accepte `missionId`, appelle `startMission(missionId)` sur l'événement `MISSION_STARTED` du moteur (déjà émis uniquement sur un vrai fresh start IDLE/STOPPED→RUNNING, jamais une reprise après pause — hook point naturel, aucune nouvelle UI nécessaire puisque la prod démarre déjà automatiquement le moteur au chargement de la mission).
+   - `pages/MissionPage.tsx` — passe `missionId: engine.missionId` à `useMissionSync`.
+3. Aucun nouveau bouton "Démarrer" ajouté côté `reca-operator` : en production l'engine démarre déjà automatiquement (`if (!engine.getConfig().devControls) engine.play()`), donc le hook sur `MISSION_STARTED` suffit à refléter fidèlement "l'opérateur a commencé sa tournée" sans changer l'UX existante.
+
+`tsc -b`/`npm run lint`/`npm run build` propres sur `reca-operator` (après `npm install`, `node_modules` absent au départ dans ce sandbox). **Migration `20260725020000` à appliquer par l'utilisateur** avant que le rôle `operateur` soit formellement reconnu par ce repo — la policy `mission_items_update_operator` ad hoc reste fonctionnelle en attendant (elle n'est retirée qu'après application, pas de régression entre-temps).
+
 ## [x] Modernisation fiche contrat v2 (branche `modernisation-fiche-contrat-v2`, depuis `optimisation-fiche-contrat-v2` committé) — implémenté et vérifié
 
 Demande : intégrer la nouvelle maquette `.input/design-v2.png` de la fiche contrat (`ContractDetailPage`). Écart avec l'existant (tâche 9, 2026-07-18) : mise en page en 3 colonnes (Informations générales / Client / Site & tracé) au lieu du bandeau d'icônes + grille 2/3+1/3 actuelle, carte satellite + stats de zones fusionnées en une seule carte, "Informations opérateur" en 3 colonnes avec encart ambre "ATTENTION" au lieu d'une liste verticale éditable, "Clauses du contrat" en checklist à cocher au lieu de texte à développer, tableau de paiements visible en ligne au lieu d'caché dans une modale, et une carte **"Historique du contrat"** (nouvelle) qui n'existe pas du tout aujourd'hui.

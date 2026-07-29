@@ -16,9 +16,10 @@ type ContractsListContentProps = {
   contracts: Contract[] | undefined
   isLoading: boolean
   isError: boolean
+  showStats?: boolean
 }
 
-export function ContractsListContent({ contracts, isLoading, isError }: ContractsListContentProps) {
+export function ContractsListContent({ contracts, isLoading, isError, showStats = true }: ContractsListContentProps) {
   const navigate = useNavigate()
 
   return (
@@ -31,7 +32,11 @@ export function ContractsListContent({ contracts, isLoading, isError }: Contract
       errorLabel="Impossible de charger les contrats."
     >
       {(data) => (
-        <ContractsListBody contracts={data} onSelect={(contract) => navigate(`/contracts/${contract.id}`)} />
+        <ContractsListBody
+          contracts={data}
+          showStats={showStats}
+          onSelect={(contract) => navigate(`/contracts/${contract.id}`)}
+        />
       )}
     </QueryState>
   )
@@ -39,16 +44,18 @@ export function ContractsListContent({ contracts, isLoading, isError }: Contract
 
 function ContractsListBody({
   contracts,
+  showStats,
   onSelect,
 }: {
   contracts: Contract[]
+  showStats: boolean
   onSelect: (contract: Contract) => void
 }) {
   const { search, setSearch, statusFilter, setStatusFilter, filtered } = useContractsListFilters(contracts)
 
   return (
     <div className="flex flex-col gap-4">
-      <ContractsStatsRow contracts={contracts} />
+      {showStats && <ContractsStatsRow contracts={contracts} />}
 
       <Input
         label="Rechercher"
