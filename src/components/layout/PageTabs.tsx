@@ -8,13 +8,22 @@ type PageTabsProps = {
   tabs: PageTab[]
   activeId: string
   onChange: (id: string) => void
+  /**
+   * Retire le padding horizontal, prévu pour un conteneur pleine largeur (`ModuleContainer`).
+   * À activer quand la page est déjà paddée par son propre `<main>` — sans ça le padding se
+   * cumule. Un booléen qui *choisit* la classe plutôt que deux classes de padding
+   * concurrentes : l'ordre de cascade Tailwind ne garantirait pas laquelle gagne.
+   */
+  flush?: boolean
 }
 
-export function PageTabs({ tabs, activeId, onChange }: PageTabsProps) {
+export function PageTabs({ tabs, activeId, onChange, flush = false }: PageTabsProps) {
   return (
     <div
       role="tablist"
-      className="flex shrink-0 gap-1 overflow-x-auto border-b border-reca-gray-light px-4 sm:px-6 lg:px-8"
+      className={`flex shrink-0 gap-1 overflow-x-auto border-b border-reca-gray-light ${
+        flush ? 'px-0' : 'px-4 sm:px-6 lg:px-8'
+      }`}
     >
       {tabs.map((tab) => {
         const isActive = tab.id === activeId

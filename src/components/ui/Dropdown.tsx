@@ -66,15 +66,19 @@ export function Dropdown({ trigger, children, className = '' }: DropdownProps) {
 type DropdownItemProps = {
   children: ReactNode
   onClick?: () => void
+  /** `danger` pour une action destructive (texte rouge), à l'image de `Button variant="danger"`. */
+  variant?: 'default' | 'danger'
 }
 
-export function DropdownItem({ children, onClick }: DropdownItemProps) {
+export function DropdownItem({ children, onClick, variant = 'default' }: DropdownItemProps) {
   return (
     <button
       type="button"
       role="menuitem"
       onClick={onClick}
-      className="flex w-full items-center gap-2 rounded-control px-3 py-3 text-left text-body text-reca-black hover:bg-reca-gray-light"
+      className={`flex w-full items-center gap-2 rounded-control px-3 py-3 text-left text-body hover:bg-reca-gray-light ${
+        variant === 'danger' ? 'text-reca-red dark:text-red-400' : 'text-reca-black'
+      }`}
     >
       {children}
     </button>

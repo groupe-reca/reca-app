@@ -11,6 +11,8 @@ import { toast } from '@/stores/toastStore'
 import { MobileContractLayout } from '../../components/mobile/MobileContractLayout'
 import { ContractFormModal } from '../../components/ContractFormModal'
 import { ContractDetailHeader } from '../../components/detail/ContractDetailHeader'
+import { ContractDetailTabsShell } from '../../components/detail/ContractDetailTabsShell'
+import { ContractStatsBanner } from '../../components/detail/ContractStatsBanner'
 import { ContractInfoStrip } from '../../components/detail/ContractInfoStrip'
 import { ContractMapCard } from '../../components/detail/ContractMapCard'
 import { ContractOperatorInfoCard } from '../../components/detail/ContractOperatorInfoCard'
@@ -94,27 +96,64 @@ export function MobileContractDetailPage() {
       >
         {(contractData) => {
           return (
-            <div className="flex flex-col gap-4">
-              <ContractDetailHeader
-                contract={contractData}
-                onEdit={() => setEditOpen(true)}
-                onEmail={handleOpenEmail}
-                onDownloadPdf={handleDownloadPdf}
-                onCancelContract={handleCancelContract}
-                onChangeStatus={(status) => updateStatus.mutate(status)}
-                onDelete={handleDelete}
-                onResumeDraft={() => navigate(`/contracts/new?draftId=${contractData.id}`)}
-                isCancelling={updateStatus.isPending}
-                isDownloadingPdf={isDownloadingPdf}
-              />
-              <ContractMapCard zones={zones} />
-              <ContractInfoStrip contract={contractData} />
-              <ContractClientCard client={contractData.client} />
-              <ContractPaymentsCard contract={contractData} invoices={invoices ?? []} payments={payments ?? []} />
-              <ContractNotesCard contractId={contractData.id} />
-              <ContractOperatorInfoCard contract={contractData} />
-              <ContractClausesCard contract={contractData} />
-              <ContractHistoryCard contractId={contractData.id} />
+            <>
+              {/*
+               * Le `<main>` de `MobileAppShell` n'a aucun padding : `top-0` fige donc bien le
+               * bloc à son vrai sommet, juste sous le `MobileHeader` (pas de `top` négatif à
+               * prévoir, contrairement au Desktop). Les marges négatives compensent en revanche
+               * le `p-4` de `MobileContractLayout` pour un rendu bord à bord.
+               */}
+              <ContractDetailTabsShell
+                stickyClassName="top-0 -mx-4 -mt-4 px-4 pt-4"
+                header={
+                  <ContractDetailHeader
+                    contract={contractData}
+                    compact
+                    clientName={
+                      contractData.client
+                        ? `${contractData.client.prenom} ${contractData.client.nom}`.trim()
+                        : null
+                    }
+                    onEdit={() => setEditOpen(true)}
+                    onEmail={handleOpenEmail}
+                    onDownloadPdf={handleDownloadPdf}
+                    onCancelContract={handleCancelContract}
+                    onChangeStatus={(status) => updateStatus.mutate(status)}
+                    onDelete={handleDelete}
+                    onResumeDraft={() => navigate(`/contracts/new?draftId=${contractData.id}`)}
+                    isCancelling={updateStatus.isPending}
+                    isDownloadingPdf={isDownloadingPdf}
+                  />
+                }
+              >
+                {(activeTab) => (
+                  <div className="flex flex-col gap-4">
+                    {activeTab === 'resume' && (
+                      <>
+                        <ContractStatsBanner contract={contractData} zones={zones} />
+                        <ContractInfoStrip contract={contractData} onEdit={() => setEditOpen(true)} />
+                        <ContractClientCard client={contractData.client} />
+                        <ContractNotesCard contractId={contractData.id} />
+                      </>
+                    )}
+                    {activeTab === 'site' && (
+                      <>
+                        <ContractMapCard zones={zones} />
+                        <ContractOperatorInfoCard contract={contractData} />
+                      </>
+                    )}
+                    {activeTab === 'echeancier' && (
+                      <ContractPaymentsCard
+                        contract={contractData}
+                        invoices={invoices ?? []}
+                        payments={payments ?? []}
+                      />
+                    )}
+                    {activeTab === 'clauses' && <ContractClausesCard contract={contractData} />}
+                    {activeTab === 'historique' && <ContractHistoryCard contractId={contractData.id} />}
+                  </div>
+                )}
+              </ContractDetailTabsShell>
               <ContractFormModal open={editOpen} onClose={() => setEditOpen(false)} contract={contractData} />
               <SendEmailModal
                 open={emailOpen}
@@ -130,7 +169,7 @@ export function MobileContractDetailPage() {
                 }}
                 onSent={() => logEvent.mutate({ type: 'courriel_envoye' })}
               />
-            </div>
+            </>
           )
         }}
       </QueryState>
