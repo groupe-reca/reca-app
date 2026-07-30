@@ -25,11 +25,11 @@ export function ClientDetailHeader({ client, onEdit, onDelete, isDeleting = fals
           Modifier
         </Button>
         <Button
-          variant="secondary"
+          variant="danger"
           fullWidth
           onClick={onDelete}
           disabled={isDeleting}
-          className="sm:w-auto border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+          className="sm:w-auto"
         >
           <Trash2 className="size-4" aria-hidden="true" />
           Supprimer

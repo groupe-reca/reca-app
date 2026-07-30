@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabaseClient'
 import { usePropertyPhotos } from '../../hooks/usePropertyPhotos'
 import { SurfaceSummary } from './SurfaceSummary'
 import type { ContractPhotoFormValues, ContractZoneFormValues } from '../../schemas/contractCreation.schema'
+import { formatArea } from '@/lib/format'
 
 type PropertySubStepValidateProps = {
   zones: ContractZoneFormValues[]
@@ -75,7 +76,7 @@ export function PropertySubStepValidate({
       <Card>
         <h2 className="mb-1 text-subtitle font-semibold text-reca-black">Résumé de l'analyse</h2>
         <p className="text-body text-reca-gray-medium">
-          {zones.length} zone{zones.length > 1 ? 's' : ''} — {total.toFixed(2)} m² au total. Cliquez sur « Suivant »
+          {zones.length} zone{zones.length > 1 ? 's' : ''} — {formatArea(total)} au total. Cliquez sur « Suivant »
           pour continuer vers les services.
         </p>
       </Card>

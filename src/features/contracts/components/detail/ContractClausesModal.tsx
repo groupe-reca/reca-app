@@ -1,6 +1,7 @@
 import { Modal } from '@/components/ui/Modal'
 import { DEPOT_NEIGE_OPTIONS } from '../../constants/wizardOptions'
 import type { Contract } from '../../types/contract.types'
+import { formatArea } from '@/lib/format'
 
 export function ContractClausesModal({
   open,
@@ -18,7 +19,7 @@ export function ContractClausesModal({
           <span className="font-medium text-reca-black">Zone desservie : </span>
           {contract.zoneDesservie}
         </p>
-        <p>Superficie : {contract.superficie != null ? `${contract.superficie} m²` : '—'}</p>
+        <p>Superficie : {formatArea(contract.superficie)}</p>
         <p>Exclusions : {contract.exclusions}</p>
         <p>Seuil de déclenchement : {contract.seuilDeclenchementCm} cm</p>
         <p>Heure limite de dégagement : {contract.heurePremierPassage}</p>

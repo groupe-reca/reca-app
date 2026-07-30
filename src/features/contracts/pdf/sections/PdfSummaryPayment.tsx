@@ -1,5 +1,5 @@
 import { Text, View } from '@react-pdf/renderer'
-import { formatCurrency } from '@/lib/format'
+import { formatArea, formatCurrency } from '@/lib/format'
 import { pdfColors, pdfStyles } from '@/components/pdf/pdfStyles'
 import { MODE_PAIEMENT_OPTIONS } from '../../constants/wizardOptions'
 import { computeInstallmentAmount, getNextPaymentEntry } from '../../utils/paymentPresets'
@@ -27,7 +27,7 @@ export function PdfSummaryPayment({ contract, settings }: PdfSummaryPaymentProps
 
   const recap = [
     { label: 'Type', value: contract.type ?? '—' },
-    { label: 'Surface totale', value: contract.superficie != null ? `${contract.superficie} m²` : '—' },
+    { label: 'Surface totale', value: formatArea(contract.superficie) },
     { label: 'Mode de paiement', value: modeLabel },
     { label: 'Prochain paiement', value: nextPayment?.dateEcheance ?? '—' },
   ]

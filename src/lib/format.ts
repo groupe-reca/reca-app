@@ -4,6 +4,21 @@ export function formatCurrency(value: number): string {
   return currencyFormatter.format(value)
 }
 
+const areaFormatter = new Intl.NumberFormat('fr-CA', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
+/**
+ * Formate une surface en m² au format français (virgule décimale) : `47,92 m²`.
+ * Renvoie `'—'` si null/undefined. **Seul formateur de surface du repo** — ne pas
+ * réintroduire de `.toFixed(2)` aux points d'usage, qui produisait un point anglais.
+ */
+export function formatArea(m2: number | null | undefined): string {
+  if (m2 == null) return '—'
+  return `${areaFormatter.format(m2)} m²`
+}
+
 export function formatPhone(value: string | null | undefined): string {
   if (!value) return ''
   const digits = value.replace(/\D/g, '').slice(-10)

@@ -6,6 +6,7 @@ import { useClient } from '@/features/clients/hooks/useClient'
 import { useContractInvoices } from '@/features/invoices/hooks/useContractInvoices'
 import { usePaymentsByContract } from '@/features/payments/hooks/usePaymentsByContract'
 import { useSettings } from '@/features/settings/hooks/useSettings'
+import { useBreadcrumbLabel } from '@/layouts/useBreadcrumbLabel'
 import { toast } from '@/stores/toastStore'
 import { ContractFormModal } from '../../components/ContractFormModal'
 import { ContractDetailHeader } from '../../components/detail/ContractDetailHeader'
@@ -35,6 +36,8 @@ export function DesktopContractDetailPage() {
   const { data: payments } = usePaymentsByContract(id)
   const { data: settings } = useSettings()
   const { data: fullClient } = useClient(contract?.clientId ?? '')
+  // Fil d'Ariane : remplace le libellé statique 'Détail' de la route par le numéro réel.
+  useBreadcrumbLabel(contract?.numero)
   const zones = (zoneRows ?? []).map(mapZoneRowToFormValues)
   const imageUrl = useSignedCaptureUrl(zones[0]?.imageStoragePath)
   const updateStatus = useUpdateContractStatus(id)

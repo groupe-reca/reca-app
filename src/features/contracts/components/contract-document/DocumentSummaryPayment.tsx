@@ -1,5 +1,5 @@
 import { CalendarClock, CreditCard, DollarSign, Home, Ruler } from 'lucide-react'
-import { formatCurrency } from '@/lib/format'
+import { formatArea, formatCurrency } from '@/lib/format'
 import { MODE_PAIEMENT_OPTIONS } from '../../constants/wizardOptions'
 import { computeInstallmentAmount, getNextPaymentEntry } from '../../utils/paymentPresets'
 import { DocumentSectionHeader } from './DocumentSectionHeader'
@@ -25,7 +25,7 @@ export function DocumentSummaryPayment({ contract, settings }: DocumentSummaryPa
 
   const recap = [
     { icon: Home, label: 'Type', value: contract.type ?? '—' },
-    { icon: Ruler, label: 'Surface totale', value: contract.superficie != null ? `${contract.superficie} m²` : '—' },
+    { icon: Ruler, label: 'Surface totale', value: formatArea(contract.superficie) },
     { icon: DollarSign, label: 'Prix', value: contract.prix != null ? formatCurrency(contract.prix) : '—' },
     { icon: CalendarClock, label: 'Prochain paiement', value: nextPayment?.dateEcheance ?? '—' },
   ]

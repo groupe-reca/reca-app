@@ -1,6 +1,7 @@
 import { Card } from '@/components/ui/Card'
 import { PolygonCard } from './PolygonCard'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
+import { formatArea } from '@/lib/format'
 
 type SurfaceSummaryProps = {
   zones: ContractZoneFormValues[]
@@ -21,7 +22,7 @@ export function SurfaceSummary({ zones, onRemove }: SurfaceSummaryProps) {
         ))}
       </div>
       {zones.length > 0 && (
-        <p className="mt-4 text-label font-medium text-reca-black">Surface totale : {total.toFixed(2)} m²</p>
+        <p className="mt-4 text-label font-medium text-reca-black">Surface totale : {formatArea(total)}</p>
       )}
     </Card>
   )

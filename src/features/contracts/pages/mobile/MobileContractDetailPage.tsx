@@ -6,6 +6,7 @@ import { useClient } from '@/features/clients/hooks/useClient'
 import { useContractInvoices } from '@/features/invoices/hooks/useContractInvoices'
 import { usePaymentsByContract } from '@/features/payments/hooks/usePaymentsByContract'
 import { useSettings } from '@/features/settings/hooks/useSettings'
+import { useBreadcrumbLabel } from '@/layouts/useBreadcrumbLabel'
 import { toast } from '@/stores/toastStore'
 import { MobileContractLayout } from '../../components/mobile/MobileContractLayout'
 import { ContractFormModal } from '../../components/ContractFormModal'
@@ -41,6 +42,8 @@ export function MobileContractDetailPage() {
   const { data: payments } = usePaymentsByContract(id)
   const { data: settings } = useSettings()
   const { data: fullClient } = useClient(contract?.clientId ?? '')
+  // Titre du Header compact : remplace le libellé statique 'Détail' par le numéro réel.
+  useBreadcrumbLabel(contract?.numero)
   const zones = (zoneRows ?? []).map(mapZoneRowToFormValues)
   const imageUrl = useSignedCaptureUrl(zones[0]?.imageStoragePath)
   const updateStatus = useUpdateContractStatus(id)

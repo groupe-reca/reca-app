@@ -1,5 +1,5 @@
 import { Button } from '@/components/ui/Button'
-import { formatDateLong } from '@/lib/format'
+import { formatArea, formatDateLong } from '@/lib/format'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
 
 type ContractZonesStatRowProps = {
@@ -20,7 +20,7 @@ export function ContractZonesStatRow({ zones, onViewTrace }: ContractZonesStatRo
       <div className="flex flex-wrap items-center gap-6 text-body">
         <div>
           <p className="text-label text-reca-gray-medium">Surface totale</p>
-          <p className="font-medium text-reca-black">{total.toFixed(2)} m²</p>
+          <p className="font-medium text-reca-black">{formatArea(total)}</p>
         </div>
         <div>
           <p className="text-label text-reca-gray-medium">Nombre de zones</p>

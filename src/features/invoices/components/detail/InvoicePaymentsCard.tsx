@@ -34,7 +34,7 @@ export function InvoicePaymentsCard({ invoiceId }: { invoiceId: string }) {
           type="button"
           onClick={() => handleDelete(payment.id)}
           aria-label="Supprimer le paiement"
-          className="text-reca-gray-medium hover:text-red-600"
+          className="text-reca-gray-medium hover:text-reca-red dark:hover:text-red-400"
         >
           <Trash2 className="size-4" aria-hidden="true" />
         </button>

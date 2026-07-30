@@ -41,7 +41,7 @@ export function ContractPaymentsCard({ invoices, payments }: ContractPaymentsCar
       key: 'action',
       header: 'Action',
       render: (invoice) => (
-        <Link to={`/invoices/${invoice.id}`} className="text-reca-red hover:underline">
+        <Link to={`/invoices/${invoice.id}`} className="text-reca-info hover:underline">
           Voir la facture
         </Link>
       ),

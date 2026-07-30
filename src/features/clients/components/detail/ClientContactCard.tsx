@@ -13,7 +13,7 @@ export function ClientContactCard({ client }: { client: Client }) {
           <div className="flex items-center gap-2">
             <Phone className="size-4 shrink-0 text-reca-gray-medium" aria-hidden="true" />
             {client.telephone ? (
-              <a href={`tel:${client.telephone}`} className="text-reca-red hover:underline">
+              <a href={`tel:${client.telephone}`} className="text-reca-info hover:underline">
                 {client.telephone}
               </a>
             ) : (
@@ -23,7 +23,7 @@ export function ClientContactCard({ client }: { client: Client }) {
           <div className="flex items-center gap-2">
             <Mail className="size-4 shrink-0 text-reca-gray-medium" aria-hidden="true" />
             {client.courriel ? (
-              <a href={`mailto:${client.courriel}`} className="text-reca-red hover:underline">
+              <a href={`mailto:${client.courriel}`} className="text-reca-info hover:underline">
                 {client.courriel}
               </a>
             ) : (

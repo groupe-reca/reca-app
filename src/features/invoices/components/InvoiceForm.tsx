@@ -73,7 +73,7 @@ export function InvoiceForm({ invoice, isSubmitting, disabled, onSubmit, onCance
       <button
         type="button"
         onClick={applyStandardTaxes}
-        className="self-start text-label font-medium text-reca-red hover:underline"
+        className="self-start text-label font-medium text-reca-info hover:underline"
       >
         Appliquer les taux standards (TPS 5 % · TVQ 9,975 %)
       </button>

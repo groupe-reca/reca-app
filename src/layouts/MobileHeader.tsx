@@ -1,5 +1,6 @@
 import { ChevronLeft } from 'lucide-react'
 import { Link, useMatches } from 'react-router'
+import { useBreadcrumbLabelValue } from './useBreadcrumbLabel'
 import { useMobileHeaderActionsValue } from './useMobileHeaderActions'
 
 type RouteHandle = {
@@ -15,11 +16,17 @@ type RouteHandle = {
 export function MobileHeader() {
   const matches = useMatches()
   const actions = useMobileHeaderActionsValue()
+  const labelOverride = useBreadcrumbLabelValue()
 
   const crumbs = matches
     .filter((match) => Boolean((match.handle as RouteHandle | undefined)?.breadcrumb))
-    .map((match) => ({
-      label: (match.handle as RouteHandle).breadcrumb as string,
+    .map((match, index, all) => ({
+      // Même remplacement dynamique que `Breadcrumb.tsx` (le titre du Header compact est
+      // le dernier crumb) — les deux fichiers doivent rester alignés.
+      label:
+        labelOverride && index === all.length - 1
+          ? labelOverride
+          : ((match.handle as RouteHandle).breadcrumb as string),
       pathname: match.pathname,
     }))
 

@@ -1,6 +1,7 @@
 import { Pencil, Trash2, ZoomIn } from 'lucide-react'
 import { ZONE_TYPE_COLORS } from '../../constants/wizardOptions'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
+import { formatArea } from '@/lib/format'
 
 type PolygonCardProps = {
   zone: ContractZoneFormValues
@@ -38,7 +39,7 @@ export function PolygonCard({ zone, selected = false, onSelect, actions }: Polyg
         <span className="text-body text-reca-black">{zone.label}</span>
       </div>
       <div className="flex items-center gap-3">
-        <span className="text-body font-medium text-reca-black">{zone.surfaceM2.toFixed(2)} m²</span>
+        <span className="text-body font-medium text-reca-black">{formatArea(zone.surfaceM2)}</span>
         {actions?.onZoom && (
           <button type="button" onClick={(event) => { event.stopPropagation(); actions.onZoom?.() }} aria-label="Zoomer sur la zone">
             <ZoomIn className="size-4 text-reca-gray-medium hover:text-reca-black" aria-hidden="true" />
@@ -51,7 +52,7 @@ export function PolygonCard({ zone, selected = false, onSelect, actions }: Polyg
         )}
         {actions?.onRemove && (
           <button type="button" onClick={(event) => { event.stopPropagation(); actions.onRemove?.() }} aria-label="Supprimer la zone">
-            <Trash2 className="size-4 text-reca-gray-medium hover:text-red-600" aria-hidden="true" />
+            <Trash2 className="size-4 text-reca-gray-medium hover:text-reca-red dark:hover:text-red-400" aria-hidden="true" />
           </button>
         )}
       </div>

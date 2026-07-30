@@ -71,7 +71,7 @@ export function ClientContractsCard({ clientId }: { clientId: string }) {
         <button
           type="button"
           onClick={() => setShowAll(true)}
-          className="flex items-center justify-between text-label font-medium text-reca-red hover:underline"
+          className="flex items-center justify-between text-label font-medium text-reca-info hover:underline"
         >
           Voir tous les contrats ({all.length})
           <ChevronRight className="size-4" aria-hidden="true" />

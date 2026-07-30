@@ -44,7 +44,7 @@ export function InvoiceDetailHeader({
           <Pencil className="size-4" aria-hidden="true" />
           Modifier
         </Button>
-        <Button variant="info" fullWidth onClick={onEmail} className="sm:w-auto">
+        <Button variant="primary" fullWidth onClick={onEmail} className="sm:w-auto">
           <Mail className="size-4" aria-hidden="true" />
           Envoyer par courriel
         </Button>
@@ -59,11 +59,11 @@ export function InvoiceDetailHeader({
           Télécharger PDF
         </Button>
         <Button
-          variant="secondary"
+          variant="danger"
           fullWidth
           onClick={onCancelInvoice}
           disabled={isCancelling}
-          className="sm:w-auto border-red-200 text-red-600 hover:bg-red-50 dark:border-red-500/30 dark:text-red-400 dark:hover:bg-red-500/10"
+          className="sm:w-auto"
         >
           <XCircle className="size-4" aria-hidden="true" />
           Annuler la facture

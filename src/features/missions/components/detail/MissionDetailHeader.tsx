@@ -46,7 +46,7 @@ export function MissionDetailHeader({ mission }: { mission: MissionSummary }) {
           <Button isLoading={updateStatus.isPending} onClick={() => updateStatus.mutate({ statut: 'en_cours' })}>
             Débuter
           </Button>
-          <Button variant="secondary" onClick={handleCancel} className="border-red-300 text-red-600 hover:bg-red-50">
+          <Button variant="danger" onClick={handleCancel}>
             Annuler
           </Button>
         </div>
@@ -72,7 +72,7 @@ export function MissionDetailHeader({ mission }: { mission: MissionSummary }) {
             <Button isLoading={updateStatus.isPending} onClick={handleClose}>
               Fermer
             </Button>
-            <Button variant="secondary" onClick={handleCancel} className="border-red-300 text-red-600 hover:bg-red-50">
+            <Button variant="danger" onClick={handleCancel}>
               Annuler
             </Button>
           </div>

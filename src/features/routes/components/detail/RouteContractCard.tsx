@@ -66,7 +66,7 @@ export function RouteContractCard({
           aria-label="Retirer"
           title="Retirer"
           onClick={onRemove}
-          className="flex size-9 items-center justify-center rounded-control text-red-600 hover:bg-red-50"
+          className="flex size-9 items-center justify-center rounded-control text-reca-red hover:bg-reca-red/10 dark:text-red-400"
         >
           <Trash2 className="size-4" />
         </button>

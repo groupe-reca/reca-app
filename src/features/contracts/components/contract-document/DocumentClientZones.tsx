@@ -1,6 +1,7 @@
 import { MapPin, User } from 'lucide-react'
 import { DocumentSectionHeader } from './DocumentSectionHeader'
 import type { ContractDocumentData } from './types'
+import { formatArea } from '@/lib/format'
 
 type DocumentClientZonesProps = Pick<ContractDocumentData, 'contract' | 'client' | 'zones'>
 
@@ -52,7 +53,7 @@ export function DocumentClientZones({ contract, client, zones }: DocumentClientZ
             {zones.map((zone) => (
               <li key={zone.id} className="flex items-center justify-between text-label text-reca-black">
                 <span>{zone.label}</span>
-                <span className="text-reca-gray-medium">{zone.surfaceM2.toFixed(2)} m²</span>
+                <span className="text-reca-gray-medium">{formatArea(zone.surfaceM2)}</span>
               </li>
             ))}
           </ul>

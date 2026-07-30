@@ -19,7 +19,7 @@ export function ContractClientCard({ client }: { client: ContractClientRef | nul
     <Card className="flex flex-col gap-4">
       <div>
         <h2 className="text-subtitle font-semibold text-reca-black">
-          <Link to={`/clients/${client.id}`} className="text-reca-red hover:underline">
+          <Link to={`/clients/${client.id}`} className="text-reca-info hover:underline">
             {client.prenom} {client.nom}
           </Link>
         </h2>

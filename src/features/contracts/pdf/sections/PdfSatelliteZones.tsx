@@ -2,6 +2,7 @@ import { Image, Text, View } from '@react-pdf/renderer'
 import { pdfStyles } from '@/components/pdf/pdfStyles'
 import { ZONE_TYPE_OPTIONS } from '../../constants/wizardOptions'
 import type { ContractDocumentData } from '../../components/contract-document/types'
+import { formatArea } from '@/lib/format'
 
 type PdfSatelliteZonesProps = Pick<ContractDocumentData, 'contract' | 'zones' | 'imageUrl'>
 
@@ -44,13 +45,13 @@ export function PdfSatelliteZones({ contract, zones, imageUrl }: PdfSatelliteZon
                   {zone.label}
                   {typeLabel !== zone.label && <Text style={{ color: '#6b7280' }}> — {typeLabel}</Text>}
                 </Text>
-                <Text style={{ fontWeight: 700 }}>{zone.surfaceM2.toFixed(2)} m²</Text>
+                <Text style={{ fontWeight: 700 }}>{formatArea(zone.surfaceM2)}</Text>
               </View>
             )
           })}
           <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', paddingTop: 6 }}>
             <Text style={{ fontWeight: 700 }}>Total</Text>
-            <Text style={{ fontWeight: 700 }}>{totalSurface.toFixed(2)} m²</Text>
+            <Text style={{ fontWeight: 700 }}>{formatArea(totalSurface)}</Text>
           </View>
         </View>
       )}

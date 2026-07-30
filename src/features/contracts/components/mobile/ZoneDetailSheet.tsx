@@ -3,6 +3,7 @@ import type { LucideIcon } from 'lucide-react'
 import { BottomSheet } from '@/components/ui/BottomSheet'
 import { ZONE_TYPE_COLORS, ZONE_TYPE_OPTIONS } from '../../constants/wizardOptions'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
+import { formatArea } from '@/lib/format'
 
 type ZoneDetailSheetProps = {
   zone: ContractZoneFormValues | null
@@ -36,7 +37,7 @@ export function ZoneDetailSheet({ zone, onClose }: ZoneDetailSheetProps) {
 
           <div className="rounded-control border border-reca-gray-light p-3">
             <p className="text-label text-reca-gray-medium">Surface</p>
-            <p className="text-subtitle font-semibold text-reca-black">{zone.surfaceM2.toFixed(2)} m²</p>
+            <p className="text-subtitle font-semibold text-reca-black">{formatArea(zone.surfaceM2)}</p>
           </div>
 
           <div className="flex flex-col gap-2 border-t border-reca-gray-light pt-4">

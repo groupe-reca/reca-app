@@ -1,7 +1,7 @@
 import { useWatch } from 'react-hook-form'
 import type { Control } from 'react-hook-form'
 import { Card } from '@/components/ui/Card'
-import { formatCurrency } from '@/lib/format'
+import { formatArea, formatCurrency } from '@/lib/format'
 import type { Client } from '@/features/clients/types/client.types'
 import type { ContractCreationFormValues } from '../../schemas/contractCreation.schema'
 import { getNextPaymentEntry } from '../../utils/paymentPresets'
@@ -53,7 +53,7 @@ export function ContractSummaryPanel({ client, control }: ContractSummaryPanelPr
         </div>
         <div>
           <p className="text-label text-reca-gray-medium">Surface totale</p>
-          <p className="text-body text-reca-black">{totalSurface > 0 ? `${totalSurface.toFixed(2)} m²` : '—'}</p>
+          <p className="text-body text-reca-black">{totalSurface > 0 ? formatArea(totalSurface) : '—'}</p>
         </div>
         <div>
           <p className="text-label text-reca-gray-medium">Prix</p>
@@ -72,7 +72,7 @@ export function ContractSummaryPanel({ client, control }: ContractSummaryPanelPr
             {zones.map((zone) => (
               <li key={zone.id} className="flex items-center justify-between text-label text-reca-black">
                 <span>{zone.label}</span>
-                <span className="text-reca-gray-medium">{zone.surfaceM2.toFixed(2)} m²</span>
+                <span className="text-reca-gray-medium">{formatArea(zone.surfaceM2)}</span>
               </li>
             ))}
           </ul>

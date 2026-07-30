@@ -72,7 +72,7 @@ export function MissionNotesCard({ missionId }: { missionId: string }) {
         <button
           type="button"
           onClick={() => setShowAll(true)}
-          className="flex items-center justify-between text-label font-medium text-reca-red hover:underline"
+          className="flex items-center justify-between text-label font-medium text-reca-info hover:underline"
         >
           Voir toutes les notes ({notes.length})
           <ChevronRight className="size-4" aria-hidden="true" />
