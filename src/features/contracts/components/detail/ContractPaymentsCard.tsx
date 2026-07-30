@@ -14,7 +14,12 @@ type ContractPaymentsCardProps = {
   payments: Payment[]
 }
 
-/** "Paiements" — tableau des versements directement en ligne (plus de modale, `ContractPaymentsHistoryModal` supprimée). */
+/**
+ * « Échéancier de facturation » — tableau des versements en ligne (plus de modale,
+ * `ContractPaymentsHistoryModal` supprimée). Le titre était « Paiements », ce qui prêtait à
+ * confusion : cette carte liste des **factures** (`Invoice`), et un module Paiements distinct
+ * existe par ailleurs dans la navigation.
+ */
 export function ContractPaymentsCard({ invoices, payments }: ContractPaymentsCardProps) {
   const total = invoices.reduce((sum, invoice) => sum + invoice.total, 0)
 
@@ -39,7 +44,7 @@ export function ContractPaymentsCard({ invoices, payments }: ContractPaymentsCar
     },
     {
       key: 'action',
-      header: 'Action',
+      header: 'Actions',
       render: (invoice) => (
         <Link to={`/invoices/${invoice.id}`} className="text-reca-info hover:underline">
           Voir la facture
@@ -50,7 +55,7 @@ export function ContractPaymentsCard({ invoices, payments }: ContractPaymentsCar
 
   return (
     <Card className="flex flex-col gap-4">
-      <h2 className="text-subtitle font-semibold text-reca-black">Paiements</h2>
+      <h2 className="text-subtitle font-semibold text-reca-black">Échéancier de facturation</h2>
 
       {invoices.length > 0 ? (
         <>
