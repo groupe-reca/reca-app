@@ -1,5 +1,95 @@
 # Plans — RECA Centre des opérations
 
+## [~] Refonte de l'outil de mesure des contrats — Phase B (plan) — branche `refonte-outil-mesure-contrats`
+
+Source : `RECAAPPREFONTEOUTILMESURE.md`. Phase A = `OUTIL_MESURE_ASSESSMENT.md` (racine du repo). **Validé avec l'utilisateur (2026-08-02)** : on fait **Option A puis Option B**, l'**intégration reca-operateur est un sprint SÉPARÉ** (ce chantier ne touche NI `reca-operateur`, NI `missions`/`mission_items`).
+
+**Séquencement affiné (validé 2026-08-02)** — raisonnement : le cœur de l'Option B (dérivation `gps_geometry` + buffer/simplif + copie figée mission + GPS engine) sert un consommateur (reca-operateur) qui n'existe pas encore et est en sprint séparé ; le concevoir à l'aveugle risque de figer les mauvais paramètres. On découpe donc B en deux :
+1. **A** (cadrage ajustable) — MAINTENANT, plus haute valeur / plus faible risque.
+2. **B-autonome** (`snow_geometry` unifiée + `source`/`version` + `validateGeometry` + `geometry_status` + backfill non destructif) — valeur propre indépendante de l'opérateur, additif, faible risque.
+3. **Seam GPS** (`deriveGpsGeometry` + copie figée mission + GPS engine) — **décalé pour être conçu AVEC le sprint opérateur**, où il sera réellement testable. Ce chantier prépare juste les colonnes `gps_geometry`/`geometry_version` (laissées calculables/nulles), pas la dérivation fine.
+
+### Objectif
+Transformer l'étape « Analyse & Zones » du Wizard Contrats en un véritable éditeur de surface : cadrage ajustable (fini le cadre fixe qui coupe), dessin libre au-delà du cadrage, plusieurs surfaces, validation géographique, et une **zone GPS dérivée** stockée côté contrat, prête pour le futur sprint opérateur. Ne jamais supprimer l'outil, ne jamais borner la géométrie finale au cadre visuel, ne jamais écraser une surface existante.
+
+### Rappel des faits d'ancrage (Phase A)
+- Zone = `GeoJSON.Polygon` simple (jamais MultiPolygon), N lignes `contract_zones` par contrat, surface `@turf/area` géodésique, `contracts.superficie` = Σ `surface_m2`.
+- Le dessin n'est PAS borné (Mapbox Draw dessine partout) ; la limite ressentie = auto-cadrage serré (`buildDemoBoundary` 25×18 m fixe + `fitBounds` padding 20) + masque sombre + capture = screenshot viewport (`usePropertyCapture`).
+- reca-operateur (sprint séparé) ne lit AUJOURD'HUI que `adresse_geocodee/latitude/longitude` + GPS point/rayon — aucune surface. Le seam à préparer : `contracts.gps_geometry` + `geometry_version`.
+
+---
+
+### PHASE A/Option A — Cadrage ajustable, dessin libre (AUCUN changement de schéma, faible risque)
+
+**Principe** : découpler « vue de capture » (§5.1) de « zone de déneigement » (§5.2). La capture cadre les zones tracées (+ marge), plus le viewport brut ; le cadre cesse d'être une frontière.
+
+**Architecture / composants touchés (module `contracts`) :**
+1. `utils/propertyBoundary.ts` — `buildDemoBoundary` conservé (repli sans zones) mais **plus utilisé comme cadre de dessin** ; nouvelle `boundsFromZones(zones, marginPct)` (bbox des polygones tracés + marge **30 %** par défaut, plage 20–40 % validée §6.2).
+2. `components/wizard/MapViewportController.tsx` — cesse de `fitBounds` sur la boîte fixe 25×18 ; cadre sur `boundsFromZones` s'il y a des zones, sinon sur le point géocodé avec un zoom large (pas 19.5 serré). Prop `autoFit` déjà présente (tâche 12) réutilisée.
+3. `components/wizard/PropertyMaskLayer.tsx` — masque **atténué** (opacité réduite) et **non bloquant visuellement** ; il n'entoure plus une boîte fixe mais reste une aide de lecture optionnelle (ou retiré si l'utilisateur le juge trompeur — à trancher au prototype).
+4. `hooks/usePropertyCapture.ts` — `capture()` accepte une **bbox cible** (zones + marge) : la carte se recadre sur cette bbox avant le `getCanvas().toDataURL()`, puis revient. Prolonge la « recapture avec zones » déjà amorcée tâche 8. Garantit que l'image stockée contient toujours toutes les zones.
+5. `components/wizard/PropertySubStepLocate/Delineate.tsx` — pan/zoom libre déjà là ; on retire les repères visuels de « limite » et on autorise explicitement de tracer hors du cadrage initial (aucune contrainte à lever côté Draw, elle n'existe pas — c'est surtout l'UX/messages).
+6. Bascule **satellite ↔ plan** (§7) : nouveau bouton sur la barre d'outils carte (`ZoneToolbarFloatingDesktop.tsx` / mobile `ZoneToolbarFloating.tsx`), change le `style` Mapbox. Aide au tracé quand le satellite est masqué par des arbres.
+7. Note **« surface partiellement cachée »** par zone (§7) : champ optionnel booléen porté dans le state du form (pas encore en DB en V1 ; passe en DB en V2 via colonne `contract_zones`).
+
+**Écrans / flux :** identique (Localiser → Délimiter → Valider), mais le cadrage suit les zones, le dessin déborde librement, la capture est fidèle.
+
+**Tests V1 :** stationnement dépassant le cadre, entrée très longue, propriété en coin, plusieurs zones séparées, tracé hors cadrage initial, capture contenant toutes les zones, bascule satellite/plan.
+
+**Retour arrière V1 :** purement UI → `git revert` du commit. Aucune migration.
+
+---
+
+### Option B — Éditeur de surface V2 : géométrie unifiée + zone GPS + versionnement (tout ADDITIF)
+
+**Principe** : garder `contract_zones` comme **couche de dessin** (typée/colorée, bonne UX) et ajouter, **à côté**, une représentation unifiée + une zone GPS dérivée + un compteur de version, prêtes pour le sprint opérateur. Jamais d'écrasement.
+
+**Données / migrations (toutes additives, appliquées par l'utilisateur) :**
+1. `2026XXXX_contract_zones_source_version.sql` — `contract_zones` gagne `source text not null default 'MANUAL'` (`MANUAL|MIGRATED|IMPORTED`), `version int not null default 1`, `partiellement_cachee boolean not null default false`.
+2. `2026XXXX_contracts_snow_geometry.sql` — `contracts` gagne :
+   - `snow_geometry jsonb` — **MultiPolygon** unifié (union des zones actives), la « zone de déneigement » §5.2.
+   - `gps_geometry jsonb` — zone GPS dérivée §5.3 (MultiPolygon simplifié + bufferisé), le seam opérateur.
+   - `geometry_version int not null default 0` — compteur monotone (incrémenté à chaque sauvegarde modifiant la géométrie ; le futur MissionItem gèlera « version N »).
+   - `geometry_source text` / `geometry_status text` (`VALID|NEEDS_REVIEW|MISSING|MIGRATED|INVALID`, §11) / `geometry_updated_at timestamptz`.
+   - Contraintes `jsonb_typeof(...) = 'object'` sur les 2 colonnes jsonb, check sur `geometry_status`.
+3. `2026XXXX_backfill_snow_geometry.sql` — **backfill non destructif** : pour chaque contrat ayant des `contract_zones`, construit `snow_geometry` = MultiPolygon agrégé des `geojson->'coordinates'` (jamais toucher `surface_m2`/`geojson`), marque `geometry_source='MIGRATED'`, `geometry_status='NEEDS_REVIEW'` (à confirmer par un humain). Contrats sans zone → `geometry_status='MISSING'`. `gps_geometry` laissée nulle (recalculée à la prochaine ouverture/sauvegarde).
+
+   > Note : le calcul géodésique fin (union propre, buffer) se fait mieux côté client (Turf) qu'en SQL pur. Le backfill SQL fait l'agrégation MultiPolygon brute ; la dérivation `gps_geometry` propre est (re)calculée applicativement.
+
+**Architecture / composants (dérivation, validation, aperçu) :**
+1. `types/snowGeometry.types.ts` (nouveau) — `SnowRemovalGeometry` (adapté aux conventions du repo à partir de l'exemple §9 du brief : camelCase, `geometryType: 'POLYGON'|'MULTIPOLYGON'`, `coordinates`, `areaSquareMeters`, `source`, `gpsGeometry?`, `version`, `updatedAt`).
+2. `utils/deriveSnowGeometry.ts` (nouveau, fonction pure Turf) — `zones[] → snow_geometry (MultiPolygon)` (union) + `areaSquareMeters` ; `deriveGpsGeometry(snow, opts)` — simplification (`@turf/simplify`) + buffer (`@turf/buffer`, marge GPS ~ rayon de détection, par défaut cohérent avec les 30 m opérateur mais dérivé de la surface). Nouvelles dépendances Turf à ajouter (`@turf/union`, `@turf/simplify`, `@turf/buffer`) — vérifier qu'elles fournissent leurs types comme `@turf/area`.
+3. `utils/validateGeometry.ts` (nouveau, §12) — polygone fermé, min. de points, auto-intersection (`@turf/kinks`), surface non nulle, coords valides, proximité de l'adresse (distance centre↔adresse géocodée), surface plausible (bornes), format compatible. Retourne des **avertissements compréhensibles** (« La zone semble très éloignée de l'adresse… »).
+4. `services/contracts.service.ts` — `upsertContractWithZones`/`createContractWithZones` écrivent aussi `snow_geometry`/`gps_geometry`/`geometry_version` (incrément si la géométrie change)/`geometry_source='MANUAL'`/`geometry_status` calculé. `mapContract` lit ces colonnes.
+5. `components/wizard/PropertySubStepValidate.tsx` + `SurfaceSummary.tsx` — aperçu de vérification enrichi (§6.6) : surface totale, **aperçu de la zone GPS dérivée** (layer distinct sur la carte), liste d'alertes de validité, possibilité de revenir corriger.
+6. `constants/wizardOptions.ts` — nouveau layer/style pour visualiser `gps_geometry` (contour pointillé distinct des zones de déneigement).
+7. **Exclusions §5.5** : structure prête (le MultiPolygon supporte les trous ; un `contract_zones.role` futur pourrait porter `exclusion`) mais **PAS d'UI en V2** — on ne l'implémente pas sans confirmation de pertinence, on ne la bloque pas non plus.
+
+**Consommation aval (fiche détail / PDF)** — non bloquant : `ContractMapCard.tsx` peut afficher `gps_geometry` en surcouche ; optionnel, à faire seulement si utile.
+
+**Tests V2 (§18) :** contrat existant (migré), contrat sans surface, backfill MIGRATED non destructif, MultiPolygon, zone GPS générée, géométrie invalide (auto-intersection), coords éloignées de l'adresse, surface en m² stockée / affichage pi² possible, correction après sauvegarde, reprise de brouillon avec géométrie.
+
+**Retour arrière V2 :** migrations additives → les nouvelles colonnes sont simplement ignorées si le code est revert ; `feature flag` (ex. `settings.contract_wizard_defaults` ou un flag dédié) pour désactiver l'éditeur V2 et retomber sur le flux V1/actuel. Aucune donnée existante détruite.
+
+---
+
+### Compatibilité reca-operateur — SPRINT SÉPARÉ (défini ici, PAS implémenté)
+Ce chantier **ne modifie ni `reca-operateur` ni `missions`/`mission_items`**. Il se contente de garantir le **contrat d'interface** que le futur sprint opérateur consommera :
+- `contracts.gps_geometry` (MultiPolygon dérivé, simplifié/bufferisé) + `contracts.geometry_version` (compteur monotone).
+- Le futur sprint opérateur devra : (a) **copier/geler** `gps_geometry` + `geometry_version` sur `mission_items` à la création de mission (§14 « copie opérationnelle figée », pour qu'une mission passée garde sa géométrie même si le contrat change après) ; (b) adapter `gpsEngine.ts` — remplacer le test de rayon fixe par un test de **containment** dans `gps_geometry` (ou un rayon dérivé de la surface), ce qui réduira les faux positifs sur résidences rapprochées (raisonnement Phase A §6). Rien de tout cela dans ce chantier.
+
+### Déploiement progressif
+1. **V1 (Option A)** livrée et vérifiée en premier — aucun risque schéma, débloque la vraie douleur (cadre qui coupe).
+2. **V2 (Option B)** ensuite : migrations additives appliquées par l'utilisateur, backfill non destructif, éditeur V2 derrière un flag jusqu'à vérification navigateur end-to-end (création réelle, reprise de brouillon, contrat migré).
+3. Sprint opérateur : plus tard, séparé.
+
+### Ordre d'implémentation (Phase D, une fois le plan validé)
+1. **Phase C — Prototype visuel** (données simulées, sans brancher la prod) : cadre ajustable + marge, déplacement/redimensionnement, dessin libre au-delà du cadrage, plusieurs polygones, aperçu, surface, aperçu de zone GPS dérivée (démonstratif). Cible : valider l'UX de l'Option A avant de toucher le Wizard.
+2. **Option A** : cadrage/capture/masque/bascule satellite + tests navigateur.
+3. **Option B-autonome** : types + `validateGeometry` → `deriveSnowGeometry` (union MultiPolygon) → migrations (`snow_geometry`/`source`/`version`/`status` + colonnes `gps_geometry`/`geometry_version` laissées nulles) + backfill non destructif → écriture service → aperçu Valider → tests navigateur.
+4. **Seam GPS** (`deriveGpsGeometry` fine + copie figée mission + GPS engine) : **décalé au sprint opérateur**, pas ici.
+5. Documentation (`tasks.md`/`plans.md`/`file-index.md`/`memory.md`) à jour à chaque étape.
+
 ## [x] RLS Missions — écriture ouverte à l'opérateur assigné — implémenté, migration à appliquer
 
 Demande (2026-07-25) : "quand l'opérateur appuie sur Démarrer, la mission passe en_cours + heure de départ notée ; s'il se déconnecte et revient, il doit récupérer sa mission en_cours et continuer où il en était ; le statut des résidences doit être à jour instantanément en base pour survivre à une perte de connexion."
