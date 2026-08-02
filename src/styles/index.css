@@ -60,6 +60,61 @@ body {
   background-color: var(--color-reca-snow);
 }
 
+@layer utilities {
+  /*
+   * Défilement conservé, mécanique masquée. Prévu d'abord pour la navigation de la Sidebar
+   * (fond Bleu Nuit constant), où la barre native Windows — piste claire + boutons fléchés —
+   * jure avec le fond sombre. Le pouce n'apparaît qu'au survol du conteneur.
+   * Utilitaire partagé : réutiliser cette classe, ne jamais redéfinir ces règles en dur
+   * dans un composant.
+   */
+  .scroll-discret {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+  }
+  .scroll-discret::-webkit-scrollbar {
+    width: 6px;
+  }
+  .scroll-discret::-webkit-scrollbar-button {
+    display: none;
+  }
+  .scroll-discret::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .scroll-discret::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 9999px;
+  }
+  .scroll-discret:hover {
+    scrollbar-color: rgb(255 255 255 / 0.2) transparent;
+  }
+  .scroll-discret:hover::-webkit-scrollbar-thumb {
+    background: rgb(255 255 255 / 0.2);
+  }
+
+  /*
+   * Fondu haut/bas sur un conteneur défilant : sans lui, une liste coupée net au bord donne
+   * l'impression fausse d'être complète, maintenant que la barre native ne le signale plus.
+   * Complément de `.scroll-discret`, séparé pour rester applicable indépendamment.
+   */
+  .scroll-fade-y {
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 12px,
+      #000 calc(100% - 12px),
+      transparent
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      transparent,
+      #000 12px,
+      #000 calc(100% - 12px),
+      transparent
+    );
+  }
+}
+
 /*
  * Animation convention (doc 05 — 150-250ms, soft transitions, no spectacular animation):
  * use Tailwind's `duration-150` for micro-interactions (hover, tooltip),

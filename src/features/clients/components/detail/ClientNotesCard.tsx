@@ -46,7 +46,7 @@ export function ClientNotesCard({ clientId }: { clientId: string }) {
           placeholder="Écrire une nouvelle note…"
           className="h-11 flex-1 rounded-control border border-reca-gray-light bg-reca-white px-3 text-body text-reca-black placeholder:text-reca-gray-medium/70 focus:outline-none focus:ring-2 focus:ring-reca-red/30"
         />
-        <Button onClick={handleAdd} isLoading={addNote.isPending} disabled={!message.trim()}>
+        <Button variant="secondary" onClick={handleAdd} isLoading={addNote.isPending} disabled={!message.trim()}>
           Ajouter une note
         </Button>
       </div>

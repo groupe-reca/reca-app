@@ -76,9 +76,16 @@ export const router = createBrowserRouter([
           {
             element: <RequireModule moduleKey="clients" />,
             children: [
-              { path: 'clients', element: <ClientsListPage />, handle: { breadcrumb: 'Clients' } },
-              { path: 'clients/new', element: <ClientCreatePage />, handle: { breadcrumb: 'Nouveau client' } },
-              { path: 'clients/:id', element: <ClientDetailPage />, handle: { breadcrumb: 'Détail client' } },
+              {
+                path: 'clients',
+                element: <Outlet />,
+                handle: { breadcrumb: 'Clients' },
+                children: [
+                  { index: true, element: <ClientsListPage /> },
+                  { path: 'new', element: <ClientCreatePage />, handle: { breadcrumb: 'Nouveau client' } },
+                  { path: ':id', element: <ClientDetailPage />, handle: { breadcrumb: 'Détail client' } },
+                ],
+              },
             ],
           },
           {

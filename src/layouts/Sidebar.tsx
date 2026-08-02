@@ -67,7 +67,13 @@ export function Sidebar({ open, onClose }: SidebarProps) {
           </button>
         </div>
 
-        <nav className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3">
+        {/*
+          `scroll-discret` + `scroll-fade-y` (utilitaires partagés, `styles/index.css`) : le
+          défilement reste, seule la barre native — piste claire et boutons fléchés sur le fond
+          Bleu Nuit — disparaît, remplacée par un pouce discret au survol et un fondu haut/bas
+          qui signale qu'il reste des items au-delà du bord.
+        */}
+        <nav className="scroll-discret scroll-fade-y flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto px-3">
           {ungrouped.map((item) => (
             <SidebarNavItem key={item.to} item={item} onNavigate={onClose} />
           ))}

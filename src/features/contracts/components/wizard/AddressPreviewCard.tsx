@@ -5,8 +5,8 @@ import { Card } from '@/components/ui/Card'
 import { isMapboxConfigured, MAPBOX_TOKEN } from '@/lib/mapboxClient'
 import { formatAddress } from '@/lib/format'
 import type { Client } from '@/features/clients/types/client.types'
-import { geocodeAddress } from '../../services/geocoding.service'
-import type { GeocodeResult } from '../../services/geocoding.service'
+import { geocodeAddress } from '@/lib/geocoding'
+import type { GeocodeResult } from '@/lib/geocoding'
 
 type AddressPreviewCardProps = {
   client: Client

@@ -43,6 +43,14 @@ export function formatDateLong(iso: string): string {
   return longDateFormatter.format(new Date(iso))
 }
 
+const mediumDateFormatter = new Intl.DateTimeFormat('fr-CA', { dateStyle: 'medium' })
+
+/** Date seule au format moyen français : `28 juill. 2026`. Renvoie `'—'` si null/undefined. */
+export function formatDate(iso: string | null | undefined): string {
+  if (!iso) return '—'
+  return mediumDateFormatter.format(new Date(iso))
+}
+
 const dateTimeFormatter = new Intl.DateTimeFormat('fr-CA', { dateStyle: 'medium', timeStyle: 'short' })
 
 export function formatDateTime(iso: string): string {
