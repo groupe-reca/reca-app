@@ -1,5 +1,6 @@
 import { PolygonCard } from './PolygonCard'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
+import { formatArea } from '@/lib/format'
 
 type PolygonListProps = {
   zones: ContractZoneFormValues[]
@@ -36,7 +37,7 @@ export function PolygonList({ zones, selectedZoneId, onSelectZone, onEditZone, o
       ))}
       <div className="mt-3 flex items-center justify-between border-t border-reca-gray-light pt-3">
         <span className="text-label font-semibold text-reca-black">TOTAL</span>
-        <span className="text-label font-semibold text-reca-black">{total.toFixed(2)} m²</span>
+        <span className="text-label font-semibold text-reca-black">{formatArea(total)}</span>
       </div>
     </div>
   )

@@ -1,3 +1,4 @@
+import { geocodeAddress } from '@/lib/geocoding'
 import { supabase } from '@/lib/supabaseClient'
 import { createCrudService } from '@/lib/supabaseCrud'
 import type { ClientFormValues } from '../schemas/client.schema'
@@ -79,13 +80,35 @@ export async function getClient(id: string): Promise<Client> {
   return mapClient(fallbackData as ClientRow, null)
 }
 
+/**
+ * Renseigne lat/lng par géocodage de l'adresse quand elles manquent (client saisi sans passer
+ * par la suggestion Mapbox d'`AddressAutocomplete`, ou client existant sans coordonnées) — pour
+ * que la carte de la fiche puisse s'afficher. **Best-effort** : un échec/absence de token ne
+ * bloque jamais l'enregistrement (`try/catch`, on garde les coords nulles).
+ */
+async function toRowInputWithGeocode(values: ClientFormValues): Promise<Partial<ClientRow>> {
+  const row = toRowInput(values)
+  if ((row.latitude == null || row.longitude == null) && row.adresse) {
+    try {
+      const result = await geocodeAddress(row.adresse, row.ville ?? null, row.code_postal ?? null)
+      if (result) {
+        row.latitude = result.lat
+        row.longitude = result.lng
+      }
+    } catch {
+      // ignoré : le géocodage est un confort, pas une condition d'enregistrement
+    }
+  }
+  return row
+}
+
 export async function createClient(values: ClientFormValues): Promise<Client> {
-  const row = await clientsCrud.create(toRowInput(values))
+  const row = await clientsCrud.create(await toRowInputWithGeocode(values))
   return mapClient(row)
 }
 
 export async function updateClient(id: string, values: ClientFormValues): Promise<Client> {
-  const row = await clientsCrud.update(id, toRowInput(values))
+  const row = await clientsCrud.update(id, await toRowInputWithGeocode(values))
   return mapClient(row)
 }
 

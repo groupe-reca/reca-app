@@ -18,7 +18,7 @@ export function RouteActionBar({ onAddContract, onDeleteRoute, onOpenSettings }:
         <Settings className="size-4" aria-hidden="true" />
         Paramètres
       </Button>
-      <Button variant="secondary" onClick={onDeleteRoute} className="border-red-300 text-red-600 hover:bg-red-50">
+      <Button variant="danger" onClick={onDeleteRoute}>
         <Trash2 className="size-4" aria-hidden="true" />
         Supprimer la Route
       </Button>

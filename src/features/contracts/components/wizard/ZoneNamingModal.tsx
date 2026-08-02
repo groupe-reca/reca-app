@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button'
 import { ZoneTypeSelector } from './ZoneTypeSelector'
 import { useZoneTypeSelection } from '../../hooks/useZoneTypeSelection'
 import type { ZoneType } from '../../types/contract.types'
+import { formatArea } from '@/lib/format'
 
 type ZoneNamingModalProps = {
   pendingZone: { surfaceM2: number } | null
@@ -36,7 +37,7 @@ export function ZoneNamingModal({ pendingZone, onConfirm, onCancel }: ZoneNaming
       {pendingZone && (
         <div className="flex flex-col gap-4">
           <p className="text-body text-reca-black">
-            Surface calculée : <span className="font-medium">{pendingZone.surfaceM2.toFixed(2)} m²</span>
+            Surface calculée : <span className="font-medium">{formatArea(pendingZone.surfaceM2)}</span>
           </p>
           <ZoneTypeSelector selection={selection} />
           <div className="flex justify-end gap-3">

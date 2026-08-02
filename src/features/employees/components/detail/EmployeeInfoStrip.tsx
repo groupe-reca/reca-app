@@ -14,7 +14,7 @@ export function EmployeeInfoStrip({ employee }: { employee: Employee }) {
       icon: Phone,
       label: 'Téléphone',
       value: employee.telephone ? (
-        <a href={`tel:${employee.telephone}`} className="text-reca-red hover:underline">
+        <a href={`tel:${employee.telephone}`} className="text-reca-info hover:underline">
           {formatPhone(employee.telephone)}
         </a>
       ) : (
@@ -25,7 +25,7 @@ export function EmployeeInfoStrip({ employee }: { employee: Employee }) {
       icon: Mail,
       label: 'Courriel',
       value: employee.courriel ? (
-        <a href={`mailto:${employee.courriel}`} className="text-reca-red hover:underline">
+        <a href={`mailto:${employee.courriel}`} className="text-reca-info hover:underline">
           {employee.courriel}
         </a>
       ) : (

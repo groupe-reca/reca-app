@@ -2,6 +2,7 @@ import { ChevronRight, Mail, Phone } from 'lucide-react'
 import { Link } from 'react-router'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { EmptyValue } from '@/components/ui/EmptyValue'
 import { formatAddress } from '@/lib/format'
 import type { ContractClientRef } from '../../types/contract.types'
 
@@ -19,7 +20,7 @@ export function ContractClientCard({ client }: { client: ContractClientRef | nul
     <Card className="flex flex-col gap-4">
       <div>
         <h2 className="text-subtitle font-semibold text-reca-black">
-          <Link to={`/clients/${client.id}`} className="text-reca-red hover:underline">
+          <Link to={`/clients/${client.id}`} className="text-reca-info hover:underline">
             {client.prenom} {client.nom}
           </Link>
         </h2>
@@ -33,7 +34,9 @@ export function ContractClientCard({ client }: { client: ContractClientRef | nul
               {client.telephone}
             </a>
           ) : (
-            <span className="text-reca-gray-medium">—</span>
+            // Téléphone et courriel sont des champs du module Clients, pas du contrat :
+            // l'invitation mène à la fiche client, seul endroit où ils sont éditables.
+            <EmptyValue label="Ajouter un téléphone" to={`/clients/${client.id}`} />
           )}
         </div>
         <div className="flex items-center gap-2">
@@ -43,7 +46,7 @@ export function ContractClientCard({ client }: { client: ContractClientRef | nul
               {client.courriel}
             </a>
           ) : (
-            <span className="text-reca-gray-medium">—</span>
+            <EmptyValue label="Ajouter un courriel" to={`/clients/${client.id}`} />
           )}
         </div>
         <p className="text-reca-gray-medium">

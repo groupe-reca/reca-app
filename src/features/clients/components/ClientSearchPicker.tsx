@@ -67,7 +67,7 @@ export function ClientSearchPicker({ value, onChange }: ClientSearchPickerProps)
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="text-label font-medium text-reca-red hover:underline"
+            className="text-label font-medium text-reca-info hover:underline"
           >
             Changer de client
           </button>

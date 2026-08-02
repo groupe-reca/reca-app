@@ -1,5 +1,6 @@
 import { ZONE_TYPE_OPTIONS } from '../../constants/wizardOptions'
 import type { ContractZoneFormValues } from '../../schemas/contractCreation.schema'
+import { formatArea } from '@/lib/format'
 
 type ZoneAreaSummaryProps = {
   zones: ContractZoneFormValues[]
@@ -18,7 +19,7 @@ export function ZoneAreaSummary({ zones }: ZoneAreaSummaryProps) {
   return (
     <div className="flex flex-col gap-2 border-t border-reca-gray-light pt-4">
       <p className="text-label font-medium text-reca-black">
-        {zones.length} zone{zones.length > 1 ? 's' : ''} — {total.toFixed(2)} m² au total
+        {zones.length} zone{zones.length > 1 ? 's' : ''} — {formatArea(total)} au total
       </p>
       <div className="flex flex-col gap-1">
         {byType.map((entry) => (
@@ -27,7 +28,7 @@ export function ZoneAreaSummary({ zones }: ZoneAreaSummaryProps) {
               <span className="size-2.5 rounded-full" style={{ backgroundColor: entry.color }} aria-hidden="true" />
               {entry.label}
             </span>
-            <span>{entry.subtotal.toFixed(2)} m²</span>
+            <span>{formatArea(entry.subtotal)}</span>
           </div>
         ))}
       </div>

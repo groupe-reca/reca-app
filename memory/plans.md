@@ -370,3 +370,30 @@ Résumé : voir `memory/tasks.md` (section "Tâche 8") et `memory/memory.md` pou
 Plan détaillé complet (contexte, arborescence, points d'intégration, vérification) : `/root/.claude/plans/ouvre-une-nouvelle-branche-memoized-book.md`.
 
 Résumé : brancher un vrai téléchargement PDF (`@react-pdf/renderer`, choisi par l'utilisateur plutôt que `html2canvas`+`jsPDF`) sur les boutons "Télécharger PDF" déjà présents en placeholder sur les fiches Contrat/Facture + "Voir le contrat (PDF)" sur `ContractCreatedPage.tsx`. "Envoyer par courriel" reste hors périmètre (nécessite Edge Function + service tiers, décision séparée). Nouveau dossier partagé `src/components/pdf/` (primitives transverses, ni Contrats ni Factures ne s'importent l'un l'autre) + `src/features/contracts/pdf/` (mire le contenu de `contract-document/` existant en primitives react-pdf) + `src/features/invoices/pdf/` (nouveau, aucun aperçu HTML n'existait avant). Point technique clé : ni `logo.jpg` (JPEG progressif, plante react-pdf) ni les `.svg` existants (non supportés par `<Image>` react-pdf) n'étaient utilisables — décidé de rastériser `logo-sombre.svg` au runtime via `<canvas>` dans le navigateur plutôt que de dépendre d'un outil de conversion externe (aucun disponible dans ce sandbox : pas d'ImageMagick/cairosvg/sharp).
+
+## [x] Refonte visuelle & navigabilité (branche `refonte-ui`, depuis `main` `e532059`, 2026-07-30 — terminé et vérifié)
+
+Plan détaillé complet (contexte, prémisses infirmées, arbitrages, vérification) : `/root/.claude/plans/typed-plotting-dusk.md`. Brief source : `.input/refonte`.
+
+Résumé : 4 phases exécutées dans l'ordre 1 → 2 → 4 → 3 (jetons/cohérence globale → sidebar → états vides → fiche contrat en onglets), un commit par phase. **Cinq prémisses du brief étaient infirmées par le code et ont été retirées du périmètre** (bouton « violet » qui était un bleu volontaire, typo « écrar » inexistante, prix déjà en 1re ligne, deux formats de date déjà unifiés, profil de sidebar déjà épinglé, lightbox de carte déjà présent) — voir `memory/memory.md` et `memory/tasks.md` pour le détail et les 4 arbitrages validés avec l'utilisateur.
+
+## [x] Refonte fiche détail Client `/clients/:id` (branche `refonte-client`, depuis `refonte-ui`, 2026-07-30) — TERMINÉ (vérifié navigateur, pas encore commité ; détail + vérif dans `memory/tasks.md`)
+
+Brief source : `.input/refonte-client`. Aligner la fiche client sur le livrable 06 (onglets + actions rapides), corriger la hiérarchie d'actions, remplir les vides.
+
+**Prémisses corrigées par le code réel :**
+- La fiche Client a **déjà** été refondue en cartes (`components/detail/`) : `StaticMapThumbnail` (vraie carte statique) existe déjà — pas de « cadre gris vide ». Liens tél/courriel déjà en `text-reca-info` (pas des `<a>` violets). Suppression déjà en soft-delete (`softDeleteClient` → `deleted_at`) → « Archiver » = libellé.
+- **Conflit de couleur de lien résolu** : le plan demande Bleu Nuit `#0F172A`, mais refonte-ui a standardisé « liens bleus » = `reca-info` — on suit **`reca-info`** (pas de 3e couleur), le `Link` partagé neutralise quand même `:visited`.
+- `ClientContractsCard`/`ClientInvoicesCard` importent de contracts/invoices = dépendance pipeline **autorisée** (Clients amont). Seul le **géocodage** (infra) est extrait en `src/lib/`.
+
+**Arbitrages utilisateur (2 questions) :** (1) **jeu complet livrable 06** d'onglets — Informations / Contrats / Factures & paiements / Documents / Historique (ces 2 derniers en « Bientôt disponible ») ; (2) **vraie carte Mapbox GL** interactive (pas seulement le thumbnail statique).
+
+**Phases (ordre F→A→B→E→C→D) :**
+- **F** : fil d'Ariane `clients/:id` imbriqué sous un parent `clients` (`handle.breadcrumb='Clients'`, même fix que Contrats) ; `formatDate` ajouté à `lib/format.ts` et dates unifiées dans `ClientInfoCard` ; bouton « Ajouter une note » → secondaire.
+- **A** : `ClientDetailHeader` refait — barre `CLI · nom · [Statut]`, actions rapides (tél/courriel/Maps, icônes), `Modifier` secondaire, **primaire rouge = « Créer un contrat »**, menu `⋮` (Créer une facture, **Archiver le client** en `danger` + confirmation nommant les conséquences).
+- **B** : `src/components/ui/Link.tsx` (transverse, `reca-info`, `:visited` neutralisé, interne=router / externe=`<a>`) ; adresse rendue cliquable → Google Maps.
+- **E** : `src/components/ui/EntityRow.tsx` (transverse — identifiant/libellé/date pivot/montant/statut/chevron) consommé par `ClientContractsCard` (retire « Créé le », total en pied) et `ClientInvoicesCard` (ajoute date d'échéance + total).
+- **C** : `ClientDetailTabsShell` (mirror `ContractDetailTabsShell`, `PageTabs`, en-tête collant) ; Desktop/Mobile deviennent consommateurs ; Notes → colonne latérale de l'onglet Informations ; carte fusionnée dans Informations ; Documents/Historique = placeholders.
+- **D** : géocodage extrait `contracts/services/geocoding.service.ts` → `src/lib/geocoding.ts` (contracts ré-importe) + géocodage best-effort à l'enregistrement (`clients.service` create/update si coords manquantes) ; nouveau `src/components/ui/LocationMap.tsx` (Mapbox GL interactif générique, gardes token `sk.`/ResizeObserver/cleanup, repli « Adresse non localisée · Situer », clic → lightbox `Modal`) remplace le thumbnail sur la fiche ; champ `GPS` retiré de `ClientInfoCard`.
+
+Transverses créés (réutilisables par Factures/Paiements/Équipements/Employés) : `Link`, `EntityRow`, `LocationMap`. **Données de test à nettoyer avant démo** (« pack ice » minuscule, courriel pro sur un client « Résidentiel ») — hors code.

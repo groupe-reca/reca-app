@@ -10,7 +10,7 @@ import type { AiModel, AiProvider } from '../types/contractWizardDefaults.types'
  * admin, voir `ContractWizardDefaultsForm.tsx`) sélectionnent Google (Flash/Pro) ou
  * TokenRouter, l'Edge Function route vers le bon endpoint. Lève une erreur sur échec —
  * laissé à l'appelant de la transformer en toast (même convention que
- * `geocoding.service.ts`).
+ * `lib/geocoding.ts`).
  *
  * Sur une erreur HTTP de l'Edge Function (`FunctionsHttpError`), le message précis
  * (`{ error: string }`, ex: "Quota Gemini dépassé…") est extrait du corps de la réponse

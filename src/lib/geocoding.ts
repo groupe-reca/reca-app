@@ -10,6 +10,11 @@ export type GeocodeResult = {
  * Géocode une adresse via l'API Mapbox Geocoding. Retourne `null` si le token
  * Mapbox n'est pas configuré ou si aucun résultat n'est trouvé — appelant doit
  * gérer ce cas (afficher un message plutôt que planter la carte).
+ *
+ * Vit dans `src/lib/` (pas dans un module `features/`) : le géocodage est une
+ * capacité transverse, consommée par le module Contrats (assistant) ET Clients
+ * (carte de la fiche + géocodage best-effort à l'enregistrement) — un module ne
+ * dépend jamais d'un autre (livrable 03).
  */
 export async function geocodeAddress(
   adresse: string | null,

@@ -1,5 +1,6 @@
 import { ChevronLeft, ChevronRight, Menu } from 'lucide-react'
 import { Link, useMatches } from 'react-router'
+import { useBreadcrumbLabelValue } from './useBreadcrumbLabel'
 import { useDesktopImmersiveValue } from './useDesktopChrome'
 
 type RouteHandle = {
@@ -12,11 +13,17 @@ type BreadcrumbProps = {
 
 export function Breadcrumb({ onOpenMenu }: BreadcrumbProps) {
   const immersive = useDesktopImmersiveValue()
+  const labelOverride = useBreadcrumbLabelValue()
   const matches = useMatches()
   const crumbs = matches
     .filter((match) => Boolean((match.handle as RouteHandle | undefined)?.breadcrumb))
-    .map((match) => ({
-      label: (match.handle as RouteHandle).breadcrumb as string,
+    .map((match, index, all) => ({
+      // Une page de détail peut remplacer son libellé statique de route ("Détail") par une
+      // valeur issue de sa donnée chargée (ex. "CTR-000055"), voir `useBreadcrumbLabel`.
+      label:
+        labelOverride && index === all.length - 1
+          ? labelOverride
+          : ((match.handle as RouteHandle).breadcrumb as string),
       pathname: match.pathname,
     }))
 

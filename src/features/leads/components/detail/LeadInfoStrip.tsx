@@ -14,7 +14,7 @@ export function LeadInfoStrip({ lead }: { lead: Lead }) {
       icon: Phone,
       label: 'Téléphone',
       value: lead.telephone ? (
-        <a href={`tel:${lead.telephone}`} className="text-reca-red hover:underline">
+        <a href={`tel:${lead.telephone}`} className="text-reca-info hover:underline">
           {formatPhone(lead.telephone)}
         </a>
       ) : (
@@ -25,7 +25,7 @@ export function LeadInfoStrip({ lead }: { lead: Lead }) {
       icon: Mail,
       label: 'Courriel',
       value: lead.courriel ? (
-        <a href={`mailto:${lead.courriel}`} className="text-reca-red hover:underline">
+        <a href={`mailto:${lead.courriel}`} className="text-reca-info hover:underline">
           {lead.courriel}
         </a>
       ) : (

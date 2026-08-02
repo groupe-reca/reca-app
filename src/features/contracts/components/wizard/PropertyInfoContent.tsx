@@ -2,7 +2,7 @@ import { CheckCircle2, LocateFixed, MapPin } from 'lucide-react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import type { Client } from '@/features/clients/types/client.types'
-import type { GeocodeResult } from '../../services/geocoding.service'
+import type { GeocodeResult } from '@/lib/geocoding'
 
 export type PropertyInfoContentProps = {
   client: Client
