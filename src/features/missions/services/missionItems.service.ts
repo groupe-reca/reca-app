@@ -3,9 +3,21 @@ import type { MissionItem, MissionItemRow, MissionItemStatus, MissionItemSummary
 
 const missionItemsCrud = {
   async update(id: string, statut: MissionItemStatus): Promise<MissionItemRow> {
+    const payload: Record<string, unknown> = { statut }
+    // Remise en attente par le superviseur : RECA Operator pilote son état via
+    // `statut_operateur` (colonne indépendante, cf 20260728000000_mission_items_live_status.sql),
+    // jamais via `statut`. Sans ce reset, la correction du superviseur n'atteint jamais l'app
+    // opérateur — l'item reste affiché comme terminé côté terrain malgré le changement ici.
+    if (statut === 'en_attente') {
+      payload.statut_operateur = 'en_attente'
+      payload.heure_arrivee = null
+      payload.heure_fin = null
+      payload.duree_trajet_secondes = null
+      payload.duree_intervention_secondes = null
+    }
     const { data, error } = await supabase
       .from('mission_items')
-      .update({ statut } as never)
+      .update(payload as never)
       .eq('id', id)
       .select()
       .single()
