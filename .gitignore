@@ -29,3 +29,6 @@ dist-ssr
 .claude
 .rtk
 supabase/.temp
+
+# Prototypes throwaway (Phase C outil de mesure) — contiennent un token Mapbox local
+prototypes/
